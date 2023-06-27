@@ -14,14 +14,11 @@ const signIn = require('./api/signIn')
 const bot = require('./api/botApi')
 const bubble = require('./api/bubbleApi')
 
-// console.log(process.env.REACT_APP_DB_API_KEY);
 app.use(helmet())
 app.use(express.json())
 app.use(express.urlencoded({extended: false}))
 app.use(cors())
 
-// console.log(process.env.CONCEALED_STORAGE_BUCKET);
-// console.log(dbObj);
 // conditional based om env
 app.use(morgan("dev")) //dev, tiny, ...
 
@@ -35,20 +32,24 @@ app.use('/api/test', (req, res)=>{
     res.status(200).send('testing api')
 })
 
-app.use(express.static(path.join(__dirname, "./frontend/build")))
-
-app.get("*", function(_, res){
-    res.sendFile(
-        path.join(__dirname, "./frontend/build/index.html"),
-        function(err){
-            if(err){
-                res.status(500).send(err)
-            }
-        }
-    )
+app.use('/check', (req, res)=>{
+    res.status(200).send('Server is working fine')
 })
 
-const port = process.env.PORT || 5001
+// app.use(express.static(path.join(__dirname, "./public")))
+
+// app.get("*", function(_, res){
+//     res.sendFile(
+//         path.join(__dirname, "./frontend/build/index.html"),
+//         function(err){
+//             if(err){
+//                 res.status(500).send(err)
+//             }
+//         }
+//     )
+// })
+
+const port = process.env.PORT || process.env.CONCEALED_MANUAL_PORT || 5001
 app.listen(port, ()=>{ /* Do Nothing */})
 
 module.exports = app
