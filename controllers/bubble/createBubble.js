@@ -5,6 +5,7 @@ const {database, storage} = require('../../database/firebase')
 
 async function createBubble(req, res){
     res.send({successful: true})
+    console.log(req.body);
 
     const userID = req.body.userID
     const thisBubble = {...req.body.thisBubble}
