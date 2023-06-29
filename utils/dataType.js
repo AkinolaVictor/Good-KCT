@@ -1,6 +1,6 @@
 
 function dataType(data){
-    if(typeof data === 'object'&&data.length===undefined){
+    if(typeof data === 'object' && data.length===undefined){
         return 'object'
     } else {
         if(typeof data === 'object'){
