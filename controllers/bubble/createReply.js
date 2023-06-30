@@ -17,7 +17,7 @@ async function createReply_Old(req, res){
     const refDoc = req.body.refDoc /* refDoc */
     const discernUserIdentity = req.body.discernUserIdentity /* discernUserIdentity() */
     
-    res.send({successful: true})
+    // res.send({successful: true})
     
     function getDate(){
         const now = new Date()
@@ -206,12 +206,20 @@ async function createReply_Old(req, res){
             if(path.length === 0){
                 // if(thisPost){
                     posts[postID].reply.push(data)
-                    await updateDoc(docz, {posts})
+                    await updateDoc(docz, {posts}).then(()=>{
+                        res.send({successful: true})
+                    }).catch(()=>{
+                        res.send({successful: false, message: 'unable to upload reply'})
+                    })
                 // }
             }else if(path.length === 1) {
                 // if(thisPost){
                     posts[postID].reply[path[0]].reply.push(data)
-                    await updateDoc(docz, {posts})
+                    await updateDoc(docz, {posts}).then(()=>{
+                        res.send({successful: true})
+                    }).catch(()=>{
+                        res.send({successful: false, message: 'unable to upload reply'})
+                    })
                 // }
             }else if(path.length>1){
                 // buildReply(path)
@@ -257,7 +265,11 @@ async function createReply_Old(req, res){
                 }
                 // if(thisPost){
                     posts[postID].reply[path[0]] = final
-                    await updateDoc(docz, {posts})
+                    await updateDoc(docz, {posts}).then(()=>{
+                        res.send({successful: true})
+                    }).catch(()=>{
+                        res.send({successful: false, message: 'unable to upload reply'})
+                    })
                 // }
             }
 
@@ -286,6 +298,8 @@ async function createReply_Old(req, res){
                 })
             }
         }
+    }).catch(()=>{
+        res.send({successful: false, message: 'Network error: unable to upload bubble'})
     })
 }
 
