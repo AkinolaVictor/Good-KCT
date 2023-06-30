@@ -4,8 +4,13 @@ const date = require('date-and-time')
 const {database, storage} = require('../../database/firebase')
 
 async function createBubble(req, res){
-    res.send({successful: true})
-    console.log(req.body);
+    // res.send({successful: true})
+    // console.log(req.body);
+    // const data = JSON.parse(req.body.data)
+    // console.log(data);
+    // return
+    // const userID = data.userID
+    // const thisBubble = {...data.thisBubble}
 
     const userID = req.body.userID
     const thisBubble = {...req.body.thisBubble}
@@ -25,6 +30,7 @@ async function createBubble(req, res){
         const settings = thisBubble.settings
         settings.selfDestructData.currentDate = thisBubble.createdDate
 
+        // update bot
         const botData = [...Object.keys(settings.botData)]
         if(botData.length){
             for(let k=0; k<botData.length; k++){
@@ -42,7 +48,7 @@ async function createBubble(req, res){
             }
         }
 
-
+        // feedRef
         const feedRef = {
             userID,
             postID,
@@ -55,8 +61,7 @@ async function createBubble(req, res){
             }
         }
 
-
-
+        
         const docz = doc(database, 'users', userID)
         await getDoc(docz).then(async(mainDocsnap)=>{
             const data = mainDocsnap.data()
@@ -99,6 +104,9 @@ async function createBubble(req, res){
                     })
                     // const theirFeed = [...docSnap.data().feed]
                 }
+                res.send({successful: true})
+            }).catch(()=>{
+                res.send({successful: false, message: 'failed to upload bubble'})
             })
 
             // setup bubble creation 
@@ -175,10 +183,12 @@ async function createBubble(req, res){
             //             }
             //         })
             //     }
-            //     // res.send({successful: true})
+                // res.send({successful: true})
             // }).catch(()=>{
             //     res.send({successful: false, message: 'bubble failed to upload to database'})
             // })
+        }).catch(()=>{
+            res.send({successful: false, message: 'failed to upload bubble'})
         })
     }
 
