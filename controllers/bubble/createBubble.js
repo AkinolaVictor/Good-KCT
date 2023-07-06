@@ -20,8 +20,8 @@ async function createBubble(req, res){
     const bubbleName = thisBubble.type
     
     // all file are uploaded on the client side
-    saveData()
-    // saveData_New()
+    // saveData()
+    saveData_New()
 
     async function saveData(){
         // gather all data to be forwarded as bubble
@@ -228,104 +228,86 @@ async function createBubble(req, res){
                 type: bubbleName
             }
         }
-
-
-
-        const docz = doc(database, 'users', userID)
-        await getDoc(docz).then(async(mainDocsnap)=>{
-            const data = mainDocsnap.data()
     
-            let posts = {...data.posts}
-            posts[postID] = thisBubble
-    
-            const myBubbles=[...data.bubbles]
-            myBubbles.push(feedRef)
-
-            // update my feed
-            let feed = [...data.feed]
-            feed.push(feedRef)
-    
-            // feeds this post is on
-
-            // setup bubble creation 
-            // New data structure
-    
-            const allBubbleAudience = [...thisBubble.audience]
-            for(let i=0; i<allBubbleAudience.length; i++){
-                thisBubble.activities.iAmOnTheseFeeds[allBubbleAudience[i]] = {
-                    index: Object.keys(thisBubble.activities.iAmOnTheseFeeds).length,
-                    onFeed: true, 
-                    mountedOnDevice: false,
-                    userID: allBubbleAudience[i],
-                    seenAndVerified: false,
-                    replyPath: [],
-                    myActivities: {
-                    }
+        const allBubbleAudience = [...thisBubble.audience]
+        for(let i=0; i<allBubbleAudience.length; i++){
+            thisBubble.activities.iAmOnTheseFeeds[allBubbleAudience[i]] = {
+                index: Object.keys(thisBubble.activities.iAmOnTheseFeeds).length,
+                onFeed: true, 
+                mountedOnDevice: false,
+                userID: allBubbleAudience[i],
+                seenAndVerified: false,
+                replyPath: [],
+                myActivities: {
                 }
             }
-            
-            const bubbleRef = doc(database, 'bubbles', postID)
-            const userBubbleRef = doc(database, 'userbubbles', userID)
-            const userFeedRef = doc(database, 'feeds', userID)
-            // const userRef = doc(database, 'users', userID)
+        }
+        // setup bubble creation 
+        // New data structure
         
-            // create bubble
-            await setDoc(bubbleRef, {...thisBubble}).then(async(result)=>{
-        
-                // update user feed
-                await getDoc(userFeedRef).then((docsnap)=>{
-                    if(docsnap.exists()){
-                        const bubbles = [...docsnap.data().bubbles]
-                        bubbles.push(feedRef)
-                        updateDoc(userFeedRef, {bubbles})
-                    } else {
-                        setDoc(userFeedRef, {
-                            bubbles: [feedRef]
-                        })
-                    }
-                })
-        
-                // update user bubble
-                await getDoc(userBubbleRef).then((docsnap)=>{
-                    if(docsnap.exists()){
-                        const bubbles = [...docsnap.data().bubbles]
-                        bubbles.push(feedRef)
-                        updateDoc(userBubbleRef, {bubbles})
-                    } else {
-                        setDoc(userBubbleRef, {
-                            bubbles: [feedRef]
-                        })
-                    }
-                })
+        const bubbleRef = doc(database, 'bubbles', postID)
+        const userBubbleRef = doc(database, 'userBubbles', userID)
+        const userFeedRef = doc(database, 'feeds', userID)
+        // const userRef = doc(database, 'users', userID)
     
-                // // add to user
-                // await getDoc(userRef).then((docsnap)=>{
-                //     const postIDs = [...docsnap.data().postIDs]
-                //     postIDs.push(feedRef)
-                //     updateDoc(userRef, {postIDs})
-                // })
-                
-                // give feed to others
-                // const allBubbleAudience = [...thisBubble.audience]
-                for(let i=0; i<allBubbleAudience.length; i++){
-                    const followersRef = doc(database, 'feeds', allBubbleAudience[i])
-                    await getDoc(followersRef).then(async(docsnap)=>{
-                        if(docsnap.exists()){
-                            const bubbles = [...docsnap.data().bubbles]
-                            bubbles.push(feedRef)
-                            await updateDoc(followersRef, {bubbles})
-                        } else {
-                            setDoc(followersRef, {
-                                bubbles: [feedRef]
-                            })
-                        }
+        // create bubble
+        await setDoc(bubbleRef, {...thisBubble}).then(async(result)=>{
+    
+            // update user feed
+            await getDoc(userFeedRef).then((docsnap)=>{
+                if(docsnap.exists()){
+                    const bubbles = [...docsnap.data().bubbles]
+                    bubbles.push(feedRef)
+                    updateDoc(userFeedRef, {bubbles})
+                } else {
+                    setDoc(userFeedRef, {
+                        bubbles: [feedRef]
                     })
                 }
-                // res.send({successful: true})
-            }).catch(()=>{
-                res.send({successful: false, message: 'bubble failed to upload to database'})
             })
+    
+            // update user bubble
+            await getDoc(userBubbleRef).then((docsnap)=>{
+                if(docsnap.exists()){
+                    const bubbles = [...docsnap.data().bubbles]
+                    bubbles.push(feedRef)
+                    updateDoc(userBubbleRef, {bubbles})
+                } else {
+                    setDoc(userBubbleRef, {
+                        bubbles: [feedRef]
+                    })
+                }
+            })
+
+            // // add to user
+            // await getDoc(userRef).then((docsnap)=>{
+            //     const postIDs = [...docsnap.data().postIDs]
+            //     postIDs.push(feedRef)
+            //     updateDoc(userRef, {postIDs})
+            // })
+            
+            // give feed to others
+            // const allBubbleAudience = [...thisBubble.audience]
+            for(let i=0; i<allBubbleAudience.length; i++){
+                const followersRef = doc(database, 'feeds', allBubbleAudience[i])
+                await getDoc(followersRef).then(async(docsnap)=>{
+                    if(docsnap.exists()){
+                        const bubbles = [...docsnap.data().bubbles]
+                        bubbles.push(feedRef)
+                        await updateDoc(followersRef, {bubbles})
+                    } else {
+                        setDoc(followersRef, {
+                            bubbles: [feedRef]
+                        })
+                    }
+                })
+            }
+
+            res.send({successful: true})
+        }).catch(()=>{
+            res.send({successful: false, message: 'bubble failed to upload to database'})
         })
+
     }
 }
 

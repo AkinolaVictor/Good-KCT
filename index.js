@@ -8,11 +8,10 @@ const cors = require("cors")
 // const userAuth = require('./api/createAccount')
 
 // routes
-const createAccount = require('./api/createAccount')
 const dbObj = require('./api/dbObj')
-const signIn = require('./api/signIn')
 const bot = require('./api/botApi')
 const bubble = require('./api/bubbleApi')
+const user = require('./api/userApi')
 
 app.use(helmet())
 app.use(express.json())
@@ -23,8 +22,7 @@ app.use(cors())
 app.use(morgan("dev")) //dev, tiny, ...
 
 app.use('/api', dbObj)
-app.use('/api/user', createAccount)
-app.use('/api/user', signIn)
+app.use('/api/user', user)
 app.use('/api/bot', bot)
 app.use('/api/bubble', bubble)
 
