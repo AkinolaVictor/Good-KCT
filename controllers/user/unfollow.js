@@ -7,7 +7,7 @@ async function unFollow(req, res){
     const userID = req.body.userID // user.id
     const userName = req.body.userName // user.userInfo.fullname
     const newUserID = req.body.newUserID // props.data.id
-    const newUserName = req.body.newUserName // props.data.userInfo.fullname
+    // const newUserName = req.body.newUserName // props.data.userInfo.fullname
 
     async function FollowNotifier(which){
         if(userID !== newUserID){

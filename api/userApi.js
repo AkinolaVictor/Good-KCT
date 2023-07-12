@@ -27,7 +27,7 @@ router.post('/addAudience', addAudience)
 router.post('/deleteAudience', deleteAudience)
 
 // delete Audience
-router.post('/deleteAudience', editAudience)
+router.post('/editAudience', editAudience)
 
 
 

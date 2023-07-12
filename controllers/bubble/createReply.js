@@ -118,6 +118,7 @@ async function createReply_Old(req, res){
 
         // update user
         // if(path.length>0 && (props.replyData.userID!==creatorID || props.replyData.userID!==userID)){
+        // console.log(parentID);
         if(path.length>0 && (parentID!==userID)){
             const mainUserNotificationsRef = doc(database, 'notifications', parentID)
 
@@ -166,64 +167,72 @@ async function createReply_Old(req, res){
         }
     }
     
-    const docz = doc(database, 'users', creatorID)
-    await getDoc(docz).then(async(docSnap)=>{
-        let posts = {...docSnap.data().posts}
-        const thisPost = posts[postID]
-        if(thisPost){
-            if(posts[postID].activities.iAmOnTheseFeeds[userID].myActivities.replied){
-                data.replyNumber = posts[postID].activities.iAmOnTheseFeeds[userID].replyNumber
+    // const docz = doc(database, 'users', creatorID)
+    const docz = doc(database, 'bubbles', postID)
+    await getDoc(docz).then(async(docsnap)=>{
+        if(docsnap.exists()){
+            let posts = {...docsnap.data()}
+            // const thisPost = posts
+            if(posts.activities.iAmOnTheseFeeds[userID].myActivities.replied){
+                data.replyNumber = posts.activities.iAmOnTheseFeeds[userID].replyNumber
             } else {
                 // increment activity index
-                if(posts[postID].activities.iAmOnTheseFeeds[userID].myActivities.activityIndex){
+                if(posts.activities.iAmOnTheseFeeds[userID].myActivities.activityIndex){
 
                 } else {
-                    posts[postID].activities.lastActivityIndex++
-                    posts[postID].activities.iAmOnTheseFeeds[userID].myActivities.activityIndex=posts[postID].activities.lastActivityIndex
+                    posts.activities.lastActivityIndex++
+                    posts.activities.iAmOnTheseFeeds[userID].myActivities.activityIndex = posts.activities.lastActivityIndex
                 }
 
                 // give a number to the person replying
-                if(posts[postID].activities.iAmOnTheseFeeds[userID].replyNumber){
-                    data.replyNumber = posts[postID].activities.iAmOnTheseFeeds[userID].replyNumber
+                if(posts.activities.iAmOnTheseFeeds[userID].replyNumber){
+                    data.replyNumber = posts.activities.iAmOnTheseFeeds[userID].replyNumber
                 }else {
-                    const allOnFeed = [...Object.values(posts[postID].activities.iAmOnTheseFeeds)]
+                    const allOnFeed = [...Object.values(posts.activities.iAmOnTheseFeeds)]
                     let count = 0
+
                     for(let i=0; i<allOnFeed.length; i++){
                         const current = allOnFeed[i]
                         if(current.replyNumber){
                             count++
                         }
                     }
-                    posts[postID].activities.iAmOnTheseFeeds[userID].replyNumber=count+1
-                    data.replyNumber = posts[postID].activities.iAmOnTheseFeeds[userID].replyNumber
+
+                    posts.activities.iAmOnTheseFeeds[userID].replyNumber = count+1
+                    data.replyNumber = posts.activities.iAmOnTheseFeeds[userID].replyNumber
                 }
 
-                posts[postID].activities.iAmOnTheseFeeds[userID].seenAndVerified=true
-                posts[postID].activities.iAmOnTheseFeeds[userID].myActivities.replied=true
+                posts.activities.iAmOnTheseFeeds[userID].seenAndVerified=true
+                posts.activities.iAmOnTheseFeeds[userID].myActivities.replied=true
                 // updateDoc(docz, {posts})
             }
 
             if(path.length === 0){
                 // if(thisPost){
-                    posts[postID].reply.push(data)
-                    await updateDoc(docz, {posts}).then(()=>{
-                        res.send({successful: true})
+                    posts.reply.push(data)
+                    const reply = posts.reply
+                    await updateDoc(docz, {reply}).then(()=>{
+                    // await updateDoc(docz, {posts}).then(()=>{
+                        // res.send({successful: true})
                     }).catch(()=>{
                         res.send({successful: false, message: 'unable to upload reply'})
                     })
                 // }
             }else if(path.length === 1) {
                 // if(thisPost){
-                    posts[postID].reply[path[0]].reply.push(data)
-                    await updateDoc(docz, {posts}).then(()=>{
-                        res.send({successful: true})
+                    posts.reply[path[0]].reply.push(data)
+                    const reply = posts.reply
+                    await updateDoc(docz, {reply}).then(()=>{
+                        // console.log('i actually worked at 2');
+                    // await updateDoc(docz, {posts}).then(()=>{
+                        // res.send({successful: true})
                     }).catch(()=>{
                         res.send({successful: false, message: 'unable to upload reply'})
                     })
                 // }
             }else if(path.length>1){
                 // buildReply(path)
-                const reply = posts[postID].reply
+                const reply = posts.reply
 
                 let overallRep = [];
                 let eachReply = [];
@@ -264,42 +273,55 @@ async function createReply_Old(req, res){
                     final = dR[0]
                 }
                 // if(thisPost){
-                    posts[postID].reply[path[0]] = final
-                    await updateDoc(docz, {posts}).then(()=>{
-                        res.send({successful: true})
+                    posts.reply[path[0]] = final
+                    const finalReply = posts.reply
+                    await updateDoc(docz, {reply: finalReply}).then(()=>{
+                    // await updateDoc(docz, {posts}).then(()=>{
+                        // res.send({successful: true})
                     }).catch(()=>{
-                        res.send({successful: false, message: 'unable to upload reply'})
+                        res.send({successful: false, message: 'unable to upload this reply'})
                     })
                 // }
             }
 
             // update last activity
-            updateLastActivity(posts[postID], 'replied', ()=>{updateDoc(docz, {posts})})
+            const activities = posts.activities
+            updateLastActivity(posts, 'replied', ()=>{updateDoc(docz, {activities})})
             
             // notify user(s)
             ReplyNotifier()
-            
             // update yourself
             if(creatorID!==userID){
-                const userRef = doc(database, 'users', userID)
-                await getDoc(userRef).then(async(userDoc)=>{
-                    const replies = [...userDoc.data().replies]
-                    const allLikesID = []
-                    for(let i=0; i<replies.length; i++){
-                        if(dataType(replies[i])==='object'){
-                            allLikesID.push(replies[i].postID)
+                // const userRef = doc(database, 'users', userID)
+                const userRepliesRef = doc(database, 'userReplies', userID)
+                await getDoc(userRepliesRef).then(async(userReplies)=>{
+                    if(userReplies.exists()){
+                        const bubbles = [...userReplies.data().bubbles]
+                        const allLikesID = []
+                        for(let i=0; i<bubbles.length; i++){
+                            if(dataType(bubbles[i])==='object'){
+                                allLikesID.push(bubbles[i].postID)
+                            }
                         }
-                    }
-
-                    if(!allLikesID.includes(postID)){
-                        replies.push(refDoc)
-                        await updateDoc(userRef, {replies})
+    
+                        if(!allLikesID.includes(postID)){
+                            bubbles.push(refDoc)
+                            await updateDoc(userRepliesRef, {bubbles})
+                        }
+                    } else {
+                        setDoc(userRepliesRef, {bubbles: [refDoc]})
                     }
                 })
             }
+        } else {
+            res.send({successful: false, message: 'data not found'})
         }
+    }).then(()=>{
+        res.send({successful: true})
+        // console.log('done');
     }).catch(()=>{
-        res.send({successful: false, message: 'Network error: unable to upload bubble'})
+        // console.log('failed');
+        res.send({successful: false, message: 'Network error: unable to upload reply'})
     })
 }
 

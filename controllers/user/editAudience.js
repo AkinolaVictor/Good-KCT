@@ -1,6 +1,6 @@
-const {doc, getDoc, updateDoc, setDoc, deleteField} = require('firebase/firestore')
+const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
 // const {getDownloadURL, ref, uploadBytes} = require('firebase/storage')
-// const date = require('date-and-time')
+const date = require('date-and-time')
 const {database} = require('../../database/firebase')
 
 async function editAudience(req, res){
@@ -12,19 +12,18 @@ async function editAudience(req, res){
     await getDoc(audienceRef).then(async(docsnap)=>{
         if(docsnap.exists()){
             const audience = {...docsnap.data()}
-            if(audience[data.name]){
-                await updateDoc(audienceRef, {[data.name]: deleteField()})
-            } else {
-                res.send({successful: false, message: 'audience not found'})
-            }
+            audience[data.name] = data
+            // update audience
+            await updateDoc(audienceRef, {...audience})
         } else {
-            res.send({successful: false, message: 'document not found'})
+            res.send({successful: false, message: 'Audience not found'})
         }
     }).then(()=>{
         res.send({successful: true})
     }).catch(()=>{
         res.send({successful: false, message: 'An error occured from the server side'})
     })
+
     
 }
 

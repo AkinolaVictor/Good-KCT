@@ -5,7 +5,7 @@ const { v4: uuidv4 } = require('uuid')
 const {database} = require('../../database/firebase')
 const { dataType } = require('../../utils/utilsExport')
 
-async function likeBubble(req, res){
+async function dislikeBubble(req, res){
     const userID = req.body.userID // user.id
     const userFullname = req.body.userFullname // user.userInfo.fullname
     const thisBubble = {...req.body.thisBubble}
@@ -81,84 +81,32 @@ async function likeBubble(req, res){
         }
     }
 
-    function updateLastActivity(thisPost, activity, updateFunc){
-        function getDate(){
-            const now = new Date()
-            const time = date.format(now, 'h:mm:ssA')
-            const when = date.format(now, 'DD/MM/YYYY')
-            const dateString = date.format(now, 'YYYY,MM,DD,HH,mm,ss')
-            return {
-                time,
-                date: when,
-                dateString
-            }
-        }
-
-        if(!thisPost.activities.lastActivities){
-            thisPost.activities.lastActivities=[]
-        }
-
-        const lastActivities = thisPost.activities.lastActivities
-        const activityData = {
-            activity,
-            userID: userID,
-            date: getDate()
-        }
-        if(lastActivities.length>0){
-            const last = lastActivities[lastActivities.length - 1]
-            if(last.activity!==activity){
-                for(let i=0; i<lastActivities.length; i++){
-                    const current = lastActivities[i]
-                    if(current.userID===userID && current.activity===activity){
-                        break
-                    }
-                    if(i===lastActivities.length-1){
-                        thisPost.activities.lastActivities.push(activityData)
-                        if(thisPost.activities.lastActivities.length>5){
-                            thisPost.activities.lastActivities.shift()
-                        }
-                        updateFunc()
-                    }
-                }
-            }
-        } else {
-            thisPost.activities.lastActivities.push(activityData)
-            updateFunc()
-        }
-    }
-
     const docz = doc(database, 'bubbles', thisBubble.postID)
     await getDoc(docz).then(async(docsnap)=>{
         if(docsnap.exists()){
             const posts = {...docsnap.data()}
-            if(!posts.like.includes(userID)){
-                posts.like.push(userID)
+            if(posts.like.includes(userID)){
+                // posts.like.push(userID)
+                const postLikes = posts.like
+                for(let i=0; i<postLikes.length; i++){
+                    if(postLikes[i]===userID){
+                        posts.like.splice(i, 1)
+                        break
+                    }
+                }
                 
                 if(!posts.totalLikes){
-                    posts.totalLikes = 1
+                    posts.totalLikes = 0
                 } else {
-                    posts.totalLikes++
+                    posts.totalLikes--
                 }
-
-                if(posts.activities.iAmOnTheseFeeds[userID].myActivities.activityIndex){
-                } else {
-                    posts.activities.lastActivityIndex++
-                    posts.activities.iAmOnTheseFeeds[userID].myActivities.activityIndex=posts.activities.lastActivityIndex
-                }
-
-                posts.activities.iAmOnTheseFeeds[userID].myActivities.liked=true
-                posts.activities.iAmOnTheseFeeds[userID].seenAndVerified=true
-                const activities = posts.activities
-                // update last activities
-                // updateLastActivity(posts, 'liked', ()=>{updateDoc(docz, {...posts})})
-                updateLastActivity(posts, 'liked', ()=>{updateDoc(docz, {activities})})
                 
                 // console.log(posts.activities)
                 const like = posts.like
                 await updateDoc(docz, {like}).then(async()=>{
                 // await updateDoc(docz, {...posts}).then(async()=>{
                     // console.log('done');
-                    LikeNotifier('like')
+                    LikeNotifier('dislikes')
                     
                     if(thisBubble.userID!==userID){
                         const userLikesRef = doc(database, 'userLikes', userID)
@@ -166,21 +114,19 @@ async function likeBubble(req, res){
                             if(userLikes.exists()){
                                 const bubbles = [...userLikes.data().bubbles]
                                 const allLikesID = []
-
+                                
                                 for(let i=0; i<bubbles.length; i++){
                                     if(dataType(bubbles[i])==='object'){
-                                        allLikesID.push(bubbles[i].postID)
+                                        // allLikesID.push(bubbles[i].postID)
+                                        if(bubbles[i].postID === thisBubble.postID){
+                                            bubbles.splice(i, 1)
+                                        }
+                                    }
+
+                                    if(i===bubbles.length-1){
+                                        updateDoc(userLikesRef, {bubbles})
                                     }
                                 }
-
-                                if(!allLikesID.includes(thisBubble.postID)){
-                                    bubbles.push(thisBubble.refDoc)
-                                    updateDoc(userLikesRef, {bubbles})
-                                }
-                            } else {
-                                setDoc(userLikesRef, {
-                                    bubbles: [thisBubble.refDoc]
-                                })
                             }
                         })
                     }
@@ -199,4 +145,4 @@ async function likeBubble(req, res){
     })
 }
 
-module.exports = likeBubble
+module.exports = dislikeBubble

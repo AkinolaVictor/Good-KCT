@@ -20,10 +20,10 @@ async function createBubble(req, res){
     const bubbleName = thisBubble.type
     
     // all file are uploaded on the client side
-    // saveData()
+    // saveData_old()
     saveData_New()
 
-    async function saveData(){
+    async function saveData_old(){
         // gather all data to be forwarded as bubble
         // update settings time for self-destructure
 

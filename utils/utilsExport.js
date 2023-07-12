@@ -1,8 +1,10 @@
 const dataType = require("./dataType")
+const updateLastActivity = require("./updateLastActivity")
 
 
 const registered_utilities = {
-    dataType
+    dataType,
+    updateLastActivity
 }
 
 module.exports = {...registered_utilities}
