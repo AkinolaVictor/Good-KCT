@@ -10,7 +10,6 @@ async function deleteBot(req, res){
     await getDoc(userRef).then(async(snapShot)=>{
         const data = snapShot.data()
         const bots = [...data.bots]
-        const posts = {...data.posts}
 
         for(let i=0; i<bots.length; i++){
             if(bots[i] === id){
@@ -20,16 +19,23 @@ async function deleteBot(req, res){
 
         // you must detatch bot from all posts its engaged in before deleting it
         for(let i=0; i<botPosts.length; i++){
-            if(posts[botPosts[i]]){
-                if(posts[botPosts[i]].settings.botData[id]){
-                    delete posts[botPosts[i]].settings.botData[id]
+            const bubbleRef = doc(database, 'bubbles', botPosts[i])
+            await getDoc(bubbleRef).then((docsnap)=>{
+                if(docsnap.exists()){
+                    const post = {...docsnap.data()}
+                    if(post.settings.botData[id]){
+                        delete post.settings.botData[id]
+                        const settings = post.settings
+                        updateDoc(bubbleRef, {settings})
+                    }
                 }
-            }
+            })
         }
 
-        await updateDoc(userRef, {bots, posts})
+        await updateDoc(userRef, {bots})
 
         await deleteDoc(doc(database, "bots", id))
+    }).then(()=>{
         res.send({successful:true})
     }).catch(()=>{
         res.send({successful:false})

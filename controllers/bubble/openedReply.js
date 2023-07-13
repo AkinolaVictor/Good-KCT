@@ -65,7 +65,7 @@ async function openedReply(req, res){
                     }
                     if(i===lastActivities.length-1){
                         thisPost.activities.lastActivities.push(activityData)
-                        if(thisPost.activities.lastActivities.length>5){
+                        if(thisPost.activities.lastActivities.length>10){
                             thisPost.activities.lastActivities.shift()
                         }
                         updateFunc()

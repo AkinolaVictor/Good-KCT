@@ -7,37 +7,34 @@ async function disengageBot(req, res){
     const postID = req.body.postID
     // const taskID = req.body.taskID
 
-    const userRef = doc(database, 'users', userID)
+    // const userRef = doc(database, 'users', userID)
+    const userRef = doc(database, 'bubbles', postID)
     await getDoc(userRef).then(async(docsnap)=>{
-        const posts = {...docsnap.data().posts}
-        if(posts[postID]){
-            const allBots = posts[postID].settings.botData
+        if(docsnap.exists()){
+            const post = {...docsnap.data()}
+            const allBots = post.settings.botData
             if(allBots[botID]){
                 const botRef = doc(database, 'bots', botID)
                 await getDoc(botRef).then(async(docsnap)=>{
+                    const bot = {...docsnap.data()}
                     const data = [...docsnap.data().data]
                     for(let i=0; i<data.length; i++){
                         if(data[i]===postID){
                             data.splice(i, 1)
                         }
                     }
-                    await updateDoc(botRef, {data}).then(()=>{
-                        res.send({successful:true, bot: docsnap.data()})
-                    }).catch(()=>{
-                        res.send({successful:false})
+                    await updateDoc(botRef, {data}).then(async()=>{
+                        delete post.settings.botData[botID]
+                        const settings = post.settings
+                        await updateDoc(userRef, {settings})
+                        bot.data = data
+                        res.send({successful: true, bot: bot})
                     })
-                }).catch(()=>{
-                    res.send({successful:false})
-                })
-                delete posts[postID].settings.botData[botID]
-
-                await updateDoc(userRef, {posts}).catch(()=>{
-                    res.send({successful:false})
                 })
             }
         }
     }).catch(()=>{
-        res.send({successful:false})
+        res.send({successful:false, message: 'Server Error: failed to disengage bot'})
     })
 }
 

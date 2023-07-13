@@ -8,7 +8,7 @@ async function deleteBubbleForMe(req, res){
     const userID = req.body.userID
     // const postID = req.body.postID // thisBubble.postID
     const thisBubble = {...req.body.thisBubble}
-    // console.log(thisBubble/.);
+    // console.log(thisBubble.);
     if(thisBubble.userID!==userID){
         const feedsRef = doc(database, 'feeds', userID)
         await getDoc(feedsRef).then(async(docsnap)=>{

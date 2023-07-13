@@ -6,8 +6,6 @@ const {database} = require('../../database/firebase')
 const { dataType } = require('../../utils/utilsExport')
 
 async function shareBubble(req, res){
-    res.send({successful: false, message: 'Network error: Share currently under development'})
-    return
     const userID = req.body.userID // userID
     const thisBubble = {...req.body.thisBubble} //refDoc, userID, shareStructure
     const fullname = req.body.userFullname // user.userInfo.fullname
@@ -104,7 +102,7 @@ async function shareBubble(req, res){
                     }
                     if(i===lastActivities.length-1){
                         thisPost.activities.lastActivities.push(activityData)
-                        if(thisPost.activities.lastActivities.length>5){
+                        if(thisPost.activities.lastActivities.length>10){
                             thisPost.activities.lastActivities.shift()
                         }
                         updateFunc()
