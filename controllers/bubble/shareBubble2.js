@@ -335,47 +335,6 @@ async function shareBubble(req, res){
                             // feed.push(feedRef)
                             
                             // update yourself if you are sharing a reply
-                            // if(path.length){
-                            //     // const myFeedRef = doc(database, 'users', userID)
-                            //     const myFeedRef = doc(database, 'feeds', userID)
-                            //     await getDoc(myFeedRef).then(async(docsnap2)=>{
-                            //         if(docsnap2.exists()){
-                            //             const bubbles = [...docsnap2.data().bubbles]
-                        
-                            //             const current = posts.activities.iAmOnTheseFeeds[userID].replyPath
-                            //             // check if i have shared this particular reply before, if not, share me the bubble
-                            //             // const shareReplyPath = [...path].toString()
-                            //             // if(!current.includes(`${path}`)){
-                            //             if(!current.includes(sharedReplyPath)){
-                            //                 // increase count
-                            //                 if(!posts.activities.allWhoHaveShared[userID]){
-                            //                     posts.activities.shares++
-                            //                     posts.activities.allWhoHaveShared[userID]=true
-                            //                 }
-                        
-                            //                 // update
-                            //                 // posts.activities.iAmOnTheseFeeds[userID].replyPath.push(`${path}`)
-                            //                 const allFeedData = []
-                                            
-                            //                 for(let j=0; j<bubbles.length; j++){
-                            //                     if(bubbles[j].data){
-                            //                         if(bubbles[j].data.path){
-                            //                             const pathString = [...bubbles[j].data.path].toString()
-                            //                             allFeedData.push(pathString)
-                            //                         }
-                            //                     }
-                            //                 }
-                                            
-                            //                 if(!allFeedData.includes(sharedReplyPath)){
-                            //                     posts.activities.iAmOnTheseFeeds[userID].replyPath.push(sharedReplyPath)
-                            //                     bubbles.push(feedRef)
-                            //                     await updateDoc(myFeedRef, {bubbles})
-                            //                 }
-                            //             }
-                            //         }
-                            //     })
-                            // }
-
                             if(path.length){
                                 // const myFeedRef = doc(database, 'users', userID)
                                 const myFeedRef = doc(database, 'feeds', userID)
@@ -384,7 +343,10 @@ async function shareBubble(req, res){
                                         const bubbles = [...docsnap2.data().bubbles]
                         
                                         const current = posts.activities.iAmOnTheseFeeds[userID].replyPath
-                                        if(!current.includes(`${path}`)){
+                                        // check if i have shared this particular reply before, if not, share me the bubble
+                                        // const shareReplyPath = [...path].toString()
+                                        // if(!current.includes(`${path}`)){
+                                        if(!current.includes(sharedReplyPath)){
                                             // increase count
                                             if(!posts.activities.allWhoHaveShared[userID]){
                                                 posts.activities.shares++
@@ -392,13 +354,28 @@ async function shareBubble(req, res){
                                             }
                         
                                             // update
-                                            posts.activities.iAmOnTheseFeeds[userID].replyPath.push(`${path}`)
-                                            bubbles.push(feedRef)
-                                            await updateDoc(myFeedRef, {bubbles})
+                                            // posts.activities.iAmOnTheseFeeds[userID].replyPath.push(`${path}`)
+                                            const allFeedData = []
+                                            
+                                            for(let j=0; j<bubbles.length; j++){
+                                                if(bubbles[j].data){
+                                                    if(bubbles[j].data.path){
+                                                        const pathString = [...bubbles[j].data.path].toString()
+                                                        allFeedData.push(pathString)
+                                                    }
+                                                }
+                                            }
+                                            
+                                            if(!allFeedData.includes(sharedReplyPath)){
+                                                posts.activities.iAmOnTheseFeeds[userID].replyPath.push(sharedReplyPath)
+                                                bubbles.push(feedRef)
+                                                await updateDoc(myFeedRef, {bubbles})
+                                            }
                                         }
                                     }
                                 })
                             }
+                            // }
                 
                             // share with all your followers
                             for(let i=0; i<followers.length; i++){
@@ -453,33 +430,68 @@ async function shareBubble(req, res){
                                     }
                                     
                                     if(!posts.activities.iAmOnTheseFeeds[followers[i]]){
-                                        posts.activities.iAmOnTheseFeeds[followers[i]]={
-                                            index: Object.keys(posts.activities.iAmOnTheseFeeds).length,
-                                            onFeed: true, 
-                                            userID: followers[i],
-                                            mountedOnDevice: false,
-                                            seenAndVerified: false,
-                                            replyPath: [`${path}`],
-                                            bots: {},
-                                            myActivities: {
-                                                
-                                            }
-                                        }
                                         const followersRef = doc(database, 'feeds', followers[i])
                                         await getDoc(followersRef).then(async(docsnap4)=>{
                                             const bubbles = [...docsnap4.data().bubbles]
-                                            bubbles.push(feedRef)
-                                            await updateDoc(followersRef, {bubbles})
+                                            // bubbles.push(feedRef)
+                                            // await updateDoc(followersRef, {bubbles})
+
+                                            const allFeedData = []
+
+                                            for(let j=0; j<bubbles.length; j++){
+                                                if(bubbles[j].data){
+                                                    if(bubbles[j].data.path){
+                                                        const pathString = [...bubbles[j].data.path].toString()
+                                                        allFeedData.push(pathString)
+                                                    }
+                                                }
+                                            }
+
+                                            if(!allFeedData.includes(sharedReplyPath)){
+                                                posts.activities.iAmOnTheseFeeds[followers[i]]={
+                                                    index: Object.keys(posts.activities.iAmOnTheseFeeds).length,
+                                                    onFeed: true, 
+                                                    userID: followers[i],
+                                                    mountedOnDevice: false,
+                                                    seenAndVerified: false,
+                                                    replyPath: [`${path}`],
+                                                    bots: {},
+                                                    myActivities: {
+                                                        
+                                                    }
+                                                }
+                                                
+                                                bubbles.push(feedRef)
+                                                await updateDoc(followersRef, {bubbles})
+                                            }
                                         })
                                     } else {
                                         const current = posts.activities.iAmOnTheseFeeds[followers[i]].replyPath
-                                        if(!current.includes(`${path}`)){
-                                            posts.activities.iAmOnTheseFeeds[followers[i]].replyPath.push(`${path}`)
+                                        // if(!current.includes(`${path}`)){
+                                        if(!current.includes(sharedReplyPath)){
+                                            // posts.activities.iAmOnTheseFeeds[followers[i]].replyPath.push(`${path}`)
                                             const followersRef = doc(database, 'feeds', followers[i])
                                             await getDoc(followersRef).then(async(docsnap4)=>{
                                                 const bubbles = [...docsnap4.data().bubbles]
-                                                bubbles.push(feedRef)
-                                                await updateDoc(followersRef, {bubbles})
+                                                // bubbles.push(feedRef)
+                                                // await updateDoc(followersRef, {bubbles})
+                                                
+                                                const allFeedData = []
+                                                
+                                                for(let j=0; j<bubbles.length; j++){
+                                                    if(bubbles[j].data){
+                                                        if(bubbles[j].data.path){
+                                                            const pathString = [...bubbles[j].data.path].toString()
+                                                            allFeedData.push(pathString)
+                                                        }
+                                                    }
+                                                }
+                                                
+                                                if(!allFeedData.includes(sharedReplyPath)){
+                                                    posts.activities.iAmOnTheseFeeds[followers[i]].replyPath.push(sharedReplyPath)
+                                                    bubbles.push(feedRef)
+                                                    await updateDoc(followersRef, {bubbles})
+                                                }
                                             })
                                         }else{
                                             continue

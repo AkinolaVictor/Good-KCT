@@ -168,8 +168,11 @@ async function likeReply(req, res){
     
             // destructured replies
             let dR = [...overallRep]
-            // add like
-            dR[dR.length-1].like.push(userID)
+            // add like if its absent
+            if(!(dR[dR.length-1].like.includes(userID))){
+                dR[dR.length-1].like.push(userID)
+            }
+            
             let final;
             // loop through path and create final
             for(let i=path.length-1; i>0; i=i-1){

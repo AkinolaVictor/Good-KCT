@@ -98,14 +98,16 @@ async function unFollow(req, res){
                 for(let i=0; i<auds.length; i++){
                     const current = auds[i]
                     const subAud = audience[current].audience
-                    for(let j=0; j<subAud.length; j++){
-                        if(subAud[j].id===userID){
-                            audience[auds[i]].audience.splice(j, 1)
+                    if(subAud.length){
+                        for(let j=0; j<subAud.length; j++){
+                            if(subAud[j].id===userID){
+                                audience[auds[i]].audience.splice(j, 1)
+                            }
                         }
                     }
                 }
                 // update audience
-                await updateDoc(audienceRef, {audience})
+                await updateDoc(audienceRef, {...audience})
                 
             }
         })
