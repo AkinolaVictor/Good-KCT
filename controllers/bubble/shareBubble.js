@@ -233,20 +233,6 @@ async function shareBubble(req, res){
         if(docsnap.exists()){
             let posts = {...docsnap.data()}
             
-                // check for more of this conditional changes in case of future updates
-                if(!posts.activities.allWhoHaveShared[userID]){
-                    posts.activities.shares++
-                    posts.activities.allWhoHaveShared[userID] = true
-                }
-    
-                if(posts.activities.iAmOnTheseFeeds[userID].myActivities.activityIndex){
-    
-                } else {
-                    posts.activities.lastActivityIndex++
-                    posts.activities.iAmOnTheseFeeds[userID].myActivities.activityIndex = posts.activities.lastActivityIndex
-                }
-                posts.activities.iAmOnTheseFeeds[userID].myActivities.shared = true
-                posts.activities.iAmOnTheseFeeds[userID].seenAndVerified = true
                 
                 let pathOfShare = [...thisBubble.refDoc.sharePath]
                 const discernPrevShares = () => {
@@ -277,14 +263,57 @@ async function shareBubble(req, res){
                     }
                 }
     
-                // request share permission
-                if(
-                    shareSettings.sharePermission=='Request permission for all'||
-                    shareSettings.sharePermission=='Request permission only for non-followers'||
-                    shareSettings.sharePermission=='Request permission only for followers'
-                ){
-                    
-                    shareRequest(feedRef)
+                const feedRequestRef = {
+                    userID:  thisBubble.userID,
+                    postID:thisBubble.postID,
+                    type: 'ShareRef',
+                    status: 'active',
+                    sharePath: thisBubble.refDoc.sharePath,
+                    data: {
+                        ...thisBubble.refDoc.data,
+                        type: 'Merge',
+                        depth: replyPath.length,
+                        path: replyPath,
+                        mergeReply: each,
+                        currentSharer: fullname
+                    }
+                }
+
+                
+                const userFollowersDoc = doc(database, 'followers', thisBubble.userID)
+                await getDoc(userFollowersDoc).then(async(docsnap)=>{
+                    if(docsnap.exists()){
+                        const creatorFollowers = {...docsnap.data()}
+                        // request share permission
+                        // if i am the creator, just share
+                        if(thisBubble.userID===userID){
+                            shareBubble()
+                        } else {
+                            // if i am not the creator
+                            if(shareSettings.sharePermission=='Request permission for all'){
+                                sendShareRequest(feedRequestRef)
+                            } else if(shareSettings.sharePermission=='Request permission only for followers'){
+                                if(creatorFollowers[userID]){
+                                    sendShareRequest(feedRequestRef)
+                                } else {
+                                    shareBubble()
+                                }
+                            } else if(shareSettings.sharePermission=='Request permission only for non-followers'){
+                                if(!creatorFollowers[userID]){
+                                    sendShareRequest(feedRequestRef)
+                                } else {
+                                    shareBubble()
+                                }
+                            } else {
+                                shareBubble()
+                            }
+                        }
+                    }
+                })
+
+                async function sendShareRequest(feed){
+                    // shareRequest(feedRef)
+                    shareRequest(feed)
                     // const docz = doc(database, 'users', thisBubble.userID)
                     const docz = doc(database, 'bubbles', thisBubble.postID)
                     await getDoc(docz).then(async(snapshot)=>{
@@ -295,15 +324,27 @@ async function shareBubble(req, res){
                             await updateDoc(docz, {activities})
                         }
                     })
+                }
 
-                    return
-                } else {
-                    // console.log('worked', 1);
-                    // const shareStructure = thisBubble.shareStructure
-                    
+                async function shareBubble(){
                     // append to share network
                     // if its not you who shared it last
-                    if( pathOfShare[pathOfShare.length - 1]!==userID){
+                    if(!posts.activities.allWhoHaveShared[userID]){
+                        posts.activities.shares++
+                        posts.activities.allWhoHaveShared[userID] = true
+                    }
+        
+                    if(posts.activities.iAmOnTheseFeeds[userID].myActivities.activityIndex){
+        
+                    } else {
+                        posts.activities.lastActivityIndex++
+                        posts.activities.iAmOnTheseFeeds[userID].myActivities.activityIndex = posts.activities.lastActivityIndex
+                    }
+                    posts.activities.iAmOnTheseFeeds[userID].myActivities.shared = true
+                    posts.activities.iAmOnTheseFeeds[userID].seenAndVerified = true
+
+
+                    if(pathOfShare[pathOfShare.length - 1]!==userID){
                         const mainPath = [...thisBubble.refDoc.sharePath]
                         mainPath.shift()
                         const path2 = [...mainPath]
@@ -335,46 +376,6 @@ async function shareBubble(req, res){
                             // feed.push(feedRef)
                             
                             // update yourself if you are sharing a reply
-                            // if(path.length){
-                            //     // const myFeedRef = doc(database, 'users', userID)
-                            //     const myFeedRef = doc(database, 'feeds', userID)
-                            //     await getDoc(myFeedRef).then(async(docsnap2)=>{
-                            //         if(docsnap2.exists()){
-                            //             const bubbles = [...docsnap2.data().bubbles]
-                        
-                            //             const current = posts.activities.iAmOnTheseFeeds[userID].replyPath
-                            //             // check if i have shared this particular reply before, if not, share me the bubble
-                            //             // const shareReplyPath = [...path].toString()
-                            //             // if(!current.includes(`${path}`)){
-                            //             if(!current.includes(sharedReplyPath)){
-                            //                 // increase count
-                            //                 if(!posts.activities.allWhoHaveShared[userID]){
-                            //                     posts.activities.shares++
-                            //                     posts.activities.allWhoHaveShared[userID]=true
-                            //                 }
-                        
-                            //                 // update
-                            //                 // posts.activities.iAmOnTheseFeeds[userID].replyPath.push(`${path}`)
-                            //                 const allFeedData = []
-                                            
-                            //                 for(let j=0; j<bubbles.length; j++){
-                            //                     if(bubbles[j].data){
-                            //                         if(bubbles[j].data.path){
-                            //                             const pathString = [...bubbles[j].data.path].toString()
-                            //                             allFeedData.push(pathString)
-                            //                         }
-                            //                     }
-                            //                 }
-                                            
-                            //                 if(!allFeedData.includes(sharedReplyPath)){
-                            //                     posts.activities.iAmOnTheseFeeds[userID].replyPath.push(sharedReplyPath)
-                            //                     bubbles.push(feedRef)
-                            //                     await updateDoc(myFeedRef, {bubbles})
-                            //                 }
-                            //             }
-                            //         }
-                            //     })
-                            // }
 
                             if(path.length){
                                 // const myFeedRef = doc(database, 'users', userID)
@@ -385,12 +386,6 @@ async function shareBubble(req, res){
                         
                                         const current = posts.activities.iAmOnTheseFeeds[userID].replyPath
                                         if(!current.includes(`${path}`)){
-                                            // increase count
-                                            if(!posts.activities.allWhoHaveShared[userID]){
-                                                posts.activities.shares++
-                                                posts.activities.allWhoHaveShared[userID]=true
-                                            }
-                        
                                             // update
                                             posts.activities.iAmOnTheseFeeds[userID].replyPath.push(`${path}`)
                                             bubbles.push(feedRef)
@@ -447,10 +442,10 @@ async function shareBubble(req, res){
                                     }
                                 } else {
                                     // if you're sharing a reply
-                                    if(!posts.activities.allWhoHaveShared[userID]){
-                                        posts.activities.shares++
-                                        posts.activities.allWhoHaveShared[userID]=true
-                                    }
+                                    // if(!posts.activities.allWhoHaveShared[userID]){
+                                    //     posts.activities.shares++
+                                    //     posts.activities.allWhoHaveShared[userID]=true
+                                    // }
                                     
                                     if(!posts.activities.iAmOnTheseFeeds[followers[i]]){
                                         posts.activities.iAmOnTheseFeeds[followers[i]]={
@@ -566,17 +561,15 @@ async function shareBubble(req, res){
                         }
                     })
                 }
-    
-            
         } else {
             console.log('failed here');
             res.send({successful: false, message: 'Bubble not found'})
         }
     }).then(()=>{
         res.send({successful: true})
-        console.log('success');
+        // console.log('success');
     }).catch(()=>{
-        console.log('failed');
+        // console.log('failed');
         res.send({successful: false, message: 'Error from the server'})
     })
 }

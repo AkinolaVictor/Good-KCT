@@ -17,6 +17,8 @@ const hideBubbleForMe = require('../controllers/bubble/hideBubbleFromMe')
 const deleteReply = require('../controllers/bubble/deleteReply')
 const likeReply = require('../controllers/bubble/likeReply')
 const dislikeReply = require('../controllers/bubble/dislikeReply')
+const denyShareRequest = require('../controllers/bubble/denyShareRequest')
+const confirmShareRequest = require('../controllers/bubble/confirmShareRequest')
 
 // create a bubble
 router.post('/createBubble', createBubble)
@@ -59,6 +61,12 @@ router.post('/impression', impression)
 
 // opened chart
 router.post('/shareBubble', shareBubble)
+
+// opened chart
+router.post('/denyShareRequest', denyShareRequest)
+
+// opened chart
+router.post('/confirmShareRequest', confirmShareRequest)
 
 
 module.exports = router
