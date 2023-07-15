@@ -1,4 +1,4 @@
-const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
+const {doc, getDoc, updateDoc, setDoc, increment} = require('firebase/firestore')
 // const {getDownloadURL, ref, uploadBytes} = require('firebase/storage')
 const { v4: uuidv4 } = require('uuid')
 const date = require('date-and-time')
@@ -57,7 +57,7 @@ async function dislikeReply(req, res){
             posts.reply[path[0]] = final;
 
             const reply = posts.reply
-            await updateDoc(docz, {reply})
+            await updateDoc(docz, {totalLikes: increment(-1), reply})
 
         } else {
             res.send({successful: false, message: 'Bubble not found'})

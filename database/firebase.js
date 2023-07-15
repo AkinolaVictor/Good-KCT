@@ -28,10 +28,22 @@ const firebaseConfig = {
   appConnectionKey_DB: process.env.CONCEALED_APP_CONNECTION_KEY
 };
 
+const firebasePlaygroundConfig = {
+  apiKey: process.env.CONCEALED_PLAYGROUND_DB_API_KEY,
+  authDomain: process.env.CONCEALED_PLAYGROUND_AUTH_DOMAIN,
+  projectId: process.env.CONCEALED_PLAYGROUND_PROJECT_ID,
+  storageBucket: process.env.CONCEALED_PLAYGROUND_STORAGE_BUCKET,
+  messagingSenderId: process.env.CONCEALED_PLAYGROUND_MESSAGING_SENDER_ID,
+  appId: process.env.CONCEALED_PLAYGROUND_APP_ID,
+
+  // frontendConnectionKey
+  appConnectionKey_DB: process.env.CONCEALED_PLAYGROUND_APP_CONNECTION_KEY
+};
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const database = getFirestore(app)
 const storage = getStorage(app)
 
-module.exports = {app, database, storage, config: firebaseConfig}
+module.exports = {app, database, storage, config: firebaseConfig, playgroundConfig: firebasePlaygroundConfig}
 

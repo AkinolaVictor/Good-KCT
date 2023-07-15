@@ -1,4 +1,4 @@
-const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
+const {doc, getDoc, updateDoc, setDoc, increment} = require('firebase/firestore')
 // const {getDownloadURL, ref, uploadBytes, deleteObject} = require('firebase/storage')
 const date = require('date-and-time')
 const { v4: uuidv4 } = require('uuid')
@@ -103,7 +103,7 @@ async function dislikeBubble(req, res){
                 
                 // console.log(posts.activities)
                 const like = posts.like
-                await updateDoc(docz, {like}).then(async()=>{
+                await updateDoc(docz, {totalLikes: increment(-1), like}).then(async()=>{
                 // await updateDoc(docz, {...posts}).then(async()=>{
                     // console.log('done');
                     LikeNotifier('dislikes')

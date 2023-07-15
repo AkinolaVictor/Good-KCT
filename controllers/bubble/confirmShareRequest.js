@@ -255,8 +255,9 @@ async function confirmShareRequest(req, res){
                 posts.activities.iAmOnTheseFeeds[data.userID].seenAndVerified=true
 
                 // increase count
+                posts.activities.shares++
                 if(!posts.activities.allWhoHaveShared[data.userID]){
-                    posts.activities.shares++
+                    // posts.activities.shares++
                     posts.activities.allWhoHaveShared[data.userID]=true
                 }
                 

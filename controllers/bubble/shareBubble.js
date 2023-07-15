@@ -329,8 +329,9 @@ async function shareBubble(req, res){
                 async function shareBubble(){
                     // append to share network
                     // if its not you who shared it last
+                    posts.activities.shares++
                     if(!posts.activities.allWhoHaveShared[userID]){
-                        posts.activities.shares++
+                        // posts.activities.shares++
                         posts.activities.allWhoHaveShared[userID] = true
                     }
         

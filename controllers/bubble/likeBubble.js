@@ -1,4 +1,4 @@
-const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
+const {doc, getDoc, updateDoc, setDoc, increment} = require('firebase/firestore')
 // const {getDownloadURL, ref, uploadBytes, deleteObject} = require('firebase/storage')
 const date = require('date-and-time')
 const { v4: uuidv4 } = require('uuid')
@@ -134,11 +134,11 @@ async function likeBubble(req, res){
             if(!posts.like.includes(userID)){
                 posts.like.push(userID)
                 
-                if(!posts.totalLikes){
-                    posts.totalLikes = 1
-                } else {
-                    posts.totalLikes++
-                }
+                // if(!posts.totalLikes){
+                //     posts.totalLikes = 1
+                // } else {
+                //     posts.totalLikes++
+                // }
 
                 if(posts.activities.iAmOnTheseFeeds[userID].myActivities.activityIndex){
                 } else {
@@ -154,8 +154,9 @@ async function likeBubble(req, res){
                 updateLastActivity(posts, 'liked', ()=>{updateDoc(docz, {activities})})
                 
                 // console.log(posts.activities)
+                // console.log('done-not');
                 const like = posts.like
-                await updateDoc(docz, {like}).then(async()=>{
+                await updateDoc(docz, {totalLikes: increment(1),like}).then(async()=>{
                 // await updateDoc(docz, {...posts}).then(async()=>{
                     // console.log('done');
                     LikeNotifier('like')
