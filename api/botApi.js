@@ -11,6 +11,7 @@ const deactivateTask = require('../controllers/bot/deactivateTask')
 const activateTask = require('../controllers/bot/activateTask')
 const disengageBot = require('../controllers/bot/disengageBot')
 const deleteBotActivity = require('../controllers/bot/deleteBotActivity')
+const botBubbleUpdate = require('../controllers/bot/botBubbleUpdate')
 
 
 // createbot
@@ -39,5 +40,8 @@ router.post('/disengageBot', disengageBot)
 
 // delete bot activity
 router.post('/deleteBotActivity', deleteBotActivity)
+
+// delete bot activity
+router.post('/botBubbleUpdate', botBubbleUpdate)
 
 module.exports = router

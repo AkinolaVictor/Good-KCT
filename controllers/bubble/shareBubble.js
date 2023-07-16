@@ -232,7 +232,21 @@ async function shareBubble(req, res){
     await getDoc(docz).then(async(docsnap)=>{
         if(docsnap.exists()){
             let posts = {...docsnap.data()}
-            
+            // if its not you who shared it last
+                posts.activities.shares++
+                if(!posts.activities.allWhoHaveShared[userID]){
+                    // posts.activities.shares++
+                    posts.activities.allWhoHaveShared[userID] = true
+                }
+
+                if(posts.activities.iAmOnTheseFeeds[userID].myActivities.activityIndex){
+
+                } else {
+                    posts.activities.lastActivityIndex++
+                    posts.activities.iAmOnTheseFeeds[userID].myActivities.activityIndex = posts.activities.lastActivityIndex
+                }
+                posts.activities.iAmOnTheseFeeds[userID].myActivities.shared = true
+                posts.activities.iAmOnTheseFeeds[userID].seenAndVerified = true
                 
                 let pathOfShare = [...thisBubble.refDoc.sharePath]
                 const discernPrevShares = () => {
@@ -327,22 +341,22 @@ async function shareBubble(req, res){
                 }
 
                 async function shareBubble(){
-                    // append to share network
-                    // if its not you who shared it last
-                    posts.activities.shares++
-                    if(!posts.activities.allWhoHaveShared[userID]){
-                        // posts.activities.shares++
-                        posts.activities.allWhoHaveShared[userID] = true
-                    }
+                    // // append to share network
+                    // // if its not you who shared it last
+                    // posts.activities.shares++
+                    // if(!posts.activities.allWhoHaveShared[userID]){
+                    //     // posts.activities.shares++
+                    //     posts.activities.allWhoHaveShared[userID] = true
+                    // }
         
-                    if(posts.activities.iAmOnTheseFeeds[userID].myActivities.activityIndex){
+                    // if(posts.activities.iAmOnTheseFeeds[userID].myActivities.activityIndex){
         
-                    } else {
-                        posts.activities.lastActivityIndex++
-                        posts.activities.iAmOnTheseFeeds[userID].myActivities.activityIndex = posts.activities.lastActivityIndex
-                    }
-                    posts.activities.iAmOnTheseFeeds[userID].myActivities.shared = true
-                    posts.activities.iAmOnTheseFeeds[userID].seenAndVerified = true
+                    // } else {
+                    //     posts.activities.lastActivityIndex++
+                    //     posts.activities.iAmOnTheseFeeds[userID].myActivities.activityIndex = posts.activities.lastActivityIndex
+                    // }
+                    // posts.activities.iAmOnTheseFeeds[userID].myActivities.shared = true
+                    // posts.activities.iAmOnTheseFeeds[userID].seenAndVerified = true
 
 
                     if(pathOfShare[pathOfShare.length - 1]!==userID){

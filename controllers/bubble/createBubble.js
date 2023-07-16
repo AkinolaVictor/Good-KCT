@@ -264,6 +264,8 @@ async function createBubble(req, res){
                         bubbles: [feedRef]
                     })
                 }
+            }).catch(()=>{
+                
             })
     
             // update user bubble
@@ -277,6 +279,8 @@ async function createBubble(req, res){
                         bubbles: [feedRef]
                     })
                 }
+            }).catch(()=>{
+                
             })
 
             // // add to user
@@ -303,6 +307,7 @@ async function createBubble(req, res){
                 })
             }
 
+        }).then(()=>{
             res.send({successful: true})
         }).catch(()=>{
             res.send({successful: false, message: 'bubble failed to upload to database'})
