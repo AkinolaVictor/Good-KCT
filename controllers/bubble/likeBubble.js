@@ -4,6 +4,7 @@ const date = require('date-and-time')
 const { v4: uuidv4 } = require('uuid')
 const {database} = require('../../database/firebase')
 const { dataType } = require('../../utils/utilsExport')
+const sendPushNotification = require('../pushNotification/sendPushNotification')
 
 async function likeBubble(req, res){
     const userID = req.body.userID // user.id
@@ -33,7 +34,7 @@ async function likeBubble(req, res){
         }
     }
 
-    async function LikeNotifier(which){
+    async function LikeNotifier(which, notificationData){
         if(userID!==thisBubble.userID){
             const creatorNotificationsRef = doc(database, 'notifications', thisBubble.userID)
             // const userNotificationsRef = doc(database, 'notifications', userID)
@@ -77,6 +78,13 @@ async function likeBubble(req, res){
                     all.push(likeData)
                     updateDoc(creatorNotificationsRef, {all})
                 }
+            }).then(()=>{
+                const data = {
+                    title: `${likeData.message}`,
+                    body: notificationData.message
+                }
+                sendPushNotification(thisBubble.userID, data)
+                console.log('likes for push');
             })
         }
     }
@@ -159,7 +167,11 @@ async function likeBubble(req, res){
                 await updateDoc(docz, {totalLikes: increment(1),like}).then(async()=>{
                 // await updateDoc(docz, {...posts}).then(async()=>{
                     // console.log('done');
-                    LikeNotifier('like')
+
+                    const notificationData = {
+                        message: 'This is the bubble message, at least the headlines...'
+                    }
+                    LikeNotifier('like', notificationData)
                     
                     if(thisBubble.userID!==userID){
                         const userLikesRef = doc(database, 'userLikes', userID)

@@ -103,7 +103,8 @@ async function dislikeBubble(req, res){
                 
                 // console.log(posts.activities)
                 const like = posts.like
-                await updateDoc(docz, {totalLikes: increment(-1), like}).then(async()=>{
+                const totalLikesValue = posts.totalLikes||0
+                await updateDoc(docz, {totalLikes:totalLikesValue>0?increment(-1):0, like}).then(async()=>{
                 // await updateDoc(docz, {...posts}).then(async()=>{
                     // console.log('done');
                     LikeNotifier('dislikes')
