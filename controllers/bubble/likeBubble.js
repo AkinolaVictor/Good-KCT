@@ -8,6 +8,7 @@ const sendPushNotification = require('../pushNotification/sendPushNotification')
 
 async function likeBubble(req, res){
     const userID = req.body.userID // user.id
+    const userIcon = req.body.userIcon // user.id
     const userFullname = req.body.userFullname // user.userInfo.fullname
     const thisBubble = {...req.body.thisBubble}
     // thisBubble.userID = thisBubble.user.id
@@ -81,10 +82,10 @@ async function likeBubble(req, res){
             }).then(()=>{
                 const data = {
                     title: `${likeData.message}`,
-                    body: notificationData.message
+                    body: notificationData.message,
+                    icon: userIcon
                 }
                 sendPushNotification(thisBubble.userID, data)
-                console.log('likes for push');
             })
         }
     }
@@ -167,9 +168,9 @@ async function likeBubble(req, res){
                 await updateDoc(docz, {totalLikes: increment(1),like}).then(async()=>{
                 // await updateDoc(docz, {...posts}).then(async()=>{
                     // console.log('done');
-
+                    const bubble = posts.bubble[0]
                     const notificationData = {
-                        message: 'This is the bubble message, at least the headlines...'
+                        message: `Bubble message: ${bubble.message}`
                     }
                     LikeNotifier('like', notificationData)
                     

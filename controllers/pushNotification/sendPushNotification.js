@@ -28,8 +28,9 @@ async function sendPushNotification(userID, data){
         if(docsnap.exists()){
             const subscription = JSON.parse(docsnap.data().subscription)
             // console.log(subscription);
-            webPush.sendNotification(subscription, payload)
-            console.log('notification sent');
+            webPush.sendNotification(subscription, payload).then((res)=>{
+                // console.log(res);
+            })
     // webPush.sendNotification(subscription, data).then(()=>{
         //     res.send({successful: true})
         // }).catch(()=>{
