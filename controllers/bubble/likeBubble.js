@@ -178,7 +178,7 @@ async function likeBubble(req, res){
                     // console.log('done');
                     const bubble = posts.bubble[0]
                     const notificationData = {
-                        message: `Bubble message: ${bubble.message}`
+                        message: `Bubble: ${bubble.message||''}`
                     }
                     LikeNotifier('like', notificationData)
                     

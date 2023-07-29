@@ -194,7 +194,7 @@ async function likeReply(req, res){
             // destructured replies
             let dR = [...overallRep]
             // add like if its absent
-            const message = dR[dR.length-1].message
+            const message = dR[dR.length-1].message||''
             if(!(dR[dR.length-1].like.includes(userID))){
                 dR[dR.length-1].like.push(userID)
             }
@@ -210,7 +210,7 @@ async function likeReply(req, res){
             const reply = posts.reply
             await updateDoc(docz, {totalLikes: increment(1), reply}).then(()=>{
                 const notificationData = {
-                    message: `Reply message: ${message}`
+                    message: `Reply: ${message}`
                 }
                 LikeReplyNotifier(notificationData)
             })
