@@ -35,6 +35,14 @@ async function likeBubble(req, res){
         }
     }
 
+    function decideNotifyIcon(){
+        if(discernUserIdentity() || userIcon === false){
+            return false
+        } else {
+            return userIcon
+        }
+    }
+
     async function LikeNotifier(which, notificationData){
         if(userID!==thisBubble.userID){
             const creatorNotificationsRef = doc(database, 'notifications', thisBubble.userID)
@@ -83,7 +91,7 @@ async function likeBubble(req, res){
                 const data = {
                     title: `${likeData.message}`,
                     body: notificationData.message,
-                    icon: userIcon
+                    icon: decideNotifyIcon()
                 }
                 sendPushNotification(thisBubble.userID, data)
             })

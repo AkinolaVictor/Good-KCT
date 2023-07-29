@@ -3,9 +3,11 @@ const {doc, getDoc, updateDoc, setDoc, increment} = require('firebase/firestore'
 const { v4: uuidv4 } = require('uuid')
 const date = require('date-and-time')
 const {database} = require('../../database/firebase')
+const sendPushNotification = require('../pushNotification/sendPushNotification')
 
 async function likeReply(req, res){
     const bubbleID = req.body.bubbleID
+    const userIcon = req.body.userIcon // user.id
     const bubbleCreator = req.body.bubbleCreator
     const userID = req.body.userID
     const path = req.body.path // props.path
@@ -61,7 +63,15 @@ async function likeReply(req, res){
         }
     }
 
-    async function LikeReplyNotifier(){
+    function decideNotifyIcon(){
+        if(discernUserIdentity() || userIcon === false){
+            return false
+        } else {
+            return userIcon
+        }
+    }
+
+    async function LikeReplyNotifier(notificationData){
         function getDate(){
             const now = new Date()
             const time = date.format(now, 'h:mmA')
@@ -112,6 +122,13 @@ async function likeReply(req, res){
                     all.push(creatorData)
                     updateDoc(creatorNotificationsRef, {all})
                 }
+            }).then(()=>{
+                const data = {
+                    title: `${creatorData.message}`,
+                    body: notificationData.message,
+                    icon: decideNotifyIcon()
+                }
+                sendPushNotification(bubbleCreator, data)
             })
         }
 
@@ -127,31 +144,38 @@ async function likeReply(req, res){
                 }
             }
 
-            const maiReplyData = {
+            const mainReplyData = {
                 time: getDate(),
                 bubbleID: bubbleID,
                 mainReplier: replyDataID,
                 creatorID: bubbleCreator,
                 id: uuidv4(),
                 userID: userID,
-                replyCreatorID: '',
+                replyCreatorID,
                 message: constructMainUserMessage(),
                 identityStatus: discernUserIdentity(),
                 feed: refDoc
             }
-            maiReplyData.feed.env='feed'
+            mainReplyData.feed.env='feed'
 
             await getDoc(mainUserNotificationsRef).then(async(snapshot)=>{
                 if(!snapshot.exists()){
                     setDoc(mainUserNotificationsRef, {
-                        all: [maiReplyData]
+                        all: [mainReplyData]
                     })
                 } else {
                     // update all
                     const all=[...snapshot.data().all]
-                    all.push(maiReplyData)
+                    all.push(mainReplyData)
                     updateDoc(mainUserNotificationsRef, {all})
                 }
+            }).then(()=>{
+                const data = {
+                    title: `${mainReplyData.message}`,
+                    body: notificationData.message,
+                    icon: decideNotifyIcon()
+                }
+                sendPushNotification(replyCreatorID, data)
             })
         }
     }
@@ -169,6 +193,7 @@ async function likeReply(req, res){
             // destructured replies
             let dR = [...overallRep]
             // add like if its absent
+            const message = dR[dR.length-1].message
             if(!(dR[dR.length-1].like.includes(userID))){
                 dR[dR.length-1].like.push(userID)
             }
@@ -183,7 +208,10 @@ async function likeReply(req, res){
             posts.reply[path[0]] = final;
             const reply = posts.reply
             await updateDoc(docz, {totalLikes: increment(1), reply}).then(()=>{
-                LikeReplyNotifier()
+                const notificationData = {
+                    message: `Reply message: ${message}`
+                }
+                LikeReplyNotifier(notificationData)
             })
 
         } else {
