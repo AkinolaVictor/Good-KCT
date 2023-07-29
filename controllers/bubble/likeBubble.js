@@ -14,7 +14,7 @@ async function likeBubble(req, res){
     // thisBubble.userID = thisBubble.user.id
     // settings, userID
     let secrecySettings = thisBubble.settings.secrecyData
-    // console.log(req.body);
+    // console.log(userIcon);
     function discernUserIdentity(){
         if(secrecySettings.atmosphere === 'Night (Absolute secrecy)'){
             return true
