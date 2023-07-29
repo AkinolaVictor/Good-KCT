@@ -3,6 +3,7 @@ const {database} = require('../../database/firebase')
 const date = require('date-and-time')
 const { v4: uuidv4 } = require('uuid')
 const { dataType } = require('../../utils/utilsExport')
+const sendPushNotification = require('../pushNotification/sendPushNotification')
 
 
 async function createReply_Old(req, res){
@@ -10,6 +11,7 @@ async function createReply_Old(req, res){
     const creatorID = req.body.creatorID /* thisBubble.user.id */
     const postID = req.body.postID /* thisBubble.postID */
     const userID = req.body.userID /* user.id */
+    const userIcon = req.body.userIcon // user.id
     const data = req.body.data /* data */
     const fullname = req.body.fullname /* user.userInfo.fullname */
     const parentName = req.body.parentName /* props.replyData.name */
@@ -64,7 +66,15 @@ async function createReply_Old(req, res){
         }
     }
 
-    async function ReplyNotifier(){
+    function decideNotifyIcon(){
+        if(discernUserIdentity || userIcon === false){
+            return false
+        } else {
+            return userIcon
+        }
+    }
+
+    async function ReplyNotifier(notificationData){
         if(userID!==creatorID){
             // console.log('notify 1');
             const creatorNotificationsRef = doc(database, 'notifications', creatorID)
@@ -113,6 +123,13 @@ async function createReply_Old(req, res){
                     all.push(creatorData)
                     updateDoc(creatorNotificationsRef, {all})
                 }
+            }).then(()=>{
+                const data = {
+                    title: `${creatorData.message}`,
+                    body: notificationData.message,
+                    icon: decideNotifyIcon()
+                }
+                sendPushNotification(creatorID, data)
             })
         }
 
@@ -163,6 +180,13 @@ async function createReply_Old(req, res){
                     all.push(mainReplyData)
                     updateDoc(mainUserNotificationsRef, {all})
                 }
+            }).then(()=>{
+                const data = {
+                    title: `${mainReplyData.message}`,
+                    body: notificationData.message,
+                    icon: decideNotifyIcon()
+                }
+                sendPushNotification(parentID, data)
             })
         }
     }
@@ -207,6 +231,7 @@ async function createReply_Old(req, res){
                 // updateDoc(docz, {posts})
             }
 
+            // let save_the_reply = ''
             if(path.length === 0){
                 // if(thisPost){
                     posts.reply.push(data)
@@ -289,7 +314,11 @@ async function createReply_Old(req, res){
             updateLastActivity(posts, 'replied', ()=>{updateDoc(docz, {activities})})
             
             // notify user(s)
-            ReplyNotifier()
+            // const bubble = posts.bubble[0]
+            const notificationData = {
+                message: `Reply:: ${data.message||''}`
+            }
+            ReplyNotifier(notificationData)
             // update yourself
             if(creatorID!==userID){
                 // const userRef = doc(database, 'users', userID)

@@ -4,6 +4,7 @@ const date = require('date-and-time')
 const { v4: uuidv4 } = require('uuid')
 const {database} = require('../../database/firebase')
 const { dataType } = require('../../utils/utilsExport')
+const sendPushNotification = require('../pushNotification/sendPushNotification')
 
 async function confirmShareRequest(req, res){
     const userID = req.body.userID // user.id
@@ -72,7 +73,7 @@ async function confirmShareRequest(req, res){
                     }
                 }
                 // updateDoc(creatorNotificationsRef, {all})
-            }
+            } 
         })
 
         // notify audience
@@ -92,6 +93,13 @@ async function confirmShareRequest(req, res){
                 all.push(newData)
                 updateDoc(audienceNotificationsRef, {all})
             }
+        }).then(()=>{
+            const data = {
+                title: `${newData.message}`,
+                body: 'please check the notification section in the app to see the bubble.',
+                icon: false
+            }
+            sendPushNotification(data.userID, data)
         })
     }
     const discernPrevShares = () => {

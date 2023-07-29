@@ -210,7 +210,7 @@ async function likeReply(req, res){
             const reply = posts.reply
             await updateDoc(docz, {totalLikes: increment(1), reply}).then(()=>{
                 const notificationData = {
-                    message: `Reply: ${message}`
+                    message: `Reply:: ${message}`
                 }
                 LikeReplyNotifier(notificationData)
             })

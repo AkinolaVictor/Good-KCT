@@ -4,10 +4,19 @@ const date = require('date-and-time')
 const { v4: uuidv4 } = require('uuid')
 const {database} = require('../../database/firebase')
 const { dataType } = require('../../utils/utilsExport')
+const sendPushNotification = require('../pushNotification/sendPushNotification')
 
 async function denyShareRequest(req, res){
     const userID = req.body.userID // user.id
     const data = req.body.data
+    
+    // function decideNotifyIcon(){
+    //     if(discernUserIdentity() || userIcon === false){
+    //         return false
+    //     } else {
+    //         return userIcon
+    //     }
+    // }
     
     function getDate(){
         const now = new Date()
@@ -56,8 +65,13 @@ async function denyShareRequest(req, res){
             all.push(newData)
             await updateDoc(audienceNotificationsRef, {all})
         }
-    // }).then(()=>{
-    //     console.log('done 1');
+    }).then(()=>{
+        const data = {
+            title: `${newData.message}`,
+            body: 'please check the notification section in the app to see the bubble, you can also make another share request to the bubble creator.',
+            icon: false
+        }
+        sendPushNotification(data.userID, data)
     })
 
     const bubbleRef = doc(database, 'bubbles', data.feed.postID)
@@ -71,8 +85,6 @@ async function denyShareRequest(req, res){
                 await updateDoc(bubbleRef, {activities})
             }
         }
-    // }).then(()=>{
-    //     console.log('done 2');
     })
 
     res.send({successful: true})

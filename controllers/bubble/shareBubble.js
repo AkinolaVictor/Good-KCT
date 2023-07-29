@@ -4,9 +4,12 @@ const date = require('date-and-time')
 const { v4: uuidv4 } = require('uuid')
 const {database} = require('../../database/firebase')
 const { dataType } = require('../../utils/utilsExport')
+const sendPushNotification = require('../pushNotification/sendPushNotification')
 
 async function shareBubble(req, res){
     const userID = req.body.userID // userID
+    const userIcon = req.body.userIcon // user.id
+    const notificationMessage = req.body.notificationMessage // user.id
     const thisBubble = {...req.body.thisBubble} //refDoc, userID, shareStructure
     const fullname = req.body.userFullname // user.userInfo.fullname
     const replyPath = req.body.replyPath // screenModal.data.path
@@ -67,6 +70,14 @@ async function shareBubble(req, res){
             return false
         } else {
             return false
+        }
+    }
+
+    function decideNotifyIcon(){
+        if(discernUserIdentity() || userIcon === false){
+            return false
+        } else {
+            return userIcon
         }
     }
 
@@ -174,12 +185,19 @@ async function shareBubble(req, res){
                     all.push(shareRequestData)
                     updateDoc(creatorNotificationsRef, {all})
                 }
+            }).then(()=>{
+                const data = {
+                    title: `${shareRequestData.message}`,
+                    body: `Bubble:: ${notificationMessage}`,
+                    icon: decideNotifyIcon()
+                }
+                sendPushNotification(thisBubble.userID, data)
             })
             
         }
     }
 
-    async function ShareNotifier(){
+    async function ShareNotifier(notificationData){
         if(userID!==thisBubble.userID){
             const creatorNotificationsRef = doc(database, 'notifications', thisBubble.userID)
             // const userNotificationsRef = doc(database, 'notifications', userID)
@@ -223,6 +241,13 @@ async function shareBubble(req, res){
                     all.push(shareData)
                     updateDoc(creatorNotificationsRef, {all})
                 }
+            }).then(()=>{
+                const data = {
+                    title: `${shareData.message}`,
+                    body: notificationData.message,
+                    icon: decideNotifyIcon()
+                }
+                sendPushNotification(thisBubble.userID, data)
             })
         }
     }
@@ -506,7 +531,11 @@ async function shareBubble(req, res){
                                 }
                             }
                             // Notify user
-                            ShareNotifier()
+                            const bubble = posts.bubble[0]
+                            const notificationData = {
+                                message: `Bubble:: ${bubble.message||''}`
+                            }
+                            ShareNotifier(notificationData)
                 
                             // update last activity
 

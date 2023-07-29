@@ -21,6 +21,7 @@ async function sendPushNotification(userID, data){
     const payload = JSON.stringify({
         title: 'Concealed',
         // body: 'This is a push Notification from concealed server',
+        badge: 'https://firebasestorage.googleapis.com/v0/b/concealed-f8f32.appspot.com/o/systemFolder%2Ficons%2FconcealedLogo_64_solid.png?alt=media&token=e7c5f409-335c-4e8e-8258-cdbc154f6d15',
         ...data
     })
     const userSubscriptionRef = doc(database, 'savedPushSubscriptions', userID)
@@ -31,11 +32,6 @@ async function sendPushNotification(userID, data){
             webPush.sendNotification(subscription, payload).then((res)=>{
                 // console.log(res);
             })
-    // webPush.sendNotification(subscription, data).then(()=>{
-        //     res.send({successful: true})
-        // }).catch(()=>{
-            //     res.send({successful: false, message: 'failed to send push notification'})
-            // })
         }
     })
             
