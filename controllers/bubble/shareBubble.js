@@ -188,7 +188,7 @@ async function shareBubble(req, res){
             }).then(()=>{
                 const data = {
                     title: `${shareRequestData.message}`,
-                    body: `Bubble:: ${notificationMessage}`,
+                    body: `Bubble: ${notificationMessage}`,
                     icon: decideNotifyIcon()
                 }
                 sendPushNotification(thisBubble.userID, data)
@@ -533,7 +533,7 @@ async function shareBubble(req, res){
                             // Notify user
                             const bubble = posts.bubble[0]
                             const notificationData = {
-                                message: `Bubble:: ${bubble.message||''}`
+                                message: `Bubble: ${bubble.message||''}`
                             }
                             ShareNotifier(notificationData)
                 

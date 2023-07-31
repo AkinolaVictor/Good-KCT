@@ -316,7 +316,7 @@ async function createReply_Old(req, res){
             // notify user(s)
             // const bubble = posts.bubble[0]
             const notificationData = {
-                message: `Reply:: ${data.message||''}`
+                message: `Reply: ${data.message||''}`
             }
             ReplyNotifier(notificationData)
             // update yourself

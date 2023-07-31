@@ -1,4 +1,4 @@
-const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
+const {doc, getDoc, updateDoc, setDoc, increment} = require('firebase/firestore')
 // const {getDownloadURL, ref, uploadBytes, deleteObject} = require('firebase/storage')
 const date = require('date-and-time')
 const { v4: uuidv4 } = require('uuid')
@@ -99,7 +99,7 @@ async function openedReply(req, res){
             
             // update last activities
             const activities = posts.activities
-            updateLastActivity(posts, 'opened reply', ()=>{updateDoc(docz, {activities})})
+            updateLastActivity(posts, 'opened reply', ()=>{updateDoc(docz, {openedReply: increment(1), activities})})
         }
 
     }).then(()=>{

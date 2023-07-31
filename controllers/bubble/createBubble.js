@@ -2,6 +2,7 @@ const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
 const {getDownloadURL, ref, uploadBytes} = require('firebase/storage')
 const date = require('date-and-time')
 const {database, storage} = require('../../database/firebase')
+const sendPushNotification = require('../pushNotification/sendPushNotification')
 
 async function createBubble(req, res){
     // res.send({successful: true})
@@ -14,10 +15,40 @@ async function createBubble(req, res){
 
     const userID = req.body.userID
     const thisBubble = {...req.body.thisBubble}
-
+    const secrecySettings = thisBubble.settings.secrecyData
     const postID = thisBubble.postID
     // const bubbleName = req.body.bubbleName
     const bubbleName = thisBubble.type
+    
+    
+    function discernUserIdentity(){
+        if(secrecySettings.atmosphere === 'Night (Absolute secrecy)'){
+            return true
+        } else if(secrecySettings.atmosphere === 'Dark room (Absolute secrecy for reply only)'){
+            return true
+        } else if(secrecySettings.atmosphere === 'Man behind the scene'){
+            return true
+        } else if(secrecySettings.atmosphere === 'Annonymous' || secrecySettings.atmosphere === 'Anonymous'){
+            return false
+        } else if(secrecySettings.atmosphere === 'On mask'){
+            return true
+        } else if(secrecySettings.atmosphere === 'I see you all'){
+            return true
+        } else if(secrecySettings.atmosphere === 'Day (Absolute openness)'){
+            return false
+        } else {
+            return false
+        }
+    }
+
+    function decideNotifyIcon(){
+        const userIcon = thisBubble.user.profilePhoto.length?thisBubble.user.profilePhoto:false
+        if(discernUserIdentity() || userIcon === false){
+            return false
+        } else {
+            return userIcon
+        }
+    }
     
     // all file are uploaded on the client side
     // saveData_old()
@@ -304,6 +335,77 @@ async function createBubble(req, res){
                             bubbles: [feedRef]
                         })
                     }
+                }).then(()=>{
+                    function constructTitle(){
+                        if(discernUserIdentity()){
+                            return "someone you're following created a bubble"
+                        } else {
+                            return `${thisBubble.user.name} created a bubble`
+                        }
+                    }
+
+                    const discrenMessage = () => {
+                        const bubble = thisBubble.bubble
+                        for(let i=0; i<bubble.length; i++){
+                            if(bubble[i].name==='Everyone'){
+                                let message = ''
+
+                                // building message
+                                const config = bubble[i].config
+                                for(let j=0; j<config.length; j++){
+                                    const tweak = config[j].tweak
+                                    const word = config[j].word
+                                    if(word!=='(%%%---!!!@@@###&&&)' || word!=='(%%%%----!!!!@@@@####&&&&)'){
+                                        if(tweak.name === 'none'){
+                                            message = message + `${word} `
+                                        } else if (tweak.name ==='description'){
+                                            message = message + `${word} `
+                                        } else if (tweak.name ==='hide'){
+                                            // message = message + `${word} `
+                                        } else{
+                                            message = message + `*** `
+                                        }
+                                    } 
+                                }
+
+
+                                return message.length?message:`You're selected among those who can view the content of this bubble.`
+                            } else {
+                                if(bubble[i].audience.includes(allBubbleAudience[i])){
+                                    let message = ''
+
+                                    // building message
+                                    const config = bubble[i].config
+                                    for(let j=0; j<config.length; j++){
+                                        const tweak = config[j].tweak
+                                        const word = config[j].word
+                                        if(tweak.name === 'none'){
+                                            message = message + `${word} `
+                                        } else if (tweak.name ==='description'){
+                                            message = message + `${word} `
+                                        } else if (tweak.name ==='hide'){
+                                            // message = message + `${word} `
+                                        } else{
+                                            message = message + `*** `
+                                        }
+                                    }
+
+
+                                    return message.length?message:`You're selected among those who can view the content of this bubble.`
+                                } else {
+                                    return `You're selected among those who can view the content of this bubble.`
+                                }
+                            }
+                        }
+                        return `You're selected among those who can view the content of this bubble.`
+                    }
+
+                    const data = {
+                        title: `${constructTitle()}`,
+                        body: discrenMessage(),
+                        icon: decideNotifyIcon()
+                    }
+                    sendPushNotification(allBubbleAudience[i], data)
                 })
             }
 
