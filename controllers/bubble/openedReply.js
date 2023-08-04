@@ -99,7 +99,8 @@ async function openedReply(req, res){
             
             // update last activities
             const activities = posts.activities
-            updateLastActivity(posts, 'opened reply', ()=>{updateDoc(docz, {openedReply: increment(1), activities})})
+            updateLastActivity(posts, 'opened reply', ()=>{updateDoc(docz, {activities})})
+            updateDoc(docz, {openedReplyCount: increment(1)})
         }
 
     }).then(()=>{

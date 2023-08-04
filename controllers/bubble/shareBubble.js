@@ -578,6 +578,7 @@ async function shareBubble(req, res){
                             const shareStructure = posts.shareStructure
                             // await updateDoc(docz, {posts}).then(async()=>{
                             await updateDoc(docz, {shareStructure, activities}).then(async()=>{
+                                // console.log('finished');
                                 if(thisBubble.userID!==userID){
                                     // const userRef = doc(database, 'users', userID)
                                     const userShareRef = doc(database, 'userShares', userID)

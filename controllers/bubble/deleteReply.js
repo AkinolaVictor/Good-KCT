@@ -36,7 +36,12 @@ async function deleteReply(req, res){
             const replys = posts.reply
     
             if (path.length === 1) {
-                posts.reply[path[0]] = 'Deleted...';
+                const subreplys = posts.reply[path[0]].reply
+                if(subreplys.length){
+                    posts.reply[path[0]].message = '**The content of this reply has been deleted**';
+                } else {
+                    posts.reply[path[0]] = 'Deleted...';
+                }
                 const reply = posts.reply
                 await updateDoc(docz, {reply})
             }else{
@@ -46,7 +51,12 @@ async function deleteReply(req, res){
                 // let id = dR[path.length-1].id
                 let parent = [...dR[path.length-2].reply]
                 // delete child
-                parent[path[path.length-1]] = 'Deleted...'
+                const subreplys = parent[path[path.length-1]].reply
+                if(subreplys.length){
+                    parent[path[path.length-1]].message = '**The content of this reply has been deleted**'
+                }else{
+                    parent[path[path.length-1]] = 'Deleted...'
+                }
                 dR[path.length-2].reply = parent
                 // reversal compilation
                 let final;

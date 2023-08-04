@@ -1,4 +1,4 @@
-const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
+const {doc, getDoc, updateDoc, setDoc, increment} = require('firebase/firestore')
 // const {getDownloadURL, ref, uploadBytes, deleteObject} = require('firebase/storage')
 const date = require('date-and-time')
 const { v4: uuidv4 } = require('uuid')
@@ -95,10 +95,11 @@ async function openedChart(req, res){
                 const activities = posts.activities
                 updateDoc(docz, {activities})
             }
-
+            
             // update last activities
             const activities = posts.activities
-            updateLastActivity(posts, 'opened chart', ()=>{updateDoc(docz, {activities})})
+            updateLastActivity(posts, 'opened chart', ()=>{updateDoc(docz, {activities});})
+            updateDoc(docz, {openedChartCount: increment(1)})
         } else {
             res.send({successful: false, message: 'bubble not found'})
         }
