@@ -383,7 +383,7 @@ async function shareBubble(req, res){
                     // posts.activities.iAmOnTheseFeeds[userID].myActivities.shared = true
                     // posts.activities.iAmOnTheseFeeds[userID].seenAndVerified = true
 
-
+                    // shareStructure
                     if(pathOfShare[pathOfShare.length - 1]!==userID){
                         const mainPath = [...thisBubble.refDoc.sharePath]
                         mainPath.shift()
@@ -577,7 +577,8 @@ async function shareBubble(req, res){
                             // add bubble to your share in profile 
                             const shareStructure = posts.shareStructure
                             // await updateDoc(docz, {posts}).then(async()=>{
-                            await updateDoc(docz, {shareStructure, activities}).then(async()=>{
+                            // update shareStructure afterwards (as the last thing to do)
+                            await updateDoc(docz, {activities}).then(async()=>{
                                 // console.log('finished');
                                 if(thisBubble.userID!==userID){
                                     // const userRef = doc(database, 'users', userID)
@@ -602,6 +603,7 @@ async function shareBubble(req, res){
                                         }
                                     })
                                 }
+                                await updateDoc(docz, {shareStructure})
                             })
                         }
                     })

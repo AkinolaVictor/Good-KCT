@@ -348,9 +348,9 @@ async function createReply_Old(req, res){
     }).then(()=>{
         res.send({successful: true})
         // console.log('done');
-    }).catch(()=>{
-        // console.log('failed');
-        res.send({successful: false, message: 'Network error: unable to upload reply'})
+    }).catch((err)=>{
+        // console.log(err);
+        res.send({successful: false, message: 'Server error: unable to upload reply'})
     })
 }
 

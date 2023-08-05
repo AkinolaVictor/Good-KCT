@@ -9,6 +9,11 @@ async function sendPushNotification(userID, data){
     // const data = req.body.data // user.userInfo.fullname
     // const newUserID = req.body.newUserID // props.data.id
     // console.log('worked here 1');
+
+    if(!userID){
+        return
+    }
+    // console.log('i ran');
     
     const vapidKey = {
         publicKey: process.env.CONCEALED_PUSH_VAPID_PUBLIC_KEY,

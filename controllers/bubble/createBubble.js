@@ -259,7 +259,9 @@ async function createBubble(req, res){
                 type: bubbleName
             }
         }
-    
+
+        thisBubble.feedRef = feedRef
+        
         const allBubbleAudience = [...thisBubble.audience]
         for(let i=0; i<allBubbleAudience.length; i++){
             thisBubble.activities.iAmOnTheseFeeds[allBubbleAudience[i]] = {

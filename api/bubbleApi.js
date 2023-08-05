@@ -19,6 +19,7 @@ const likeReply = require('../controllers/bubble/likeReply')
 const dislikeReply = require('../controllers/bubble/dislikeReply')
 const denyShareRequest = require('../controllers/bubble/denyShareRequest')
 const confirmShareRequest = require('../controllers/bubble/confirmShareRequest')
+const registerAudience = require('../controllers/bubble/registerAudience')
 
 // create a bubble
 router.post('/createBubble', createBubble)
@@ -61,6 +62,9 @@ router.post('/impression', impression)
 
 // opened chart
 router.post('/shareBubble', shareBubble)
+
+// register Audience
+router.post('/registerAudience', registerAudience)
 
 // opened chart
 router.post('/denyShareRequest', denyShareRequest)
