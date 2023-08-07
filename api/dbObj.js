@@ -12,7 +12,7 @@ router.post('/getDatabase', async (req, res)=>{
             successful: true,
             ...database.config,
             vapidPublicKey: process.env.CONCEALED_PUSH_VAPID_PUBLIC_KEY||'',
-            vapidPrivateKey: process.env.CONCEALED_PUSH_VAPID_PRIVATE_KEY||''
+            // vapidPrivateKey: process.env.CONCEALED_PUSH_VAPID_PRIVATE_KEY||''
             // userAuth: getAuth()
         })
     }
@@ -26,7 +26,7 @@ router.post('/getPlaygroundDatabase', async (req, res)=>{
             successful: true,
             ...database.playgroundConfig,
             vapidPublicKey: process.env.CONCEALED_PUSH_VAPID_PUBLIC_KEY,
-            vapidPrivateKey: process.env.CONCEALED_PUSH_VAPID_PRIVATE_KEY
+            // vapidPrivateKey: process.env.CONCEALED_PUSH_VAPID_PRIVATE_KEY
             // userAuth: getAuth()
         })
     }

@@ -23,9 +23,9 @@ const firebaseConfig = {
   storageBucket: process.env.CONCEALED_STORAGE_BUCKET,
   messagingSenderId: process.env.CONCEALED_MESSAGING_SENDER_ID,
   appId: process.env.CONCEALED_APP_ID,
+  appConnectionKey_DB: process.env.CONCEALED_APP_CONNECTION_KEY
 
   // frontendConnectionKey
-  appConnectionKey_DB: process.env.CONCEALED_APP_CONNECTION_KEY
 };
 
 const firebasePlaygroundConfig = {
@@ -41,7 +41,19 @@ const firebasePlaygroundConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
+function discernDB(){
+  if(process.env.CONCEALED_ENV==='production'){
+    return firebaseConfig
+  } else if(process.env.CONCEALED_ENV==='production-development'){
+    return firebasePlaygroundConfig
+  } else if(process.env.CONCEALED_ENV==='local-development'){
+    return firebasePlaygroundConfig
+  }else{
+    return firebasePlaygroundConfig
+  }
+}
+
+const app = initializeApp(discernDB());
 const database = getFirestore(app)
 const storage = getStorage(app)
 
