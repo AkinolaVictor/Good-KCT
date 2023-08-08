@@ -35,11 +35,11 @@ const firebasePlaygroundConfig = {
   storageBucket: process.env.CONCEALED_PLAYGROUND_STORAGE_BUCKET,
   messagingSenderId: process.env.CONCEALED_PLAYGROUND_MESSAGING_SENDER_ID,
   appId: process.env.CONCEALED_PLAYGROUND_APP_ID,
-
-  // frontendConnectionKey
   appConnectionKey_DB: process.env.CONCEALED_PLAYGROUND_APP_CONNECTION_KEY
+
 };
 
+// console.log(firebasePlaygroundConfig);
 // Initialize Firebase
 function discernDB(){
   if(process.env.CONCEALED_ENV==='production'){
