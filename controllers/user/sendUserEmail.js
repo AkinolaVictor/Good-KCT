@@ -3,7 +3,7 @@ const { google } = require("googleapis");
 const OAuth2 = google.auth.OAuth2;
 
 
-async function verifyEmail(req, res){
+async function sendUserEmail(req, res){
     const MY_EMAIL = 'concealed.bubble@gmail.com'
     const RECEIVER_EMAIL = req.body.userEmail||'akinolavictor50@gmail.com'
     const subject = req.body.subject
@@ -52,16 +52,17 @@ async function verifyEmail(req, res){
     //emailOptions - who sends what to whom
     const sendEmail = async (emailOptions) => {
         let emailTransporter = await createdTransporter();
-        await emailTransporter.sendMail(emailOptions, (error, info)=> {
-            // console.log(info);
-            if(error){
-                res.send({successful: false, message: 'Sorry, Message not sent!!!'});
-                // return false;
-            }else{
-                res.send({successful: true, message: 'Thank you, Your message has been delivered'});
-                // return true;
-            }
-        })
+        await emailTransporter.sendMail(emailOptions)
+        // await emailTransporter.sendMail(emailOptions, (error, info)=> {
+        //     // console.log(info);
+        //     if(error){
+        //         res.send({successful: false, message: 'Sorry, Message not sent!!!'});
+        //         // return false;
+        //     }else{
+        //         res.send({successful: true, message: 'Thank you, Your message has been delivered'});
+        //         // return true;
+        //     }
+        // })
     };
 
     const emailOptions = {
@@ -80,4 +81,4 @@ async function verifyEmail(req, res){
     })
 }
 
-module.exports = verifyEmail
+module.exports = sendUserEmail

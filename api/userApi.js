@@ -7,7 +7,7 @@ const unFollow = require('../controllers/user/unfollow')
 const addAudience = require('../controllers/user/addAudience')
 const deleteAudience = require('../controllers/user/deleteAudience')
 const editAudience = require('../controllers/user/editAudience')
-const verifyEmail = require('../controllers/user/verifyEmail')
+const sendUserEmail = require('../controllers/user/sendUserEmail')
 
 // create an account
 router.post('/createAccount', signUp)
@@ -31,7 +31,7 @@ router.post('/deleteAudience', deleteAudience)
 router.post('/editAudience', editAudience)
 
 // delete Audience
-router.post('/verifyEmail', verifyEmail)
+router.post('/sendUserEmail', sendUserEmail)
 
 
 
