@@ -54,7 +54,7 @@ async function sendUserEmail(req, res){
         let emailTransporter = await createdTransporter();
         await emailTransporter.sendMail(emailOptions)
         // await emailTransporter.sendMail(emailOptions, (error, info)=> {
-        //     // console.log(info);
+            // console.log(info);
         //     if(error){
         //         res.send({successful: false, message: 'Sorry, Message not sent!!!'});
         //         // return false;
@@ -69,8 +69,8 @@ async function sendUserEmail(req, res){
         from: 'Concealed <concealed.bubble@gmail.com>',
         to: RECEIVER_EMAIL,
         subject,
-        // text: "I am sending an email from nodemailer!",
         html
+        // text: "I am sending an email from nodemailer!",
     }
 
     await sendEmail(emailOptions).then(()=>{
