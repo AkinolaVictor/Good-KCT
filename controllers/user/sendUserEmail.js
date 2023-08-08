@@ -8,17 +8,17 @@ async function sendUserEmail(req, res){
     const RECEIVER_EMAIL = req.body.userEmail||'akinolavictor50@gmail.com'
     const subject = req.body.subject
     const html = req.body.html
+
+    const client_id = process.env.CONCEALED_OAUTH2_EMAIL_CLIENT_ID
+    const client_secret = process.env.CONCEALED_OAUTH2_EMAIL_CLIENT_SECRET
+    const refresh_token = process.env.CONCEALED_OAUTH2_EMAIL_REFRESH_TOKEN
     // console.log(RECEIVER_EMAIL);
     const createdTransporter = async () => {
         
-        const oauth2Client = new OAuth2(
-          process.env.OAUTH2_EMAIL_CLIENT_ID,
-          process.env.OAUTH2_EMAIL_CLIENT_SECRET,
-          "https://developers.google.com/oauthplayground"
-        );
+        const oauth2Client = new OAuth2(client_id, client_secret, "https://developers.google.com/oauthplayground");
       
         oauth2Client.setCredentials({
-          refresh_token: process.env.OAUTH2_EMAIL_REFRESH_TOKEN
+          refresh_token
         });
       
         const accessToken = oauth2Client.getAccessToken()
@@ -38,9 +38,9 @@ async function sendUserEmail(req, res){
             type: "OAuth2",
             user: MY_EMAIL,
             accessToken,
-            clientId: process.env.OAUTH2_EMAIL_CLIENT_ID,
-            clientSecret: process.env.OAUTH2_EMAIL_CLIENT_SECRET,
-            refreshToken: process.env.OAUTH2_EMAIL_REFRESH_TOKEN,
+            clientId: client_id,
+            clientSecret: client_secret,
+            refreshToken: refresh_token,
             tls: {
                 rejectUnauthorized: false
             }
@@ -76,7 +76,7 @@ async function sendUserEmail(req, res){
     await sendEmail(emailOptions).then(()=>{
         res.send({successful: true})
     }).catch(()=>{
-        console.log('failed to send to email');
+        // console.log('failed to send to email');
         res.send({successful: false})
     })
 }
