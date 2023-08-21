@@ -65,6 +65,7 @@ async function registerAudience(req, res){
                 seenAndVerified: false,
                 replyPath: [],
                 myActivities: {
+                    impression: true
                 }
             }
 

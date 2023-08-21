@@ -23,9 +23,7 @@ const firebaseConfig = {
   storageBucket: process.env.CONCEALED_STORAGE_BUCKET,
   messagingSenderId: process.env.CONCEALED_MESSAGING_SENDER_ID,
   appId: process.env.CONCEALED_APP_ID,
-  appConnectionKey_DB: process.env.CONCEALED_APP_CONNECTION_KEY
-
-  // frontendConnectionKey
+  measurementId: process.env.CONCEALED_APP_MEASUREMENT_ID
 };
 
 const firebasePlaygroundConfig = {
@@ -35,8 +33,7 @@ const firebasePlaygroundConfig = {
   storageBucket: process.env.CONCEALED_PLAYGROUND_STORAGE_BUCKET,
   messagingSenderId: process.env.CONCEALED_PLAYGROUND_MESSAGING_SENDER_ID,
   appId: process.env.CONCEALED_PLAYGROUND_APP_ID,
-  appConnectionKey_DB: process.env.CONCEALED_PLAYGROUND_APP_CONNECTION_KEY
-
+  measurementId: process.env.CONCEALED_PLAYGROUND_APP_MEASUREMENT_ID
 };
 
 // console.log(firebasePlaygroundConfig);

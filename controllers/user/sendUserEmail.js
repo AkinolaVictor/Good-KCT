@@ -2,13 +2,14 @@ const nodemailer = require('nodemailer');
 const { google } = require("googleapis");
 const OAuth2 = google.auth.OAuth2;
 
+// console.log({client_id, client_secret, refresh_token});
 
 async function sendUserEmail(req, res){
     const MY_EMAIL = 'concealed.bubble@gmail.com'
     const RECEIVER_EMAIL = req.body.userEmail||'akinolavictor50@gmail.com'
     const subject = req.body.subject
     const html = req.body.html
-
+    
     const client_id = process.env.CONCEALED_OAUTH2_EMAIL_CLIENT_ID
     const client_secret = process.env.CONCEALED_OAUTH2_EMAIL_CLIENT_SECRET
     const refresh_token = process.env.CONCEALED_OAUTH2_EMAIL_REFRESH_TOKEN

@@ -6,12 +6,11 @@ const {database} = require('../../database/firebase')
 async function addAudience(req, res){
     const data = req.body.data
     const userID = req.body.userID
-
     // remove from audience
     const audienceRef = doc(database, 'savedAudience', userID)
     await getDoc(audienceRef).then(async(docsnap)=>{
         if(docsnap.exists()){
-            const audience = {...docsnap.data()}
+            let audience = {...docsnap.data()}
             audience[data.name] = data
             // update audience
             await updateDoc(audienceRef, {...audience})

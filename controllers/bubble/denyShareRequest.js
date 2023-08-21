@@ -6,6 +6,10 @@ const {database} = require('../../database/firebase')
 const { dataType } = require('../../utils/utilsExport')
 const sendPushNotification = require('../pushNotification/sendPushNotification')
 
+
+// https://www.tutsmake.com/file-upload-in-mongodb-using-node-js/
+
+
 async function denyShareRequest(req, res){
     const userID = req.body.userID // user.id
     const data = req.body.data
