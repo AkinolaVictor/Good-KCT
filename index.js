@@ -19,7 +19,17 @@ const pushNotification = require('./api/pushNotificationApi')
 app.use(helmet())
 app.use(express.json())
 app.use(express.urlencoded({extended: false}))
-app.use(cors())
+
+app.use(cors());
+app.options('*', cors());
+var allowCrossDomain = function(req,res,next) {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, PUT, POST, DELETE');
+  res.header('Access-Control-Allow-Headers', 'Content-Type');
+  next();  
+}
+app.use(allowCrossDomain);
+// app.use(cors())
 
 // conditional based om env
 app.use(morgan("dev")) //dev, tiny, ...
