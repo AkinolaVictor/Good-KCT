@@ -33,8 +33,8 @@ async function createBubble(req, res){
         } else if(secrecySettings.atmosphere === 'On mask'){
             return true
         } else if(secrecySettings.atmosphere === 'I see you all'){
-            return true
-        } else if(secrecySettings.atmosphere === 'Day (Absolute openness)'){
+            return false
+        } else if(secrecySettings.atmosphere === 'Just know its me'){
             return false
         } else {
             return false
@@ -357,7 +357,9 @@ async function createBubble(req, res){
                                 for(let j=0; j<config.length; j++){
                                     const tweak = config[j].tweak
                                     const word = config[j].word
-                                    if(word!=='(%%%---!!!@@@###&&&)' || word!=='(%%%%----!!!!@@@@####&&&&)'){
+                                    if(word ==='(%%%---!!!@@@###&&&)'){
+                                    } else if( word ==='(%%%%----!!!!@@@@####&&&&)'){
+                                    } else {
                                         if(tweak.name === 'none'){
                                             message = message + `${word} `
                                         } else if (tweak.name ==='description'){
@@ -367,7 +369,7 @@ async function createBubble(req, res){
                                         } else{
                                             message = message + `*** `
                                         }
-                                    } 
+                                    }
                                 }
 
 

@@ -60,6 +60,8 @@ async function shareBubble(req, res){
             return true
         } else if(secrecySettings.atmosphere === 'Man behind the scene'){
             return true
+        } else if(secrecySettings.atmosphere === 'Just know its me'){
+            return true
         } else if(secrecySettings.atmosphere === 'Annonymous' || secrecySettings.atmosphere === 'Anonymous'){
             return false
         } else if(secrecySettings.atmosphere === 'On mask'){
