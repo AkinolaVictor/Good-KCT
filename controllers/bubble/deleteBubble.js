@@ -35,7 +35,7 @@ async function deleteBubble(req, res){
                     await delBubble()
                 }
             }).catch((err)=>{
-                console.log('failed down');
+                // console.log('failed down');
                 res.send({successful: false, message: 'unable to delete files'})
             })
         }
@@ -153,10 +153,10 @@ async function deleteBubble(req, res){
                     }
                     
                 }
-                console.log('good');
+                // console.log('good');
             } else {
                 res.send({successful: false, message: 'Bubble not found'})
-                console.log('failed down');
+                // console.log('failed down');
             }
         })
     }
