@@ -36,8 +36,12 @@ async function sendPushNotification(userID, data){
             // console.log(subscription);
             webPush.sendNotification(subscription, payload).then((res)=>{
                 // console.log(res);
+            }).catch(()=>{
+                // console.log('caught');
             })
         }
+    }).catch(()=>{
+        res.send({successful: 'fail'})
     })
             
 }
