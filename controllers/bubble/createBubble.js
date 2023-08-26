@@ -162,6 +162,10 @@ async function createBubble(req, res){
                 
             })
 
+            // console.log('small');
+            // console.log('small');
+            // console.log('small');
+
             // // add to user
             // await getDoc(userRef).then((docsnap)=>{
             //     const postIDs = [...docsnap.data().postIDs]
