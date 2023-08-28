@@ -80,7 +80,9 @@ async function registerAudience(req, res){
                     icon: decideNotifyIcon()
                 }
                 // console.log('i go here 2');
-                sendPushNotification(creatorID, data)
+
+                // sendPushNotification(creatorID, data)
+                
             })
 
             // give feed ref to user---to be on a safe zone, i have to initialize as deleted...
