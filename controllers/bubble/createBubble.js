@@ -61,7 +61,7 @@ async function createBubble(req, res){
             audienceNames.push(bubble[i].name)
         }
 
-        if(audienceNames.includes('Everyone')){
+        if(audienceNames.includes('Everyone') || audienceNames.includes('My Followers')){
             return true
         } else {
             return false
@@ -120,8 +120,12 @@ async function createBubble(req, res){
                 }
             }
         }
+
         // setup bubble creation 
         // New data structure
+
+        thisBubble.audience = []
+        
         
         const bubbleRef = doc(database, 'bubbles', postID)
         const userBubbleRef = doc(database, 'userBubbles', userID)
