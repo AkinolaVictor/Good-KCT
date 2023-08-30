@@ -8,7 +8,7 @@ async function userDailyAnalytics(req, res){
     const userID = req.body.userID
     const currentDate = req.body.currentDate
     // const dataString = JSON.stringify(data)
-    console.log(currentDate, analytics);
+    // console.log(currentDate, analytics);
     // remove from audience
     const usageRef = doc(database, 'usageAnalytics', userID)
     await getDoc(usageRef).then(async(docsnap)=>{
