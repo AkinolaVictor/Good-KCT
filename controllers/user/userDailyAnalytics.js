@@ -4,20 +4,24 @@ const {doc, getDoc, updateDoc, setDoc, deleteField} = require('firebase/firestor
 const {database} = require('../../database/firebase')
 
 async function userDailyAnalytics(req, res){
-    const data = req.body.data || '{}'
+    const analytics = req.body.data || {}
     const userID = req.body.userID
     const currentDate = req.body.currentDate
     // const dataString = JSON.stringify(data)
-    // console.log(currentDate, data);
+    console.log(currentDate, analytics);
     // remove from audience
     const usageRef = doc(database, 'usageAnalytics', userID)
     await getDoc(usageRef).then(async(docsnap)=>{
         if(docsnap.exists()){
             const data = {...docsnap.data()}
-            data[currentDate] = data
+            if(data[currentDate]){
+                data[currentDate].push(analytics)
+            } else {
+                data[currentDate] = [analytics]
+            }
             await updateDoc(usageRef, {...data})
         } else{
-            setDoc(usageRef, {[currentDate]: data})
+            setDoc(usageRef, {[currentDate]: [analytics]})
         } 
     }).then(()=>{
         res.send({successful: true})
