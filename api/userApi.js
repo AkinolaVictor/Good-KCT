@@ -9,6 +9,7 @@ const deleteAudience = require('../controllers/user/deleteAudience')
 const editAudience = require('../controllers/user/editAudience')
 const sendUserEmail = require('../controllers/user/sendUserEmail')
 const getAllUsers = require('../controllers/user/getAllUsers')
+const userDailyAnalytics = require('../controllers/user/userDailyAnalytics')
 
 // create an account
 router.post('/createAccount', signUp)
@@ -36,6 +37,9 @@ router.post('/sendUserEmail', sendUserEmail)
 
 // delete Audience
 router.post('/getAllUsers', getAllUsers)
+
+// delete Audience
+router.post('/userDailyAnalytics', userDailyAnalytics)
 
 
 
