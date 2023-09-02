@@ -12,6 +12,7 @@ async function userDailyAnalytics(req, res){
     // console.log(currentDate, analytics);
     // remove from audience
 
+    
     const usageRef = doc(database, 'usageAnalytics', userID)
     await getDoc(usageRef).then(async(docsnap)=>{
         if(docsnap.exists()){
