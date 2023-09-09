@@ -16,6 +16,8 @@ const bubble = require('./api/bubbleApi')
 const user = require('./api/userApi')
 const pushNotification = require('./api/pushNotificationApi')
 
+
+
 app.use(helmet())
 app.use(express.json())
 app.use(express.urlencoded({extended: false}))
@@ -61,6 +63,9 @@ app.use('/check', (req, res)=>{
 //         }
 //     )
 // })
+
+
+// console.log(global)
 
 const port = process.env.PORT || process.env.CONCEALED_MANUAL_PORT || 5001
 app.listen(port, ()=>{ /* Do Nothing */})

@@ -53,7 +53,7 @@ async function createBubble(req, res){
     // all file are uploaded on the client side
     saveData_New()
 
-    function checkForEveryone(){
+    function checkForEveryoneAndFollowers(){
         const bubble = [...thisBubble.bubble]
 
         const audienceNames = []
@@ -62,6 +62,21 @@ async function createBubble(req, res){
         }
 
         if(audienceNames.includes('Everyone') || audienceNames.includes('My Followers')){
+            return true
+        } else {
+            return false
+        }
+    }
+
+    function checkForEveryone(){
+        const bubble = [...thisBubble.bubble]
+
+        const audienceNames = []
+        for(let i=0; i<bubble.length; i++){
+            audienceNames.push(bubble[i].name)
+        }
+
+        if(audienceNames.includes('Everyone')){
             return true
         } else {
             return false
@@ -84,7 +99,7 @@ async function createBubble(req, res){
                     const data = [...snapshot.data().data]
                     if(!data.includes(postID)){
                         data.push(postID)
-                        updateDoc(botRef, {data})
+                        await updateDoc(botRef, {data})
                     }
                     // if(k===botData.length-1){
                     // }
@@ -200,7 +215,7 @@ async function createBubble(req, res){
                         }
                     }
 
-                    const discrenMessage = () => {
+                    const discernMessage = () => {
                         const bubble = thisBubble.bubble
                         for(let i=0; i<bubble.length; i++){
                             if(bubble[i].name==='Everyone'){
@@ -260,14 +275,14 @@ async function createBubble(req, res){
 
                     const data = {
                         title: `${constructTitle()}`,
-                        body: discrenMessage(),
+                        body: discernMessage(),
                         icon: decideNotifyIcon()
                     }
                     sendPushNotification(allBubbleAudience[i], data)
                 })
             }
 
-            if(checkForEveryone()){
+            if(checkForEveryoneAndFollowers()){
                 // feed everyone with this bubbbles
                 await getDoc(bubblesForEveryoneRef).then(async(docsnap)=>{
                     if(docsnap.exists()){
@@ -279,6 +294,8 @@ async function createBubble(req, res){
                             bubbleRefs: [feedRef]
                         })
                     }
+                }).then(()=>{
+                    
                 }).catch(()=>{
                     
                 })
