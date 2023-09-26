@@ -196,6 +196,10 @@ async function createReply_Old(req, res){
     await getDoc(docz).then(async(docsnap)=>{
         if(docsnap.exists()){
             let posts = {...docsnap.data()}
+            let replys = posts.reply
+            if(typeof(replys) === "string"){
+                replys = JSON.parse(posts.reply)
+            }
             // const thisPost = posts
             if(posts.activities.iAmOnTheseFeeds[userID].myActivities.replied){
                 data.replyNumber = posts.activities.iAmOnTheseFeeds[userID].replyNumber
@@ -234,8 +238,11 @@ async function createReply_Old(req, res){
             // let save_the_reply = ''
             if(path.length === 0){
                 // if(thisPost){
-                    posts.reply.push(data)
-                    const reply = posts.reply
+                    // posts.reply.push(data)
+                    // const reply = posts.reply
+                    // console.log("i replied", posts.reply);
+                    replys.push(data)
+                    const reply = JSON.stringify(replys)
                     await updateDoc(docz, {reply}).then(()=>{
                     // await updateDoc(docz, {posts}).then(()=>{
                         // res.send({successful: true})
@@ -245,8 +252,12 @@ async function createReply_Old(req, res){
                 // }
             }else if(path.length === 1) {
                 // if(thisPost){
-                    posts.reply[path[0]].reply.push(data)
-                    const reply = posts.reply
+                    // posts.reply[path[0]].reply.push(data)
+                    // const reply = posts.reply
+
+                    replys[path[0]].reply.push(data)
+                    const reply = JSON.stringify(replys)
+
                     await updateDoc(docz, {reply}).then(()=>{
                         // console.log('i actually worked at 2');
                     // await updateDoc(docz, {posts}).then(()=>{
@@ -257,7 +268,9 @@ async function createReply_Old(req, res){
                 // }
             }else if(path.length>1){
                 // buildReply(path)
-                const reply = posts.reply
+                // const reply = posts.reply
+
+                const reply = replys
 
                 let overallRep = [];
                 let eachReply = [];
@@ -298,8 +311,11 @@ async function createReply_Old(req, res){
                     final = dR[0]
                 }
                 // if(thisPost){
-                    posts.reply[path[0]] = final
-                    const finalReply = posts.reply
+                    // posts.reply[path[0]] = final
+                    // const finalReply = posts.reply
+
+                    replys[path[0]] = final
+                    const finalReply = JSON.stringify(replys)
                     await updateDoc(docz, {reply: finalReply}).then(()=>{
                     // await updateDoc(docz, {posts}).then(()=>{
                         // res.send({successful: true})

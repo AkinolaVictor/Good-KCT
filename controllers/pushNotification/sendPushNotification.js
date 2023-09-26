@@ -27,6 +27,18 @@ async function sendPushNotification(userID, data){
         title: 'Concealed',
         // body: 'This is a push Notification from concealed server',
         badge: 'https://firebasestorage.googleapis.com/v0/b/concealed-f8f32.appspot.com/o/systemFolder%2Ficons%2FconcealedLogo_64_solid.png?alt=media&token=e7c5f409-335c-4e8e-8258-cdbc154f6d15',
+        // actions: [
+        //     {
+        //         action: 'explore',
+        //         title: 'Expore',
+        //         // icon: '/concealedLogo_192_solid.png',
+        //     },
+        //     {
+        //         action: 'close',
+        //         title: 'Close',
+        //         // icon: '/concealedLogo_192_solid.png',
+        //     }
+        // ],
         ...data
     })
     const userSubscriptionRef = doc(database, 'savedPushSubscriptions', userID)

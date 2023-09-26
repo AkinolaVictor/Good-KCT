@@ -1,7 +1,5 @@
 const express = require('express')
 const router = express.Router()
-const {doc, setDoc, getDoc, updateDoc, deleteDoc} = require('firebase/firestore')
-const {database} = require('../database/firebase')
 const createBot = require('../controllers/bot/createBot')
 const deleteBot = require('../controllers/bot/deleteBot')
 const createTask = require('../controllers/bot/createTask')
@@ -11,7 +9,7 @@ const deactivateTask = require('../controllers/bot/deactivateTask')
 const activateTask = require('../controllers/bot/activateTask')
 const disengageBot = require('../controllers/bot/disengageBot')
 const deleteBotActivity = require('../controllers/bot/deleteBotActivity')
-const botBubbleUpdate = require('../controllers/bot/botBubbleUpdate')
+const getAllBots = require('../controllers/bot/getAllBots')
 
 
 // createbot
@@ -42,6 +40,6 @@ router.post('/disengageBot', disengageBot)
 router.post('/deleteBotActivity', deleteBotActivity)
 
 // delete bot activity
-router.post('/botBubbleUpdate', botBubbleUpdate)
+router.post('/getAllBots', getAllBots)
 
 module.exports = router

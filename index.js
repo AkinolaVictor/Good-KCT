@@ -14,8 +14,27 @@ const dbObj = require('./api/dbObj')
 const bot = require('./api/botApi')
 const bubble = require('./api/bubbleApi')
 const user = require('./api/userApi')
-const pushNotification = require('./api/pushNotificationApi')
+const chats = require('./api/chatApi')
+const http = require('http')
+const socketio = require('socket.io');
+const socketApi = require('./api/socketApi');
+// const pushNotification = require('./api/pushNotificationApi')
 
+
+const server = http.createServer(app)
+const io = socketio(server, {
+  // transports: ["polling", "websocket", "webtransport"],
+  cors: {
+    // origin: '*',
+    // sample of how this origin works
+    origin: ["https://concealed.vercel.app", "https://concealed-dev.vercel.app", "http://localhost:3000"]
+  }
+})
+
+io.on("connect", (socket)=>{
+  // console.log(socket.id);
+  socketApi(socket, io)
+})
 
 
 app.use(helmet())
@@ -39,9 +58,10 @@ app.use(morgan("dev")) //dev, tiny, ...
 
 app.use('/api', dbObj)
 app.use('/api/user', user)
-app.use('/api/pushNotification', pushNotification)
+// app.use('/api/pushNotification', pushNotification)
 app.use('/api/bot', bot)
 app.use('/api/bubble', bubble)
+app.use('/api/chats', chats)
 
 app.use('/api/test', (req, res)=>{
     res.status(200).send('testing api')
@@ -50,6 +70,9 @@ app.use('/api/test', (req, res)=>{
 app.use('/check', (req, res)=>{
     res.status(200).send('Server is working fine')
 })
+// const data = [1, 3, 4]
+// console.log(typeof(data));
+// console.log(typeof(JSON.stringify(data)));
 
 // app.use(express.static(path.join(__dirname, "./public")))
 
@@ -68,7 +91,8 @@ app.use('/check', (req, res)=>{
 // console.log(global)
 
 const port = process.env.PORT || process.env.CONCEALED_MANUAL_PORT || 5001
-app.listen(port, ()=>{ /* Do Nothing */})
+server.listen(port, ()=>{ /* Do Nothing */})
+// app.listen(port, ()=>{ /* Do Nothing */})
 module.exports = app
 
 

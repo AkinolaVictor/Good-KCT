@@ -33,16 +33,24 @@ async function deleteReply(req, res){
         // console.log('i ran');
         if(docsnap.exists()){
             let posts = {...docsnap.data()}
-            const replys = posts.reply
+            
+            let replys = posts.reply
+            if(typeof(replys) === "string"){
+                replys = JSON.parse(posts.reply)
+            }
     
             if (path.length === 1) {
-                const subreplys = posts.reply[path[0]].reply
+                // const subreplys = posts.reply[path[0]].reply
+                const subreplys = replys[path[0]].reply
                 if(subreplys.length){
-                    posts.reply[path[0]].message = '**The content of this reply has been deleted**';
+                    // posts.reply[path[0]].message = '**The content of this reply has been deleted**';
+                    replys[path[0]].message = '**The content of this reply has been deleted**';
                 } else {
-                    posts.reply[path[0]] = 'Deleted...';
+                    // posts.reply[path[0]] = 'Deleted...';
+                    replys[path[0]] = 'Deleted...';
                 }
-                const reply = posts.reply
+                // const reply = posts.reply
+                const reply = JSON.stringify(replys)
                 await updateDoc(docz, {reply})
             }else{
                 buildReply(path, replys)
@@ -69,8 +77,9 @@ async function deleteReply(req, res){
                     }
                     final = dR[0]
                 }
-                posts.reply[path[0]] = final;
-                const reply = posts.reply
+                // posts.reply[path[0]] = final;
+                replys[path[0]] = final;
+                const reply = JSON.stringify(replys)
                 await updateDoc(docz, {reply})
             }
         } else {

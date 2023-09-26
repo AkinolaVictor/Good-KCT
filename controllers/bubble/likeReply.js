@@ -188,7 +188,11 @@ async function likeReply(req, res){
         // console.log('i ran');
         if(docsnap.exists()){
             let posts = {...docsnap.data()}
-            const replys = posts.reply
+            // console.log(posts.reply);
+            let replys = posts.reply
+            if(typeof(posts.reply) === "string"){
+                replys = JSON.parse(posts.reply)
+            }
 
             // let path = [...path]
             buildReply(path, replys)
@@ -207,9 +211,12 @@ async function likeReply(req, res){
                 dR[i-1].reply[path[i]] = dR[i]
             }
             final = dR[0]
-                
-            posts.reply[path[0]] = final;
-            const reply = posts.reply
+            
+            // posts.reply[path[0]] = final;
+            // const reply = posts.reply
+
+            replys[path[0]] = final;
+            const reply = JSON.stringify(replys)
             await updateDoc(docz, {totalLikes: increment(1), reply}).then(()=>{
                 const notificationData = {
                     message: `Reply: ${message}`

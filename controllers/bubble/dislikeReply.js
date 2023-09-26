@@ -3,6 +3,7 @@ const {doc, getDoc, updateDoc, setDoc, increment} = require('firebase/firestore'
 const { v4: uuidv4 } = require('uuid')
 const date = require('date-and-time')
 const {database} = require('../../database/firebase')
+const { default: sizeof } = require('firestore-size')
 
 async function dislikeReply(req, res){
     const bubbleID = req.body.bubbleID
@@ -34,7 +35,13 @@ async function dislikeReply(req, res){
         // console.log('i ran');
         if(docsnap.exists()){
             let posts = {...docsnap.data()}
-            const replys = posts.reply
+            // const dataSize = sizeof(posts)
+            // console.log(dataSize);
+            
+            let replys = posts.reply
+            if(typeof(replys) === "string"){
+                replys = JSON.parse(posts.reply)
+            }
 
             // let path = [...path]
             buildReply(path, replys)
@@ -54,9 +61,11 @@ async function dislikeReply(req, res){
                 dR[i-1].reply[path[i]] = dR[i]
             }
             final = dR[0]
-            posts.reply[path[0]] = final;
+            // posts.reply[path[0]] = final;
+            replys[path[0]] = final;
 
-            const reply = posts.reply
+            // const reply = posts.reply
+            const reply = JSON.stringify(replys)
             await updateDoc(docz, {totalLikes: increment(-1), reply})
 
         } else {

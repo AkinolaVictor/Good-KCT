@@ -121,6 +121,12 @@ async function createBubble(req, res){
         }
 
         thisBubble.feedRef = feedRef
+        // DO ALL STRINGIFY HERE
+        const emptyReply = []
+        const emptyShareStructure = {}
+
+        thisBubble.reply = JSON.stringify(emptyReply)
+        thisBubble.shareStructure = JSON.stringify(emptyShareStructure)
         
         const allBubbleAudience = [...thisBubble.audience]
         for(let i=0; i<allBubbleAudience.length; i++){

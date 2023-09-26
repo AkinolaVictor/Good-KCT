@@ -27,7 +27,7 @@ async function deleteBotActivity(req, res){
             })
         }
     }).catch(()=>{
-        res.send({successful: 'true'})
+        res.send({successful: false})
     })
 }
 

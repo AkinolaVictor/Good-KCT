@@ -10,6 +10,7 @@ async function confirmShareRequest(req, res){
     const userID = req.body.userID // user.id
     let data = req.body.data
     let pathOfShare = [...data.feed.sharePath]
+    console.log(pathOfShare);
     // const thisBubble = {...req.body.thisBubble}
     
     let overallShare = []
@@ -59,73 +60,117 @@ async function confirmShareRequest(req, res){
 
     async function confirmRequest(){
         // update my notification
-        await shareBubble()
-        const creatorNotificationsRef = doc(database, 'notifications', userID)
-        await getDoc(creatorNotificationsRef).then(async(snapshot)=>{
-            if(snapshot.exists()){
-                // update all
-                const all=[...snapshot.data().all]
-                for(let i=0; i<all.length; i++){
-                    if(all[i].id === data.id && all[i].type==='shareRequest'){
-                        all[i].status = 'granted'
-                        await updateDoc(creatorNotificationsRef, {all})
-                        break
-                    }
-                }
-                // updateDoc(creatorNotificationsRef, {all})
-            } 
-        })
-
-        // notify audience
-        const newData = {...data}
-        newData.message = 'Your request to share this bubble was granted, it has been automatically pushed to your followers'
-        newData.status = 'granted'
-        newData.time = getDate()
         
-        const audienceNotificationsRef = doc(database, 'notifications', data.userID)
-        await getDoc(audienceNotificationsRef).then(async(snapshot)=>{
-            if(!snapshot.exists()){
-                setDoc(audienceNotificationsRef, {
-                    all: [newData]
-                })
-            } else {
-                const all=[...snapshot.data().all]
-                all.push(newData)
-                updateDoc(audienceNotificationsRef, {all})
-            }
-        }).then(()=>{
-            const data = {
-                title: `${newData.message}`,
-                body: 'please check the notification section in the app to see the bubble.',
-                icon: false
-            }
-            sendPushNotification(data.userID, data)
-        })
-    }
-    const discernPrevShares = () => {
-        // if(pathOfShare.length==1 && pathOfShare[0]===userID){
-
-        // if i'm the last person to share
-        // if(pathOfShare.length==1 && pathOfShare[pathOfShare.length-1]===userID){
-        if(pathOfShare.length>=1 && pathOfShare[pathOfShare.length-1]===userID){
-            return pathOfShare
-        } else {
-            return [...pathOfShare, userID]
+        await shareBubble(notify)
+        async function notify(){
+            const creatorNotificationsRef = doc(database, 'notifications', userID)
+            await getDoc(creatorNotificationsRef).then(async(snapshot)=>{
+                if(snapshot.exists()){
+                    // update all
+                    const all=[...snapshot.data().all]
+                    for(let i=0; i<all.length; i++){
+                        if(all[i].id === data.id && all[i].type==='shareRequest'){
+                            all[i].status = 'granted'
+                            await updateDoc(creatorNotificationsRef, {all})
+                            break
+                        }
+                    }
+                    // updateDoc(creatorNotificationsRef, {all})
+                } 
+            }).catch(()=>{})
+    
+            // notify audience
+            const newData = {...data}
+            newData.message = 'Your request to share this bubble was granted, it has been automatically pushed to your followers'
+            newData.status = 'granted'
+            newData.time = getDate()
+            
+            const audienceNotificationsRef = doc(database, 'notifications', data.userID)
+            await getDoc(audienceNotificationsRef).then(async(snapshot)=>{
+                if(!snapshot.exists()){
+                    setDoc(audienceNotificationsRef, {
+                        all: [newData]
+                    })
+                } else {
+                    const all=[...snapshot.data().all]
+                    all.push(newData)
+                    updateDoc(audienceNotificationsRef, {all})
+                }
+            }).then(()=>{
+                const data = {
+                    title: `${newData.message}`,
+                    body: 'please check the notification section in the app to see the bubble.',
+                    icon: false
+                }
+                sendPushNotification(data.userID, data)
+            }).catch(()=>{})
         }
     }
 
-    async function shareBubble(){
+    const discernPrevShares = () => {
+        // if i'm the last person to share
+        // if(pathOfShare.length==1 && pathOfShare[pathOfShare.length-1]===userID){
+        if(pathOfShare.length>=1 && pathOfShare[pathOfShare.length-1]===data.userID){
+            return pathOfShare
+        } else {
+            return [...pathOfShare, data.userID]
+        }
+    }
+
+    async function shareBubble(notify){
         // console.log('i got here 1');
         const bubbleRef = doc(database, 'bubbles', data.feed.postID)
         await getDoc(bubbleRef).then(async(snapshot)=>{
             if(snapshot.exists()){
                 // console.log('i got here 2');
                 const posts = {...snapshot.data()}
+                let shareStructure = {}
+                if(typeof(posts.shareStructure) === "string"){
+                    shareStructure = JSON.parse(posts.shareStructure)
+                } else {
+                    shareStructure = posts.shareStructure
+                }
+
+                // THIS HAS TO BE DONE ON TOP SO AS TO PRESERVE "data.feed.sharePath"
+                if( pathOfShare[pathOfShare.length - 1]!==data.userID){
+                    const mainPath = [...data.feed.sharePath]
+                    console.log(mainPath);
+                    mainPath.shift()
+                    // delete mainPath[0]
+                    const path2 = [...mainPath]
+                    console.log(path2, mainPath);
+                    if(path2.length>1){
+                        console.log('before spreadShare');
+                        spreadShare(path2, path2.length, shareStructure)
+                        // spreadShare(path2, path2.length, posts.shareStructure)
+                        
+                        // const shareHub = [...overallShare]
+                        if(overallShare[overallShare.length-1][data.userID]===undefined){
+                            overallShare[overallShare.length-1][data.userID] = {}
+                            // build destructured share
+                            
+                            const finalProduct = buildShare(path2)
+                            console.log('after buildShare');
+
+                            // posts.shareStructure[path2[0]] = finalProduct
+                            shareStructure[path2[0]] = finalProduct
+                        }
+                    } else if(path2.length===1){
+                        // posts.shareStructure[path2[0]][userID]={}
+                        // console.log("called at 1");
+                        shareStructure[path2[0]][data.userID]={}
+                        // console.log("called at 1b");
+                    } else {
+                        // posts.shareStructure[userID]={}
+                        shareStructure[data.userID]={}
+                    }
+    
+                }
 
                 // if sharing a reply, first update the audience requesting for permission
                 if(data.feed.data.path.length){
                     // if audience already got this reply
-                    // console.log('i got here 3');
+                    console.log("i started here");
                     const current = posts.activities.iAmOnTheseFeeds[data.userID].replyPath
                     if(!current.includes(`${data.feed.data.path}`)){
                         const audienceRef = doc(database, 'feeds', data.userID)
@@ -134,17 +179,17 @@ async function confirmShareRequest(req, res){
                                 const bubbles = [...docsnap.data().bubbles]
                                 // update
                                 posts.activities.iAmOnTheseFeeds[data.userID].replyPath.push(`${data.feed.data.path}`)
+                                data.feed.sharePath = discernPrevShares()
                                 bubbles.push(data.feed)
                                 await updateDoc(audienceRef, {bubbles})
                             }
                             
                         })
                     }
+                    console.log("i finished here");
                 }
-                // console.log('i got here 4');
 
                 // share with audience followers
-                // console.log('i got here 5');
                 const audienceFollowersRef = doc(database, 'followers', data.userID)
                 await getDoc(audienceFollowersRef).then(async(docsnap)=>{
                     if(docsnap.exists()){
@@ -197,7 +242,7 @@ async function confirmShareRequest(req, res){
                                     const current = posts.activities.iAmOnTheseFeeds[followers[i]].replyPath
                                     if(!current.includes(`${data.feed.data.path}`)){
                                         posts.activities.iAmOnTheseFeeds[followers[i]].replyPath.push(`${data.feed.data.path}`)
-                                    }else{
+                                    } else {
                                         // if user already has the replies skip the remaining codes and move to the next counter
                                         continue
                                     }
@@ -212,48 +257,16 @@ async function confirmShareRequest(req, res){
 
                         }
                     }
-                })
+                }).catch(()=>{})
                 
 
+                console.log('i completed it');
                 // decrease share request
                 if(posts.activities.permissionRequests>0){
                     posts.activities.permissionRequests--
                 }
-                // console.log('i got here 2');
-                // console.log('i got here 6');
-
-                // let pathOfShare = [...thisBubble.refDoc.sharePath]
-                if( pathOfShare[pathOfShare.length - 1]!==userID){
-                    // const rawPath = [...data.feed.sharePath]
-                    // remove the audience id from the path, it was added during share
-                    // if(rawPath.length>1){
-                    //     rawPath.pop()
-                    // }
-                    const mainPath = [...data.feed.sharePath]
-                    mainPath.shift()
-                    const path2 = [...mainPath]
-                    if(path2.length>1){
-                        // console.log('before spreadShare');
-                        spreadShare(path2, path2.length, posts.shareStructure)
-                        // console.log('after spreadShare');
-                        // const shareHub = [...overallShare]
-                        if(overallShare[overallShare.length-1][userID]===undefined){
-                            overallShare[overallShare.length-1][userID] = {}
-                            // build destructured share
-                            // console.log('before buildShare');
-                            const finalProduct = buildShare(path2)
-                            // console.log('after buildShare');
-                            posts.shareStructure[path2[0]] = finalProduct
-                        }
-                    } else if(path2.length==1){
-                        posts.shareStructure[path2[0]][userID]={}
-                    } else {
-                        posts.shareStructure[userID]={}
-                    }
-    
-                }
-                // console.log('i got here 9');
                                         
+                // update activities of the person sharing this bubble
                 if(posts.activities.iAmOnTheseFeeds[data.userID].myActivities.activityIndex){
                 } else {
                     posts.activities.lastActivityIndex++
@@ -268,21 +281,58 @@ async function confirmShareRequest(req, res){
                     // posts.activities.shares++
                     posts.activities.allWhoHaveShared[data.userID]=true
                 }
+
+
                 
-                // increase shares
-                // posts.activities.shares++
+                // update last activity
+                if(!posts.activities.lastActivities){
+                    posts.activities.lastActivities=[]
+                }
+                const thisActivity = 'shared'
+                const lastActivities = posts.activities.lastActivities
+                const activityData = {
+                    activity: thisActivity,
+                    userID: data.userID,
+                    date: getDate()
+                }
+
+                if(lastActivities.length>0){
+                    const last = lastActivities[lastActivities.length - 1]
+                    // if the last activity that happen is not the same as this
+                    if(last.activity!==thisActivity){
+                        for(let i=0; i<lastActivities.length; i++){
+                            const current = lastActivities[i]
+                            // if this user already has this activity in the stack of activities
+                            if(current.userID===data.userID && current.activity===thisActivity){
+                                break
+                            }
+                            if(i===lastActivities.length-1){
+                                posts.activities.lastActivities.push(activityData)
+                                if(posts.activities.lastActivities.length>10){
+                                    posts.activities.lastActivities.shift()
+                                }
+                                // updateFunc()
+                            }
+                        }
+                    }
+                } else {
+                    posts.activities.lastActivities.push(activityData)
+                    // updateFunc()
+                }
 
                 // update post
                 const activities = posts.activities
-                const shareStructure = posts.shareStructure
-                updateDoc(bubbleRef, {activities, shareStructure})
+                const savedShareStructure = JSON.stringify(shareStructure)
+                await updateDoc(bubbleRef, {activities, shareStructure: savedShareStructure})
                 // console.log('i completed');
             }
+        }).then(async()=>{
+            await notify()
         }).then(()=>{
-            // console.log('done');
+            console.log('done');
             res.send({successful: true})
         }).catch(()=>{
-            // console.log('undone');
+            console.log('undone');
             res.send({successful: false, message: 'Network error: failed to share bubble'})
         })
     }

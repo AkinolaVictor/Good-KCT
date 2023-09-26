@@ -10,6 +10,22 @@ const editAudience = require('../controllers/user/editAudience')
 const sendUserEmail = require('../controllers/user/sendUserEmail')
 const getAllUsers = require('../controllers/user/getAllUsers')
 const userDailyAnalytics = require('../controllers/user/userDailyAnalytics')
+const updateUserProfile = require('../controllers/user/updateUserProfile')
+const savePushSubscribe = require('../controllers/pushNotification/savePushSubscribe')
+const getUsers = require('../controllers/user/getUsers')
+const getUserBubbles = require('../controllers/user/getUserBubbles')
+const getUserFollowers = require('../controllers/user/getUserFollowers')
+const getUserFollowings = require('../controllers/user/getUserFollowings')
+const getUserLikes = require('../controllers/user/getUserLikes')
+const getUserShares = require('../controllers/user/getUserShares')
+const getUserReplies = require('../controllers/user/getUserReplies')
+const initializeUser = require('../controllers/user/initializeUser')
+const createNewUser = require('../controllers/user/createNewUser')
+const deleteNotification = require('../controllers/user/deleteNotification')
+const changeProfileImages = require('../controllers/user/changeProfileImages')
+const deleteProfileImages = require('../controllers/user/deleteProfileImage')
+const getUserNotification = require('../controllers/user/getUserNotification')
+const getUserBotActivities = require('../controllers/user/getUserBotActivities')
 
 // create an account
 router.post('/createAccount', signUp)
@@ -40,6 +56,57 @@ router.post('/getAllUsers', getAllUsers)
 
 // delete Audience
 router.post('/userDailyAnalytics', userDailyAnalytics)
+
+// delete Audience
+router.post('/updateUserProfile', updateUserProfile)
+
+// pushNotification
+router.post('/savePushSubscribe', savePushSubscribe)
+
+// pushNotification
+router.post('/getUsers', getUsers)
+
+// pushNotification
+router.post('/getUserBubbles', getUserBubbles)
+
+// pushNotification
+router.post('/getUserFollowers', getUserFollowers)
+
+// pushNotification
+router.post('/getUserFollowings', getUserFollowings)
+
+// pushNotification
+router.post('/getUserLikes', getUserLikes)
+
+// pushNotification
+router.post('/getUserShares', getUserShares)
+
+// pushNotification
+router.post('/getUserReplies', getUserReplies)
+
+// pushNotification
+router.post('/initializeUser', initializeUser)
+
+// pushNotification
+router.post('/createNewUser', createNewUser)
+
+// pushNotification
+router.post('/deleteNotification', deleteNotification)
+
+// pushNotification
+router.post('/changeProfileImages', changeProfileImages)
+
+// pushNotification
+router.post('/deleteProfileImage', changeProfileImages)
+
+// pushNotification
+router.post('/deleteProfileImages', deleteProfileImages)
+
+// pushNotification
+router.post('/getUserNotification', getUserNotification)
+
+// pushNotification
+router.post('/getUserBotActivities', getUserBotActivities)
 
 
 

@@ -1,10 +1,7 @@
 const express = require('express')
 const router = express.Router()
-// const {database} = require('../database/firebase')
-// const signUp = require('../controllers/user/signUp')
 const createBubble = require('../controllers/bubble/createBubble')
 const createReply_Old = require('../controllers/bubble/createReply')
-// const likeBubble_old = require('../controllers/bubble/likeBubble')
 const deleteBubble = require('../controllers/bubble/deleteBubble')
 const likeBubble = require('../controllers/bubble/likeBubble')
 const dislikeBubble = require('../controllers/bubble/dislikeBubble')
@@ -20,6 +17,11 @@ const dislikeReply = require('../controllers/bubble/dislikeReply')
 const denyShareRequest = require('../controllers/bubble/denyShareRequest')
 const confirmShareRequest = require('../controllers/bubble/confirmShareRequest')
 const registerAudience = require('../controllers/bubble/registerAudience')
+const bubbleBotUpdate = require('../controllers/bubble/bubbleBotUpdate')
+const updateImpression = require('../controllers/bubble/updateImpression')
+const getBubblesForEveryone = require('../controllers/bubble/getBubblesForEveryone')
+const getBasicBubble = require('../controllers/bubble/getBasicBubble')
+const checkReplyEligibity = require('../controllers/bubble/checkReplyEligibity')
 
 // create a bubble
 router.post('/createBubble', createBubble)
@@ -71,6 +73,21 @@ router.post('/denyShareRequest', denyShareRequest)
 
 // opened chart
 router.post('/confirmShareRequest', confirmShareRequest)
+
+// opened chart
+router.post('/bubbleBotUpdate', bubbleBotUpdate)
+
+// opened chart
+router.post('/updateImpression', updateImpression)
+
+// opened chart
+router.post('/getBubblesForEveryone', getBubblesForEveryone)
+
+// opened chart
+router.post('/getBasicBubble', getBasicBubble)
+
+// opened chart
+router.post('/checkReplyEligibity', checkReplyEligibity)
 
 
 module.exports = router

@@ -1,7 +1,7 @@
-const {doc, getDoc, updateDoc, setDoc, deleteDoc} = require('firebase/firestore')
-const {getDownloadURL, ref, uploadBytes, deleteObject} = require('firebase/storage')
-const date = require('date-and-time')
-const {database, storage} = require('../../database/firebase')
+const {doc, getDoc, updateDoc} = require('firebase/firestore')
+// const {getDownloadURL, ref, uploadBytes, deleteObject} = require('firebase/storage')
+// const date = require('date-and-time')
+const {database} = require('../../database/firebase')
 
 async function deleteBubbleForMe(req, res){
 

@@ -10,29 +10,6 @@ async function openedChart(req, res){
     const thisBubble = {...req.body.thisBubble}
     // thisBubble.userID = thisBubble.user.id
     // settings, userID
-    let secrecySettings = thisBubble.settings.secrecyData
-    // console.log(req.body);
-    function discernUserIdentity(){
-        if(secrecySettings.atmosphere === 'Night (Absolute secrecy)'){
-            return true
-        } else if(secrecySettings.atmosphere === 'Dark room (Absolute secrecy for reply only)'){
-            return true
-        } else if(secrecySettings.atmosphere === 'Man behind the scene'){
-            return true
-        } else if(secrecySettings.atmosphere === 'Just know its me'){
-            return true
-        } else if(secrecySettings.atmosphere === 'Annonymous' || secrecySettings.atmosphere === 'Anonymous'){
-            return false
-        } else if(secrecySettings.atmosphere === 'On mask'){
-            return true
-        } else if(secrecySettings.atmosphere === 'I see you all'){
-            return true
-        } else if(secrecySettings.atmosphere === 'Day (Absolute openness)'){
-            return false
-        } else {
-            return false
-        }
-    }
 
     function updateLastActivity(thisPost, activity, updateFunc){
         function getDate(){
