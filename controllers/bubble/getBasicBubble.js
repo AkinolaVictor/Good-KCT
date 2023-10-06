@@ -4,6 +4,11 @@ const {database} = require('../../database/firebase')
 async function getBasicBubble(req, res){
     let userID = req.body.userID
     const feedRef = req.body.feedRef
+
+
+    if(!feedRef){
+        res.send({successful: false, message: 'some error occured while trying to get bubble'})
+    }
     // console.log(feedRef);
     const bubbleRef = doc(database, 'bubbles', feedRef.postID)
     await getDoc(bubbleRef).then(async(docSnap)=>{
@@ -155,14 +160,40 @@ async function getBasicBubble(req, res){
                 const secrecySettings = thisBubble.settings.secrecyData.atmosphere
                 if(secrecySettings==='On mask'){
                     return true 
-                } else if (secrecySettings === 'Annonymous' || secrecySettings === 'Anonymous'){
+                } else if (secrecySettings === 'Anonymous'){
                     return true
                 } else if (secrecySettings === 'Man behind the scene'){
                     return true
                 } else if (secrecySettings === 'Just know its me'){
                     return true
-                } else if (secrecySettings === 'Night (Absolute secrecy)'){
+                } else if(secrecySettings.atmosphere === 'Normal'){
+                    return secrecySettings.identity=='No'?false:true
+                } else if (secrecySettings.atmosphere === 'Custom'){
+                    if(secrecySettings.custom.bubble==="Nobody"){
+                        return true
+                    } else if(secrecySettings.custom.bubble==="Everyone"){
+                        return false
+                    } else if(secrecySettings.custom.bubble==="I want to handpick"){
+                        const bubbleIDs = secrecySettings.custom.bubbleIDs
+                        if(bubbleIDs[userID]){
+                            return false
+                        } else {
+                            return true
+                        }
+                    } else if(secrecySettings.custom.bubble==="I want to handpick exceptions"){
+                        const bubbleIDs = secrecySettings.custom.bubbleIDs
+                        if(bubbleIDs[userID]){
+                            return true
+                        } else {
+                            return false
+                        }
+                    } else {
+                        return true
+                    }
+                } else if (secrecySettings === 'Night'){
                     return true
+                } else {
+                    return false
                 }
             }
 

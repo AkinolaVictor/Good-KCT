@@ -22,13 +22,17 @@ async function createBubble(req, res){
     
     
     function discernUserIdentity(){
-        if(secrecySettings.atmosphere === 'Night (Absolute secrecy)'){
+        if(secrecySettings.atmosphere === 'Night'){
             return true
-        } else if(secrecySettings.atmosphere === 'Dark room (Absolute secrecy for reply only)'){
+        } else if(secrecySettings.atmosphere === 'Custom'){
+            return true
+        } else if(secrecySettings.atmosphere === 'Normal'){
+            return true
+        } else if(secrecySettings.atmosphere === 'Dark room'){
             return true
         } else if(secrecySettings.atmosphere === 'Man behind the scene'){
             return true
-        } else if(secrecySettings.atmosphere === 'Annonymous' || secrecySettings.atmosphere === 'Anonymous'){
+        } else if(secrecySettings.atmosphere === 'Anonymous'){
             return false
         } else if(secrecySettings.atmosphere === 'On mask'){
             return true

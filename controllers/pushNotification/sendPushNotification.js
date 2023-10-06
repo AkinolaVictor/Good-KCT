@@ -26,7 +26,7 @@ async function sendPushNotification(userID, data){
     const payload = JSON.stringify({
         title: 'Concealed',
         // body: 'This is a push Notification from concealed server',
-        badge: 'https://firebasestorage.googleapis.com/v0/b/concealed-f8f32.appspot.com/o/systemFolder%2Ficons%2FconcealedLogo_64_solid.png?alt=media&token=e7c5f409-335c-4e8e-8258-cdbc154f6d15',
+        // badge: 'https://firebasestorage.googleapis.com/v0/b/concealed-f8f32.appspot.com/o/systemFolder%2Ficons%2FconcealedLogo_64_solid.png?alt=media&token=e7c5f409-335c-4e8e-8258-cdbc154f6d15',
         // actions: [
         //     {
         //         action: 'explore',
@@ -39,6 +39,7 @@ async function sendPushNotification(userID, data){
         //         // icon: '/concealedLogo_192_solid.png',
         //     }
         // ],
+        vibrate: [200, 100, 200],
         ...data
     })
     const userSubscriptionRef = doc(database, 'savedPushSubscriptions', userID)

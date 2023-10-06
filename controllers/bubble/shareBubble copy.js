@@ -54,9 +54,13 @@ async function shareBubble(req, res){
     }
     
     function discernUserIdentity(){
-        if(secrecySettings.atmosphere === 'Night (Absolute secrecy)'){
+        if(secrecySettings.atmosphere === 'Night'){
             return true
-        } else if(secrecySettings.atmosphere === 'Dark room (Absolute secrecy for reply only)'){
+        } else if(secrecySettings.atmosphere === 'Custom'){
+            return true
+        } else if(secrecySettings.atmosphere === 'Normal'){
+            return true
+        } else if(secrecySettings.atmosphere === 'Dark room'){
             return true
         } else if(secrecySettings.atmosphere === 'Man behind the scene'){
             return true
