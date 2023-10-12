@@ -1,10 +1,10 @@
 const {doc, getDoc, updateDoc} = require('firebase/firestore')
 const {database} = require('../../database/firebase')
+const { dataType } = require('../../utils/utilsExport')
 
 async function getBasicBubble(req, res){
     let userID = req.body.userID
     const feedRef = req.body.feedRef
-
 
     if(!feedRef){
         res.send({successful: false, message: 'some error occured while trying to get bubble'})
