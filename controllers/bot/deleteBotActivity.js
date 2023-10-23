@@ -5,12 +5,13 @@ const botActivities = require('../../models/botActivities')
 async function deleteBotActivity(req, res){
     const userID = req.body.userID
     const activityID = req.body.activityID
-    
+
+    // console.log("test");
     // console.log("test");
 
     const userBotActivites = await botActivities.findOne({userID}).lean()
     if(!userBotActivites){
-        res.send({successful: false, message: "activity not found"})
+        res.send({successful: false, message: "activity not found in database"})
         return
     }
 
