@@ -1,4 +1,4 @@
-const { MongoClient } = require("mongodb");
+// const { MongoClient } = require("mongodb");
 const { default: mongoose } = require("mongoose");
 
 // Discern production and dev
@@ -13,6 +13,32 @@ const dbname = process.env.DB_NAME
 
 let clientPromise
 let mongoClient = null
+let cached = global.mongoose;
+
+if(!cached) cached = global.mongoose = {conn: null, promise: null};
+
+async function connectWithMongoosex(func){
+    const options = {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        dbName: dbname,
+        // useFindAndModify: false, 
+        // useCreateIndex: true, 
+        // poolSize: 2, 
+        // socketTimeoutMS: 10000,
+    }
+    if(cached.conn) return cached.conn;
+    if(!cached.promise){
+        cached.promise = mongoose.connect(uri, options).then((mongoose) => {
+            console.log('MONGODB CONNECTION SUCESSFUL');
+            return mongoose;
+        }).catch((error)=>{
+            console.log(error, "MONGODB CONNECTION ERROR");
+        });
+    }
+    cached.conn = await cached.promise;
+    return cached.conn;
+}
 
 async function connectWithMongoose(func){
     const options = {
@@ -25,6 +51,8 @@ async function connectWithMongoose(func){
             await mongoose.connect(uri, options).then((mongodb)=>{
                 console.log("connected to db in local");
                 global._mongoClientPromise = mongodb
+                clientPromise = mongodb
+                mongoClient = mongodb.connection.getClient
                 func()
             }).catch(()=>{
                 console.log("error encountered while trying to connect to db in local");
@@ -32,17 +60,21 @@ async function connectWithMongoose(func){
             })
         } else {
             console.log("already connected");
+            clientPromise = global._mongoClientPromise
         }
-        clientPromise = global._mongoClientPromise
     } else {
-        await mongoose.connect(uri, options).then((mongodb)=>{
-            // console.log("connected to db in server");
-            mongoClient = mongodb.connection.getClient
-            clientPromise = mongodb
-        }).catch(()=>{
-            console.log("error encountered while trying to connect to db in server");
-            clientPromise = null
-        })
+        if (!global._mongoClientPromise) {
+            await mongoose.connect(uri, options).then((mongodb)=>{
+                // console.log("connected to db in server");
+                mongoClient = mongodb.connection.getClient
+                clientPromise = mongodb
+                global._mongoClientPromise = mongodb
+            }).catch(()=>{
+                console.log("error encountered while trying to connect to db in server");
+                clientPromise = null
+                global._mongoClientPromise = null
+            })
+        }
     }
 }
 

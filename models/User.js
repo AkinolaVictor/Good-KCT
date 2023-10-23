@@ -1,4 +1,5 @@
 const { default: mongoose } = require("mongoose");
+// const { UserModel } = require("../database/mongooseConnection2");
 
 const userSchema = mongoose.Schema({
     id: String,
@@ -28,5 +29,10 @@ const userSchema = mongoose.Schema({
 }, { strict: false, minimize: false})
 
 const User = mongoose.model("users", userSchema)
+// async function User(){
+//     const data = await UserModel()
+//     return data
+// }
+
 
 module.exports = User

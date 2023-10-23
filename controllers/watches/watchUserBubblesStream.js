@@ -17,7 +17,7 @@ function watchUserBubblesStream(){
 
                 bubbles.formattedDate = formattedDate
                 bubbles._id && delete bubbles._id
-                console.log(bubbles);
+                // console.log(bubbles);
                 await setDoc(userRepliesRef, {...bubbles}).catch(()=>{})
             }
         })

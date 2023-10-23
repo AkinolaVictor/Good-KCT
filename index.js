@@ -22,12 +22,14 @@ const { connectWithMongoose} = require('./database/mongooseConncetion');
 const { default: mongoose } = require('mongoose');
 const watchAllStreams = require('./controllers/watches/watchAllStreams');
 const copyAll = require('./controllers/copy/copyAll');
+const { connectWithMongoose2 } = require('./database/mongooseConnection2');
 // const pushNotification = require('./api/pushNotificationApi')
 
 
 // CONNECT TO DATABASE
 // connectWithMongoose(copyAll)
-connectWithMongoose(()=>{})
+connectWithMongoose2()
+// connectWithMongoose(()=>{})
 watchAllStreams()
 mongoose.pluralize(null)
 // copyAll()
@@ -74,7 +76,6 @@ app.use('/api/user', user)
 app.use('/api/bot', bot)
 app.use('/api/bubble', bubble)
 app.use('/api/chats', chats)
-// app.use('/api/copy', copyAll)
 
 app.use('/api/test', (req, res)=>{
     res.status(200).send('testing api')

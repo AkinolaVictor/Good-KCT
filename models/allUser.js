@@ -1,5 +1,10 @@
 // feeds
+// const { mongoosedb } = require("../database/mongooseConncetion")
+
 const { default: mongoose } = require("mongoose");
+// if(mongoosedb){
+// }
+// const mongoose = mongoosedb
 
 const allUserSchema = mongoose.Schema({
     users: {},
