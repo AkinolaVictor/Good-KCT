@@ -2,7 +2,7 @@
 const { setDoc, doc } = require("firebase/firestore");
 const { database } = require("../../database/firebase");
 const date = require('date-and-time');
-const botActivities = require("../../models/BotActivities");
+const botActivities = require("../../models/botActivities");
 
 function watchBotActivityStream(){
     try{

@@ -2,7 +2,7 @@ const {doc, setDoc, getDoc, updateDoc} = require('firebase/firestore')
 const {database} = require('../../database/firebase')
 const bot = require('../../models/bot')
 const User = require('../../models/User')
-const botActivities = require('../../models/BotActivities')
+const botActivities = require('../../models/botActivities')
 
 async function createBot(req, res){
     const Bot = req.body.bot

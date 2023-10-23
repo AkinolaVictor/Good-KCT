@@ -3,7 +3,7 @@ const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
 // const {getDownloadURL, ref, uploadBytes, deleteObject} = require('firebase/storage')
 // const date = require('date-and-time')
 const {database} = require('../../database/firebase')
-const botActivities = require('../../models/BotActivities')
+const botActivities = require('../../models/botActivities')
 const bubble = require('../../models/bubble')
 
 async function bubbleBotUpdate(req, res){

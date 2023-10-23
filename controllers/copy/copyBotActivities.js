@@ -1,6 +1,6 @@
 const { default: axios } = require("axios")
 const { baseUrl } = require("../../utils/utilsExport")
-const botActivities = require("../../models/BotActivities")
+const botActivities = require("../../models/botActivities")
 
 async function copyBotActivities(){
     
