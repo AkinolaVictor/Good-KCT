@@ -7,6 +7,7 @@ const watchFollowerStream = require("./watchFollowerStream")
 const watchFollowingtream = require("./watchFollowingStream")
 const watchNotificationStream = require("./watchNotificationStream")
 const watchSavedAudienceStream = require("./watchSavedAudienceStream")
+const watchUserBubblesStream = require("./watchUserBubblesStream")
 const watchUserFeedsStream = require("./watchUserFeedsStream")
 const watchUserLikesStream = require("./watchUserLikesStream")
 const watchUserRepliesStream = require("./watchUserRepliesStream")
@@ -28,6 +29,7 @@ function watchAllStreams(){
     watchUserShareStream()
     watchUserStream()
     watchChatsStream()
+    watchUserBubblesStream()
 }
 
 module.exports = watchAllStreams
