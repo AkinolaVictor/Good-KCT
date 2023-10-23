@@ -1,6 +1,7 @@
 const { MongoClient } = require("mongodb");
 const { default: mongoose } = require("mongoose");
 
+// Discern production and dev
 const uri = process.env.MONGODB_URI_DEV
 // const uri = process.env.MONGODB_URI
 const dbname = process.env.DB_NAME
