@@ -26,7 +26,6 @@ const copyAll = require('./controllers/copy/copyAll');
 
 
 // CONNECT TO DATABASE
-// connectToDB()
 // connectWithMongoose(copyAll)
 connectWithMongoose(()=>{})
 watchAllStreams()
