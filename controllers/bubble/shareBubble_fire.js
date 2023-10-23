@@ -8,7 +8,6 @@ const sendPushNotification = require('../pushNotification/sendPushNotification')
 
 
 
-
 async function shareBubble(req, res){
     const userID = req.body.userID // userID
     const userIcon = req.body.userIcon // user.id
@@ -25,19 +24,19 @@ async function shareBubble(req, res){
     
     let overallShare = []
     let eachShare = {}
-    function spreadShare(path, pathLength, bubble){
+    function spreadShare(path, pathLength, shareStructure){
         let pathClone = [...path]
         if (pathClone.length<pathLength){
             let old = {...eachShare}
             eachShare = {...old[pathClone[0]]}
         }else{
-            eachShare = {...bubble.shareStructure[pathClone[0]]}
+            eachShare = {...shareStructure[pathClone[0]]}
         }
         overallShare.push(eachShare)
         pathClone.shift()
         // recursion
         if (pathClone.length!==0) {
-            spreadShare(pathClone, pathLength, bubble)
+            spreadShare(pathClone, pathLength, shareStructure)
         }
     }
 
@@ -61,7 +60,7 @@ async function shareBubble(req, res){
             return true
         } else if(secrecySettings.atmosphere === 'Custom'){
             return true
-        } else if(secrecySettings.atmosphere === 'Night'){
+        } else if(secrecySettings.atmosphere === 'Normal'){
             return true
         } else if(secrecySettings.atmosphere === 'Man behind the scene'){
             return true
@@ -153,6 +152,8 @@ async function shareBubble(req, res){
                     icon: decideNotifyIcon()
                 }
                 sendPushNotification(thisBubble.userID, data)
+            }).then(()=>{
+                // console.log("completed");
             }).catch(()=>{
                 // do nothing
             })
@@ -235,7 +236,7 @@ async function shareBubble(req, res){
             }
         }
 
-        shareRequest(feedRequestRef)
+        await shareRequest(feedRequestRef)
 
         const docz = doc(database, 'bubbles', thisBubble.postID)
         await getDoc(docz).then(async(snapshot)=>{
@@ -245,14 +246,17 @@ async function shareBubble(req, res){
                 const activities = post.activities
                 await updateDoc(docz, {activities})
             }
+        }).then(()=>{
+            res.send({successful: true})
+        }).catch(()=>{
+            res.send({successful: false, message: 'Unable to update bubble'})
         })
     }
 
     async function shareBubble(){
-
         const docz = doc(database, 'bubbles', thisBubble.postID)
         await getDoc(docz).then(async(docsnap)=>{
-
+            
             if(docsnap.exists()){
                 let posts = {...docsnap.data()}
                 let shareStructure = {}
@@ -308,8 +312,10 @@ async function shareBubble(req, res){
 
                 if(pathOfShare[pathOfShare.length - 1]!==userID){
                     const mainPath = [...thisBubble.refDoc.sharePath]
+                    console.log(mainPath);
                     mainPath.shift()
                     const path2 = [...mainPath]
+                    console.log(mainPath, path2);
                     if(path2.length>1){
                         spreadShare(path2, path2.length, shareStructure)  // Give it fresh shareStructure
                         // const shareHub = [...overallShare]
@@ -328,13 +334,12 @@ async function shareBubble(req, res){
                     }
 
                 }
-                
+
                 // send feed out to sharers followers
                 const userFollowersDoc = doc(database, 'followers', userID)
                 await getDoc(userFollowersDoc).then(async(docsnap)=>{
                     if(docsnap.exists()){
                         const followers = [...Object.keys({...docsnap.data()})]
-                        // let feed = [...docsnap.data().feed]
                         
                         // update yourself if you are sharing a reply
                         if(path.length){
@@ -444,13 +449,13 @@ async function shareBubble(req, res){
                         }
                     }
                 })
-
+                // console.log("completed serving to followers");
                 const bubble = posts.bubble[0]
                 const notificationData = {
                     message: `Bubble: ${bubble.message||''}`
                 }
                 ShareNotifier(notificationData)
-    
+                // console.log("completed sharing followers");
                 // update last activity
                 if(!posts.activities.lastActivities){
                     posts.activities.lastActivities=[]
@@ -510,45 +515,58 @@ async function shareBubble(req, res){
                             } else {
                                 setDoc(userShareRef, {bubbles: [thisBubble.refDoc]})
                             }
-                        })
+                        }).catch(()=>{})
                     }
                     // await updateDoc(docz, {shareStructure: saveShareStructure})
+                }).then(()=>{
+                    // console.log("completed");
+                    res.send({successful: true})
                 })
+            } else {
+                res.send({successful: false, message: "server error: unable to share bubble"})
             }
+        }).catch(()=>{
+            console.log("faoled to get bubble");
+            res.send({successful: false, message: "server error: failed to share bubble"})
         })
     }
 
-    
-    if(thisBubble.userID===userID){
-        shareBubble()
-    } else {
-        // if i am not the creator
-        if(shareSettings.sharePermission=='Request permission for all'){
-            sendShareRequest()
-        } else if(shareSettings.sharePermission=='Request permission only for followers' || shareSettings.sharePermission=='Request permission only for non-followers'){
-            const userFollowersDoc = doc(database, 'followers', thisBubble.userID)
-            await getDoc(userFollowersDoc).then(async(docsnap)=>{
-                if(docsnap.exists()){
-                    const creatorFollowers = {...docsnap.data()}
-                    if(shareSettings.sharePermission=='Request permission only for followers'){
-                        if(creatorFollowers[userID]){
-                            sendShareRequest()
-                        } else {
-                            shareBubble()
-                        }
-                    } else if(shareSettings.sharePermission=='Request permission only for non-followers'){
-                        if(!creatorFollowers[userID]){
-                            sendShareRequest()
-                        } else {
-                            shareBubble()
-                        }
-                    }else {
-                        // do nothing
-                    }
-                }
-            }).catch(()=>{ /* do nothing */  })
+    async function initShare(){
+        if(thisBubble.userID===userID){
+            await shareBubble()
         } else {
-            shareBubble()
+            // if i am not the creator
+            if(shareSettings.sharePermission=='Request permission for all'){
+                await sendShareRequest()
+            } else if(shareSettings.sharePermission=='Request permission only for followers' || shareSettings.sharePermission=='Request permission only for non-followers'){
+                const userFollowersDoc = doc(database, 'followers', thisBubble.userID)
+                await getDoc(userFollowersDoc).then(async(docsnap)=>{
+                    if(docsnap.exists()){
+                        const creatorFollowers = {...docsnap.data()}
+                        if(shareSettings.sharePermission=='Request permission only for followers'){
+                            if(creatorFollowers[userID]){
+                                await sendShareRequest()
+                            } else {
+                                await shareBubble()
+                            }
+                        } else if(shareSettings.sharePermission=='Request permission only for non-followers'){
+                            if(!creatorFollowers[userID]){
+                                await sendShareRequest()
+                            } else {
+                                await shareBubble()
+                            }
+                        }else {
+                            // do nothing
+                        }
+                    }
+                }).catch(()=>{ /* do nothing */  })
+            } else {
+                await shareBubble()
+            }
         }
     }
+
+    await initShare()
 }
+
+module.exports = shareBubble

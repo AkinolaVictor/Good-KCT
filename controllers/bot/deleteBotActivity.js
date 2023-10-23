@@ -1,33 +1,36 @@
 const {doc, getDoc, updateDoc} = require('firebase/firestore')
 const {database} = require('../../database/firebase')
+const botActivities = require('../../models/BotActivities')
 
 async function deleteBotActivity(req, res){
     const userID = req.body.userID
     const activityID = req.body.activityID
-    const botActivityRef = doc(database, 'botActivities', userID)
-    await getDoc(botActivityRef).then(async(docsnap)=>{
-        if(docsnap.exists()){
-            const otherBotActivities = [...docsnap.data().otherBotActivities]
-            const userBotActivities = [...docsnap.data().userBotActivities]
 
-            for(let i=0; i<otherBotActivities.length; i++){
-                if(otherBotActivities[i].activityID === activityID){
-                    otherBotActivities.splice(i, 1)
-                }
-            }
+    const userBotActivites = await botActivities.findOne({userID}).lean()
+    if(!userBotActivites){
+        res.send({successful: false, message: "activity not found"})
+        return
+    }
 
-            for(let i=0; i<userBotActivities.length; i++){
-                if(userBotActivities[i].activityID === activityID){
-                    userBotActivities.splice(i, 1)
-                }
-            }
-
-            await updateDoc(botActivityRef, {otherBotActivities, userBotActivities}).then(()=>{
-                res.send({successful: 'true'})
-            })
+    for(let i=0; i<userBotActivites.otherBotActivities.length; i++){
+        if(userBotActivites.otherBotActivities[i].activityID === activityID){
+            userBotActivites.otherBotActivities.splice(i, 1)
         }
+    }
+
+    for(let i=0; i<userBotActivites.userBotActivities.length; i++){
+        if(userBotActivites.userBotActivities[i].activityID === activityID){
+            userBotActivites.userBotActivities.splice(i, 1)
+        }
+    }
+    await botActivities.updateOne({userID}, {
+        userBotActivities: [...userBotActivites.userBotActivities],
+        otherBotActivities: [...userBotActivites.otherBotActivities]
+    }).then(()=>{
+    // await userBotActivites.save().then(()=>{
+        res.send({successful: true})
     }).catch(()=>{
-        res.send({successful: false})
+        res.send({successful: false, message: "activity not saved"})
     })
 }
 

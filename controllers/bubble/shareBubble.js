@@ -5,8 +5,11 @@ const { v4: uuidv4 } = require('uuid')
 const {database} = require('../../database/firebase')
 const { dataType } = require('../../utils/utilsExport')
 const sendPushNotification = require('../pushNotification/sendPushNotification')
-
-
+const notifications = require('../../models/notifications')
+const bubble = require('../../models/bubble')
+const Followers = require('../../models/Followers')
+const Feeds = require('../../models/Feeds')
+const userShares = require('../../models/userShares')
 
 async function shareBubble(req, res){
     const userID = req.body.userID // userID
@@ -18,9 +21,7 @@ async function shareBubble(req, res){
     const each = req.body.each // each
     const path = req.body.path
     let secrecySettings = thisBubble.settings.secrecyData
-    let shareSettings = thisBubble.settings.shareData
-
-    
+    let shareSettings = thisBubble.settings.shareData    
     
     let overallShare = []
     let eachShare = {}
@@ -101,9 +102,6 @@ async function shareBubble(req, res){
 
     async function shareRequest(shareFeed){
         if(userID!==thisBubble.userID){
-            const creatorNotificationsRef = doc(database, 'notifications', thisBubble.userID)
-            // const userNotificationsRef = doc(database, 'notifications', userID)
-            
             // data
             function getDate(){
                 const now = new Date()
@@ -134,37 +132,30 @@ async function shareBubble(req, res){
             // shareRequestData.feed.env='feed'
     
             // check if 
-            await getDoc(creatorNotificationsRef).then(async(snapshot)=>{
-                if(!snapshot.exists()){
-                    setDoc(creatorNotificationsRef, {
-                        all: [shareRequestData]
-                    })
+            try {
+                const creatorNotification = await notifications.findOne({userID: thisBubble.userID})
+                if(creatorNotification === null){
+                    const newNotif = new notifications({userID: thisBubble.userID, all: [shareRequestData]})
+                    await newNotif.save()
                 } else {
-                    // update all
-                    const all=[...snapshot.data().all]
-                    all.push(shareRequestData)
-                    updateDoc(creatorNotificationsRef, {all})
+                    creatorNotification.all.push(shareRequestData)
+                    // await creatorNotification.save()
+                    await notifications.updateOne({userID: thisBubble.userID}, {all: [...creatorNotification.all]})
                 }
-            }).then(()=>{
                 const data = {
                     title: `${shareRequestData.message}`,
                     body: `Bubble: ${notificationMessage}`,
                     icon: decideNotifyIcon()
                 }
                 sendPushNotification(thisBubble.userID, data)
-            }).then(()=>{
-                console.log("completed");
-            }).catch(()=>{
-                // do nothing
-            })
-            
+            } catch(e){
+                // DO NOTHING
+            }
         }
     }
 
     async function ShareNotifier(notificationData){
         if(userID!==thisBubble.userID){
-            const creatorNotificationsRef = doc(database, 'notifications', thisBubble.userID)
-            // const userNotificationsRef = doc(database, 'notifications', userID)
             
             // data
             function getDate(){
@@ -194,27 +185,25 @@ async function shareBubble(req, res){
             shareData.feed.env='feed'
     
             // check if 
-            await getDoc(creatorNotificationsRef).then(async(snapshot)=>{
-                if(!snapshot.exists()){
-                    setDoc(creatorNotificationsRef, {
-                        all: [shareData]
-                    })
+            try{
+                const creatorNotifications = await notifications.findOne({userID: thisBubble.userID})
+                if(creatorNotifications === null){
+                    const newNotif = new notifications({userID: thisBubble.userID, all: [shareData]})
+                    await newNotif.save()
                 } else {
-                    // update all
-                    const all=[...snapshot.data().all]
-                    all.push(shareData)
-                    updateDoc(creatorNotificationsRef, {all})
+                    creatorNotifications.all.push(shareData)
+                    // await creatorNotifications.save()
+                    await notifications.updateOne({userID: thisBubble.userID}, {all: [...creatorNotifications.all]})
                 }
-            }).then(()=>{
                 const data = {
                     title: `${shareData.message}`,
                     body: notificationData.message,
                     icon: decideNotifyIcon()
                 }
                 sendPushNotification(thisBubble.userID, data)
-            }).catch(()=>{
-                // do nothing
-            })
+            } catch (e){
+                // DO NOTHING
+            }
         }
     }
 
@@ -237,50 +226,59 @@ async function shareBubble(req, res){
         }
 
         await shareRequest(feedRequestRef)
-
-        const docz = doc(database, 'bubbles', thisBubble.postID)
-        await getDoc(docz).then(async(snapshot)=>{
-            if(snapshot.exists()){
-                const post = {...snapshot.data()}
-                post.activities.permissionRequests++
-                const activities = post.activities
-                await updateDoc(docz, {activities})
+        try{
+            const currentBubble = await bubble.findOne({postID: thisBubble.postID}).lean()
+            if(currentBubble === null){
+                res.send({successful: false, message: "Bubble not found"})
+            } else {
+                if(typeof(currentBubble.activities)==="string"){
+                    const activities = JSON.parse(currentBubble.activities)
+                    currentBubble.activities = activities
+                }
+                currentBubble.activities.permissionRequests++
+                const activities = JSON.stringify(currentBubble.activities)
+                await bubble.updateOne({postID: thisBubble.postID}, {activities})
+                res.send({successful: true})
             }
-        }).then(()=>{
-            res.send({successful: true})
-        }).catch(()=>{
+
+        } catch (e){
             res.send({successful: false, message: 'Unable to update bubble'})
-        })
+        }
     }
 
     async function shareBubble(){
-        const docz = doc(database, 'bubbles', thisBubble.postID)
-        await getDoc(docz).then(async(docsnap)=>{
-            
-            if(docsnap.exists()){
-                let posts = {...docsnap.data()}
+        try {
+            const currentBubble = await bubble.findOne({postID: thisBubble.postID}).lean()
+            if(currentBubble === null){
+                res.send({successful: false, message: "server error: bubble not found"})
+            } else {
                 let shareStructure = {}
     
-                if(typeof(posts.shareStructure) === "string"){
-                    shareStructure = {...JSON.parse(posts.shareStructure)}
+                if(typeof(currentBubble.shareStructure) === "string"){
+                    shareStructure = {...JSON.parse(currentBubble.shareStructure)}
                 } else {
-                    shareStructure = posts.shareStructure
+                    shareStructure = currentBubble.shareStructure
                 }
 
-                posts.activities.shares++
-                if(!posts.activities.allWhoHaveShared[userID]){
-                    // posts.activities.shares++
-                    posts.activities.allWhoHaveShared[userID] = true
+                if(typeof(currentBubble.activities)==="string"){
+                    const activities = JSON.parse(currentBubble.activities)
+                    currentBubble.activities = activities
                 }
 
-                if(posts.activities.iAmOnTheseFeeds[userID].myActivities.activityIndex){
+                currentBubble.activities.shares++
+                if(!currentBubble.activities.allWhoHaveShared[userID]){
+                    // currentBubble.activities.shares++
+                    currentBubble.activities.allWhoHaveShared[userID] = true
+                }
+
+                if(currentBubble.activities.iAmOnTheseFeeds[userID].myActivities.activityIndex){
                 } else {
-                    posts.activities.lastActivityIndex++
-                    posts.activities.iAmOnTheseFeeds[userID].myActivities.activityIndex = posts.activities.lastActivityIndex
+                    currentBubble.activities.lastActivityIndex++
+                    currentBubble.activities.iAmOnTheseFeeds[userID].myActivities.activityIndex = currentBubble.activities.lastActivityIndex
                 }
                 
-                posts.activities.iAmOnTheseFeeds[userID].myActivities.shared = true
-                posts.activities.iAmOnTheseFeeds[userID].seenAndVerified = true
+                currentBubble.activities.iAmOnTheseFeeds[userID].myActivities.shared = true
+                currentBubble.activities.iAmOnTheseFeeds[userID].seenAndVerified = true
 
 
                 
@@ -295,8 +293,8 @@ async function shareBubble(req, res){
                 }
 
                 const feedRef = {
-                    userID:  thisBubble.userID,
-                    postID:thisBubble.postID,
+                    userID: thisBubble.userID,
+                    postID: thisBubble.postID,
                     type: 'ShareRef',
                     status: 'active',
                     sharePath: discernPrevShares(),
@@ -312,13 +310,10 @@ async function shareBubble(req, res){
 
                 if(pathOfShare[pathOfShare.length - 1]!==userID){
                     const mainPath = [...thisBubble.refDoc.sharePath]
-                    console.log(mainPath);
                     mainPath.shift()
                     const path2 = [...mainPath]
-                    console.log(mainPath, path2);
                     if(path2.length>1){
                         spreadShare(path2, path2.length, shareStructure)  // Give it fresh shareStructure
-                        // const shareHub = [...overallShare]
                         if(overallShare[overallShare.length-1][userID]===undefined){
                             overallShare[overallShare.length-1][userID] = {}
                             // build destructured share
@@ -326,145 +321,120 @@ async function shareBubble(req, res){
                             shareStructure[path2[0]] = finalProduct
                         }
                     } else if(path2.length==1){
-                        // posts.shareStructure[path2[0]][userID]={}
                         shareStructure[path2[0]][userID]={}
                     } else {
-                        // posts.shareStructure[userID]={}
                         shareStructure[userID]={}
                     }
 
                 }
 
                 // send feed out to sharers followers
-                const userFollowersDoc = doc(database, 'followers', userID)
-                await getDoc(userFollowersDoc).then(async(docsnap)=>{
-                    if(docsnap.exists()){
-                        const followers = [...Object.keys({...docsnap.data()})]
-                        
-                        // update yourself if you are sharing a reply
-                        if(path.length){
-                            // const myFeedRef = doc(database, 'users', userID)
-                            const myFeedRef = doc(database, 'feeds', userID)
-                            await getDoc(myFeedRef).then(async(docsnap2)=>{
-                                if(docsnap2.exists()){
-                                    const bubbles = [...docsnap2.data().bubbles]
-                    
-                                    const current = posts.activities.iAmOnTheseFeeds[userID].replyPath
-                                    if(!current.includes(`${path}`)){
-                                        // update
-                                        posts.activities.iAmOnTheseFeeds[userID].replyPath.push(`${path}`)
-                                        bubbles.push(feedRef)
-                                        await updateDoc(myFeedRef, {bubbles})
-                                    }
-                                }
-                            })
-                        }
-            
-                        // share with all your followers
-                        for(let i=0; i<followers.length; i++){
-                            // if you're not sharing a reply
-                            if(!path.length){
-                                // check if follower has never recieved this bubble (since it has no reply attached to it)
-                                if(!posts.activities.iAmOnTheseFeeds[followers[i]]){
+                const userFollowers = await Followers.findOne({userID}).lean()
+                if(userFollowers){
+                    // update yourself if you are sharing a reply
+                    const followers = [...Object.keys({...userFollowers.followers})]
 
-                                    // const followersRef = doc(database, 'users', followers[i])
-                                    const followersFeedRef = doc(database, 'feeds', followers[i])
-                                    await getDoc(followersFeedRef).then(async(docsnap3)=>{
-                                        // check if follower has never recieved this bubble (since it has no reply attached to it)
-                                        if(docsnap3.exists()){
-                                            const bubbles = [...docsnap3.data().bubbles]
-                                            const allBubbleIDs = []
-
-                                            for(let j=0; j<bubbles.length; j++){
-                                                allBubbleIDs.push(bubbles[j].postID)
-                                            }
-                                            
-                                            if(!allBubbleIDs.includes(thisBubble.postID)){
-                                                posts.activities.iAmOnTheseFeeds[followers[i]]={
-                                                    index: Object.keys(posts.activities.iAmOnTheseFeeds).length,
-                                                    onFeed: true, 
-                                                    userID: followers[i],
-                                                    mountedOnDevice: false, 
-                                                    seenAndVerified: false,
-                                                    replyPath: [],
-                                                    bots: {},
-                                                    myActivities: {
-                                                        
-                                                    }
-                                                }
-                                                
-                                                bubbles.push(feedRef)
-                                                await updateDoc(followersFeedRef, {bubbles})
-                                            }
-                                        }
-                                    })
-                                }
-                            } else {
-                                // if you're sharing a reply
-                                
-                                //  if this follower is getting this bubble for the first time
-                                if(!posts.activities.iAmOnTheseFeeds[followers[i]]){
-                                    posts.activities.iAmOnTheseFeeds[followers[i]]={
-                                        index: Object.keys(posts.activities.iAmOnTheseFeeds).length,
-                                        onFeed: true, 
-                                        userID: followers[i],
-                                        mountedOnDevice: false,
-                                        seenAndVerified: false,
-                                        replyPath: [`${path}`],
-                                        bots: {},
-                                        myActivities: {
-                                            
-                                        }
-                                    }
-                                    const followersRef = doc(database, 'feeds', followers[i])
-                                    await getDoc(followersRef).then(async(docsnap4)=>{
-                                        const bubbles = [...docsnap4.data().bubbles]
-                                        bubbles.push(feedRef)
-                                        await updateDoc(followersRef, {bubbles})
-                                    })
-                                } else {
-                                    // if this follower has gotten this bubble before
-                                    const current = posts.activities.iAmOnTheseFeeds[followers[i]].replyPath
-                                    if(!current.includes(`${path}`)){
-                                        posts.activities.iAmOnTheseFeeds[followers[i]].replyPath.push(`${path}`)
-                                        const followersRef = doc(database, 'feeds', followers[i])
-                                        await getDoc(followersRef).then(async(docsnap4)=>{
-                                            const bubbles = [...docsnap4.data().bubbles]
-                                            bubbles.push(feedRef)
-                                            await updateDoc(followersRef, {bubbles})
-                                        })
-                                    }else{
-                                        continue
-                                    }
-                                }
-                                // const followersRef = doc(database, 'users', followers[i])
-                                // const followersRef = doc(database, 'feeds', followers[i])
-                                // await getDoc(followersRef).then(async(docsnap4)=>{
-                                //     const bubbles = [...docsnap4.data().bubbles]
-                                //     bubbles.push(feedRef)
-                                //     await updateDoc(followersRef, {bubbles})
-                                // })
-            
+                    if(path.length){
+                        const userFeed = await Feeds.findOne({userID})
+                        if(userFeed){
+                            const current = currentBubble.activities.iAmOnTheseFeeds[userID].replyPath
+                            if(!current.includes(`${path}`)){
+                                // update
+                                currentBubble.activities.iAmOnTheseFeeds[userID].replyPath.push(`${path}`)
+                                userFeed.bubbles.push(feedRef)
+                                // await userFeed.save()
+                                await Feeds.updateOne({userID}, {bubbles: [...userFeed.bubbles]})
                             }
                         }
                     }
-                })
-                // console.log("completed serving to followers");
-                const bubble = posts.bubble[0]
-                const notificationData = {
-                    message: `Bubble: ${bubble.message||''}`
+                    // share with all your followers
+                    for(let i=0; i<followers.length; i++){
+                        // if you're not sharing a reply
+                        if(!path.length){
+                            // check if follower has never recieved this bubble (since it has no reply attached to it)
+                            if(!currentBubble.activities.iAmOnTheseFeeds[followers[i]]){
+                                const currentFollowerFeed = await Feeds.findOne({userID: followers[i]})
+                                if(currentFollowerFeed){
+                                    const allBubbleIDs = []
+
+                                    for(let j=0; j<currentFollowerFeed.bubbles.length; j++){
+                                        allBubbleIDs.push(currentFollowerFeed.bubbles[j].postID)
+                                    }
+                                    
+                                    if(!allBubbleIDs.includes(thisBubble.postID)){
+                                        currentBubble.activities.iAmOnTheseFeeds[followers[i]]={
+                                            index: Object.keys(currentBubble.activities.iAmOnTheseFeeds).length,
+                                            onFeed: true,
+                                            userID: followers[i],
+                                            mountedOnDevice: false,
+                                            seenAndVerified: false,
+                                            myImpressions: 0,
+                                            replyPath: [],
+                                            bots: {},
+                                            myActivities: {
+                                            }
+                                        }
+                                        
+                                        currentFollowerFeed.bubbles.push(feedRef)
+                                        await Feeds.updateOne({userID: followers[i]}, {bubbles: [...currentFollowerFeed.bubbles]})
+                                        // await currentFollowerFeed.save()
+                                    }
+                                }
+                            }
+                        } else {
+                            if(!currentBubble.activities.iAmOnTheseFeeds[followers[i]]){
+                                currentBubble.activities.iAmOnTheseFeeds[followers[i]]={
+                                    index: Object.keys(currentBubble.activities.iAmOnTheseFeeds).length,
+                                    onFeed: true, 
+                                    userID: followers[i],
+                                    mountedOnDevice: false,
+                                    seenAndVerified: false,
+                                    myImpressions: 0,
+                                    replyPath: [`${path}`],
+                                    bots: {},
+                                    myActivities: {
+                                        
+                                    }
+                                }
+                                const followerFeed = await Feeds.findOne({userID: followers[i]})
+                                if(followerFeed){
+                                    followerFeed.bubbles.push(feedRef)
+                                    // await followerFeed.save()
+                                    await Feeds.updateOne({userID: followers[i]}, {bubbles: [...followerFeed.bubbles]})
+                                }
+                            } else {
+                                // if this follower has gotten this bubble before
+                                const current = currentBubble.activities.iAmOnTheseFeeds[followers[i]].replyPath
+                                if(!current.includes(`${path}`)){
+                                    currentBubble.activities.iAmOnTheseFeeds[followers[i]].replyPath.push(`${path}`)
+                                    const followerFeed = await Feeds.findOne({userID: followers[i]})
+                                    if(followerFeed){
+                                        followerFeed.bubbles.push(feedRef)
+                                        // await followerFeed.save()
+                                        await Feeds.updateOne({userID: followers[i]}, {bubbles: [...followerFeed.bubbles]})
+                                    }
+                                }else{
+                                    continue
+                                }
+                            }
+                        }
+                    }
                 }
-                ShareNotifier(notificationData)
-                // console.log("completed sharing followers");
+
+                const bubblex = currentBubble.bubble[0]
+                const notificationData = {
+                    message: `Bubble: ${bubblex.message||''}`
+                }
+                await ShareNotifier(notificationData)
                 // update last activity
-                if(!posts.activities.lastActivities){
-                    posts.activities.lastActivities=[]
+                if(!currentBubble.activities.lastActivities){
+                    currentBubble.activities.lastActivities=[]
                 }
                 const thisActivity = 'shared'
-                const lastActivities = posts.activities.lastActivities
+                const lastActivities = currentBubble.activities.lastActivities
                 const activityData = {
                     activity: thisActivity,
-                    userID: userID,
+                    userID,
                     date: getDate()
                 }
 
@@ -479,56 +449,46 @@ async function shareBubble(req, res){
                                 break
                             }
                             if(i===lastActivities.length-1){
-                                posts.activities.lastActivities.push(activityData)
-                                if(posts.activities.lastActivities.length>10){
-                                    posts.activities.lastActivities.shift()
+                                currentBubble.activities.lastActivities.push(activityData)
+                                if(currentBubble.activities.lastActivities.length>10){
+                                    currentBubble.activities.lastActivities.shift()
                                 }
-                                // updateFunc()
                             }
                         }
                     }
                 } else {
-                    posts.activities.lastActivities.push(activityData)
-                    // updateFunc()
+                    currentBubble.activities.lastActivities.push(activityData)
                 }
-                
-                const activities = posts.activities
+                const activities = JSON.stringify(currentBubble.activities)
                 const saveShareStructure = JSON.stringify(shareStructure)
-                await updateDoc(docz, {activities, shareStructure: saveShareStructure}).then(async()=>{
-                    // console.log('finished');
+                await bubble.updateOne({postID: thisBubble.postID}, {activities, shareStructure: saveShareStructure}).then(async()=>{
                     if(thisBubble.userID!==userID){
-                        // const userRef = doc(database, 'users', userID)
-                        const userShareRef = doc(database, 'userShares', userID)
-                        await getDoc(userShareRef).then(async(userDoc2)=>{
-                            if(userDoc2.exists()){
-                                const bubbles = [...userDoc2.data().bubbles]
-                                const allPostID = []
-
-                                for(let i=0; i<bubbles.length; i++){
-                                    allPostID.push(bubbles[i].postID)
-                                }
-
-                                if(!allPostID.includes(thisBubble.postID)){
-                                    bubbles.push(thisBubble.refDoc)
-                                    await updateDoc(userShareRef, {bubbles})
-                                }
-                            } else {
-                                setDoc(userShareRef, {bubbles: [thisBubble.refDoc]})
+                        const thisUserShares = await userShares.findOne({userID})
+                        if(thisUserShares === null){
+                            const newShare = new userShares({userID, bubbles: [thisBubble.refDoc]})
+                            await newShare.save()
+                        } else {
+                            const allPostID = []
+                            
+                            for(let i=0; i<thisUserShares.bubbles.length; i++){
+                                allPostID.push(thisUserShares.bubbles[i].postID)
                             }
-                        }).catch(()=>{})
+                            
+                            if(!allPostID.includes(thisBubble.postID)){
+                                thisUserShares.bubbles.push(thisBubble.refDoc)
+                                // await thisUserShares.save()
+                                await userShares.updateOne({userID}, {bubbles: [...thisUserShares.bubbles]})
+                            }
+                        }
                     }
-                    // await updateDoc(docz, {shareStructure: saveShareStructure})
-                }).then(()=>{
-                    // console.log("completed");
-                    res.send({successful: true})
-                })
-            } else {
-                res.send({successful: false, message: "server error: unable to share bubble"})
+                }).catch(()=>{})
+
+                res.send({successful: true})
             }
-        }).catch(()=>{
-            console.log("faoled to get bubble");
+
+        } catch(e){
             res.send({successful: false, message: "server error: failed to share bubble"})
-        })
+        }
     }
 
     async function initShare(){
@@ -539,27 +499,24 @@ async function shareBubble(req, res){
             if(shareSettings.sharePermission=='Request permission for all'){
                 await sendShareRequest()
             } else if(shareSettings.sharePermission=='Request permission only for followers' || shareSettings.sharePermission=='Request permission only for non-followers'){
-                const userFollowersDoc = doc(database, 'followers', thisBubble.userID)
-                await getDoc(userFollowersDoc).then(async(docsnap)=>{
-                    if(docsnap.exists()){
-                        const creatorFollowers = {...docsnap.data()}
-                        if(shareSettings.sharePermission=='Request permission only for followers'){
-                            if(creatorFollowers[userID]){
-                                await sendShareRequest()
-                            } else {
-                                await shareBubble()
-                            }
-                        } else if(shareSettings.sharePermission=='Request permission only for non-followers'){
-                            if(!creatorFollowers[userID]){
-                                await sendShareRequest()
-                            } else {
-                                await shareBubble()
-                            }
-                        }else {
-                            // do nothing
+                const creatorFollowers = await Followers.findOne({userID: thisBubble.userID}).lean()
+                if(creatorFollowers){
+                    if(shareSettings.sharePermission=='Request permission only for followers'){
+                        if(creatorFollowers.followers[userID]){
+                            await sendShareRequest()
+                        } else {
+                            await shareBubble()
                         }
+                    } else if(shareSettings.sharePermission=='Request permission only for non-followers'){
+                        if(!creatorFollowers.followers[userID]){
+                            await sendShareRequest()
+                        } else {
+                            await shareBubble()
+                        }
+                    }else {
+                        // do nothing
                     }
-                }).catch(()=>{ /* do nothing */  })
+                }
             } else {
                 await shareBubble()
             }

@@ -1,5 +1,7 @@
 const {doc, getDoc, updateDoc, getDocs, collection} = require('firebase/firestore')
 const {database} = require('../../database/firebase')
+const User = require('../../models/User')
+const allUser = require('../../models/allUser')
 
 async function updateUserProfile(req, res){
     const userID = req.body.userID
@@ -9,51 +11,59 @@ async function updateUserProfile(req, res){
 
 
     try{
-        const docz = doc(database, 'users', userID) 
-        await getDoc(docz).then(async(docSnap)=>{
-            let userInfo = {...docSnap.data().userInfo}
-            userInfo[which] = datum
-            if(generalModalProp==='username'){
-                const usersRef = collection(database, 'users')
-                let response={
-                    successful: false,
-                    message: 'Unknown error'
+        const user = await User.findOne({id: userID}).lean()
+
+        if(!user){
+            res.send({successful: false, message: 'User data not found'})
+            return 
+        }
+
+        user.userInfo[which] = datum
+
+
+        // update username
+        if(generalModalProp==='username'){
+            const getAllUsers = await allUser.findOne({name: "concealed"}).lean()
+            if(getAllUsers){
+                const usersArr = [...Object.values(getAllUsers.users)]
+                for(let i=0; i<usersArr.length; i++){
+                    const currentUsername = usersArr[i].username.toLowerCase()
+                    const newUsernamename = datum.toLowerCase()
+                    if(currentUsername === newUsernamename){
+                        res.send({successful: false, message: 'Username is already chosen'})
+                        return
+                    }
                 }
-                await getDocs(usersRef).then(async(res)=>{
-                    let allUsernames = []
-                    for(let i=0; i<res.docs.length; i++){
-                        const each = {...res.docs[i].data()}
-                        allUsernames.push(each.userInfo.username)
+                if(!getAllUsers.users[userID]){
+                    getAllUsers.users[userID] = {
+                        userID,
+                        fullname: user.userInfo.fullname,
+                        username: datum
                     }
-                    if(allUsernames.includes(datum)){
-                        response = {successful: false, message: 'Username is already chosen'}
-                        // res.send({successful: false, message: 'Username is already chosen'})
-                    } else {
-                        await updateDoc(docz, {userInfo}).then(()=>{
-                            // res.send({successful: true})
-                            response= {successful: true}
-                        }).catch(()=>{
-                            response = {successful: false, message: 'Failed to update user from server'}
-                            // res.send({successful: false, message: 'Failed to update user from server'})
-                        })
-                    }
-                    // allUsernames = null
-                }).then(()=>{
-                    res.send(response)
-                }).catch(()=>{
-                    res.send(response)
-                })
+                } else {
+                    getAllUsers.users[userID].username = datum
+                }
+                await allUser.updateOne({name: "concealed"}, { users: getAllUsers.users })
+                
             } else {
-                await updateDoc(docz, {userInfo}).then(()=>{
-                    res.send({successful: true})
-                }).catch(()=>{
-                    // alertFlash(genID, 'profileInfo', 'An error occured')
-                    res.send({successful: false, message: 'An error occured when updating profile'})
-                    return
+                const newUser = new allUser({
+                    name: "concealed",
+                    users: {
+                        [userID]: {
+                            userID,
+                            fullname: user.userInfo.fullname,
+                            username: datum
+                        }
+                    }
                 })
+                newUser.save()
             }
+        }
+
+        await User.updateOne({id: userID}, { userInfo: user.userInfo }).then(()=>{
+            res.send({successful: true})
         }).catch(()=>{
-            res.send({successful: true, message: 'Error from the server, unable to get user.'})
+            res.send({successful: false, message: 'Unable to save user data'})
         })
     } catch(e){
         res.send({successful: false, message: 'A network error occured at the server'})

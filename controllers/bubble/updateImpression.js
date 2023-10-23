@@ -1,34 +1,41 @@
 // updateImpression
 const {doc, getDoc, updateDoc, increment} = require('firebase/firestore')
 const {database} = require('../../database/firebase')
+const bubble = require('../../models/bubble')
 
 async function updateImpression(req, res){
     const userID = req.body.userID // user.id
     const postID = req.body.postID
-    // const thisBubble = {...req.body.thisBubble}
 
-
-    const bubbleRef = doc(database, 'bubbles', postID)
-    await getDoc(bubbleRef).then(async(docsnap)=>{
-        if(docsnap.exists()){
-            const posts = {...docsnap.data()}
-            // count my impressions
-            if(posts.activities.iAmOnTheseFeeds[userID].myImpressions){
-                posts.activities.iAmOnTheseFeeds[userID].myImpressions++
-            } else {
-                posts.activities.iAmOnTheseFeeds[userID].myImpressions = 1
-            }
-
-            posts.activities.iAmOnTheseFeeds[userID].myActivities.impression=true
-
-            const activities = posts.activities
-            await updateDoc(bubbleRef, {totalImpressions:increment(1), activities})
+    const thisBubble = await bubble.findOne({postID}).lean()
+    if(thisBubble){
+        if(typeof(thisBubble.activities) === "string"){
+            const activities = JSON.parse(thisBubble.activities)
+            thisBubble.activities = activities
         }
-    }).then(()=>{
+
+        if(thisBubble.activities.iAmOnTheseFeeds[userID]){
+            if(thisBubble.activities.iAmOnTheseFeeds[userID].myImpressions){
+                thisBubble.activities.iAmOnTheseFeeds[userID].myImpressions++
+            } else {
+                thisBubble.activities.iAmOnTheseFeeds[userID].myImpressions = 1
+            }
+    
+            if(!thisBubble.activities.iAmOnTheseFeeds[userID].myActivities.activityIndex){
+                thisBubble.activities.lastActivityIndex++
+                thisBubble.activities.iAmOnTheseFeeds[userID].myActivities.activityIndex = thisBubble.activities.lastActivityIndex
+            }
+    
+            thisBubble.activities.iAmOnTheseFeeds[userID].myActivities.impression = true
+            const activities = JSON.stringify(thisBubble.activities)
+            // const totalImpressions = thisBubble.totalImpressions+1
+            await bubble.updateOne({postID}, {activities})
+        }
+
         res.send({successful: true})
-    }).catch(()=>{
-        res.send({successful: false, message: 'Error from the server'})
-    })
+    } else {
+        res.send({successful: false, message: 'server error: bubble not found'})
+    }
 }
 
 module.exports = updateImpression

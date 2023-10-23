@@ -1,0 +1,33 @@
+const watchBotActivityStream = require("./watchBotActivityStream")
+const watchBotStream = require("./watchBotStream")
+const watchBubblesForEveryoneStream = require("./watchBubbleForEveryoneStream")
+const watchBubbleStream = require("./watchBubbleStream")
+const watchChatsStream = require("./watchChatsStream")
+const watchFollowerStream = require("./watchFollowerStream")
+const watchFollowingtream = require("./watchFollowingStream")
+const watchNotificationStream = require("./watchNotificationStream")
+const watchSavedAudienceStream = require("./watchSavedAudienceStream")
+const watchUserFeedsStream = require("./watchUserFeedsStream")
+const watchUserLikesStream = require("./watchUserLikesStream")
+const watchUserRepliesStream = require("./watchUserRepliesStream")
+const watchUserShareStream = require("./watchUserShareStream")
+const watchUserStream = require("./watchUserStream")
+
+function watchAllStreams(){
+    watchBotActivityStream()
+    watchBotStream()
+    watchUserFeedsStream()
+    watchBubbleStream()
+    watchBubblesForEveryoneStream()
+    watchFollowerStream()
+    watchFollowingtream()
+    watchNotificationStream()
+    watchSavedAudienceStream()
+    watchUserLikesStream()
+    watchUserRepliesStream()
+    watchUserShareStream()
+    watchUserStream()
+    watchChatsStream()
+}
+
+module.exports = watchAllStreams

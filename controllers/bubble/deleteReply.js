@@ -2,6 +2,7 @@ const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
 // const {getDownloadURL, ref, uploadBytes} = require('firebase/storage')
 const date = require('date-and-time')
 const {database} = require('../../database/firebase')
+const bubble = require('../../models/bubble')
 
 async function deleteReply(req, res){
     const bubbleID = req.body.bubbleID
@@ -28,35 +29,28 @@ async function deleteReply(req, res){
         }
     }
 
-    const docz = doc(database, 'bubbles', bubbleID)
-    await getDoc(docz).then(async(docsnap)=>{
-        // console.log('i ran');
-        if(docsnap.exists()){
-            let posts = {...docsnap.data()}
-            
-            let replys = posts.reply
+    try {
+        const thisBubble = await bubble.findOne({postID: bubbleID}).lean()
+        if(thisBubble === null){
+            res.send({successful: false, message: "Bubble was not found"})
+        } else {
+            let replys = thisBubble.reply
             if(typeof(replys) === "string"){
-                replys = JSON.parse(posts.reply)
+                replys = JSON.parse(thisBubble.reply)
             }
-    
             if (path.length === 1) {
                 // const subreplys = posts.reply[path[0]].reply
                 const subreplys = replys[path[0]].reply
                 if(subreplys.length){
-                    // posts.reply[path[0]].message = '**The content of this reply has been deleted**';
                     replys[path[0]].message = '**The content of this reply has been deleted**';
                 } else {
-                    // posts.reply[path[0]] = 'Deleted...';
                     replys[path[0]] = 'Deleted...';
                 }
                 // const reply = posts.reply
-                const reply = JSON.stringify(replys)
-                await updateDoc(docz, {reply})
-            }else{
+            } else {
                 buildReply(path, replys)
                 // destructured replies
                 let dR = [...overallRep]
-                // let id = dR[path.length-1].id
                 let parent = [...dR[path.length-2].reply]
                 // delete child
                 const subreplys = parent[path[path.length-1]].reply
@@ -79,19 +73,15 @@ async function deleteReply(req, res){
                 }
                 // posts.reply[path[0]] = final;
                 replys[path[0]] = final;
-                const reply = JSON.stringify(replys)
-                await updateDoc(docz, {reply})
             }
-        } else {
-            res.send({successful: false, message: 'Bubble not found'})
-        }
-    }).then(()=>{
-        res.send({successful: true})
-    }).catch(()=>{
-        res.send({successful: false, message: 'An error occured from the server side'})
-    })
 
-    
+            const reply = JSON.stringify(replys)
+            await bubble.updateOne({postID: bubbleID}, {reply})
+            res.send({successful: true})
+        }
+    } catch (e){
+        res.send({successful: false, message: 'An error occured from the server side'})
+    } 
 }
 
 module.exports = deleteReply

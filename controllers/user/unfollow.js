@@ -2,6 +2,10 @@ const {doc, getDoc, updateDoc, setDoc, deleteField} = require('firebase/firestor
 // const {getDownloadURL, ref, uploadBytes} = require('firebase/storage')
 const date = require('date-and-time')
 const {database} = require('../../database/firebase')
+const notifications = require('../../models/notifications')
+const Following = require('../../models/Following')
+const Followers = require('../../models/Followers')
+const savedAudience = require('../../models/savedAudience')
 
 async function unFollow(req, res){
     const userID = req.body.userID // user.id
@@ -11,8 +15,6 @@ async function unFollow(req, res){
 
     async function FollowNotifier(which){
         if(userID !== newUserID){
-            const creatorNotificationsRef = doc(database, 'notifications', newUserID)
-            
             // data
             function getDate(){
                 const now = new Date()
@@ -46,71 +48,59 @@ async function unFollow(req, res){
             // followData.feed.env='feed'
     
             // check if
-            await getDoc(creatorNotificationsRef).then(async(snapshot)=>{
-                if(!snapshot.exists()){
-                    setDoc(creatorNotificationsRef, {
-                        all: [followData]
-                    })
-                } else {
-                    // update all
-                    const all=[...snapshot.data().all]
-                    all.push(followData)
-                    updateDoc(creatorNotificationsRef, {all})
-                }
-            })
-    
+            const userNotification = await notifications.findOne({userID: newUserID})
+            if(userNotification === null){
+                const newNotifications = new notifications({userID: newUserID, all: [followData]})
+                await newNotifications.save()
+            } else {
+                userNotification.all.push(followData)
+                // await userNotification.save()
+                await notifications.updateOne({userID: newUserID}, {all: [...userNotification.all]})
+            }
         }
     }
 
     const UnFollow = async () => {
-        const docz = doc(database, 'following', userID)
-        await getDoc(docz).then(async(docSnap)=>{
-            const following = {...docSnap.data()}
-            if(following[newUserID]){
-                await updateDoc(docz, {
-                    [newUserID]: deleteField()
-                })
+        const userFollowing = await Following.findOne({userID}).lean()
+        if(userFollowing){
+            if(userFollowing.following[newUserID]){
+                delete userFollowing.following[newUserID]
+                await Following.updateOne({userID}, {following: userFollowing.following})
             }
-        })
+        }
 
         
         // remove from user
-        const docz2 = doc(database, 'followers', newUserID)
-        await getDoc(docz2).then(async(docsnap)=>{
-            if(docsnap.exists()){
-                const followers = {...docsnap.data()}
-                if(followers[userID]){
-                    await updateDoc(docz2, {
-                        [userID]: deleteField()
-                    }).then(()=>{
-                        FollowNotifier('unfollow')
-                    })
-                }
+        const userFollowers = await Followers.findOne({userID: newUserID}).lean()
+        if(userFollowers){
+            if(userFollowers.followers[userID]){
+                delete userFollowers.followers[userID]
+                await Followers.updateOne({userID: newUserID}, {followers: userFollowers.followers})
+                await FollowNotifier("unfollow")
             }
-        })
+        }
 
         // remove from audience
-        const audienceRef = doc(database, 'savedAudience', newUserID)
-        await getDoc(audienceRef).then(async(docsnap)=>{
-            if(docsnap.exists()){
-                const audience = {...docsnap.data()}
-                const auds = [...Object.keys(audience)]
-                for(let i=0; i<auds.length; i++){
-                    const current = auds[i]
-                    const subAud = audience[current].audience
-                    if(subAud.length){
-                        for(let j=0; j<subAud.length; j++){
-                            if(subAud[j].id===userID){
-                                audience[auds[i]].audience.splice(j, 1)
-                            }
+        const userSavedAudience = await savedAudience.findOne({userID: newUserID}).lean()
+        if(userSavedAudience){
+            const audience = {...userSavedAudience.audience}
+            const auds = [...Object.keys(audience)]
+            for(let i=0; i<auds.length; i++){
+                const current = auds[i]
+                const subAud = audience[current].audience
+                if(subAud.length){
+                    for(let j=0; j<subAud.length; j++){
+                        if(subAud[j].id===userID){
+                            userSavedAudience.audience[auds[i]].audience.splice(j, 1)
                         }
                     }
                 }
-                // update audience
-                await updateDoc(audienceRef, {...audience})
-                
             }
-        })
+            // update audience
+            await savedAudience.updateOne({userID: newUserID}, {
+                audience: userSavedAudience.audience
+            })
+        }
 
         res.send({successful: true})
     }

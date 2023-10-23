@@ -2,42 +2,40 @@ const {doc, getDoc, updateDoc, setDoc, deleteField} = require('firebase/firestor
 // const {getDownloadURL, ref, uploadBytes} = require('firebase/storage')
 // const date = require('date-and-time')
 const {database} = require('../../database/firebase')
+const usageAnalyticsModel = require('../../models/usageAnalytics')
 
 async function userDailyAnalytics(req, res){
     const analytics = req.body.data || {}
     const userID = req.body.userID
     const currentDate = req.body.currentDate
-    // const currentDate = "name"
-    // const dataString = JSON.stringify(data)
-    // console.log(currentDate, analytics);
-    // remove from audience
 
-    
-    const usageRef = doc(database, 'usageAnalytics', userID)
-    await getDoc(usageRef).then(async(docsnap)=>{
-        if(docsnap.exists()){
-            let analyticsData = {...docsnap.data()}
-            if(!analyticsData[currentDate]){
-                const finalData = [analytics]
-                let dataToString = JSON.stringify(finalData)
-                analyticsData[currentDate] = dataToString
-            } else {
-                const actualData = [...JSON.parse(analyticsData[currentDate])]
-                actualData.push(analytics)
-                let dataToString = JSON.stringify(actualData)
-                analyticsData[currentDate] = dataToString
-            }
-            await setDoc(usageRef, {...analyticsData})
-        } else{
+
+    try{
+        const usage = await usageAnalyticsModel.findOne({userID})
+        if(usage === null){
             const finalData = [analytics]
             const dataToString = JSON.stringify(finalData)
-            setDoc(usageRef, {[currentDate]: dataToString})
-        } 
-    }).then(()=>{
+            const newUsage = new usageAnalyticsModel({userID, analytics: {[currentDate]: dataToString}})
+            await newUsage.save()
+        } else {
+            if(!usage.analytics[currentDate]){
+                const finalData = [analytics]
+                let dataToString = JSON.stringify(finalData)
+                usage.analytics[currentDate] = dataToString
+            } else {
+                const actualData = [...JSON.parse(usage.analytics[currentDate])]
+                actualData.push(analytics)
+                let dataToString = JSON.stringify(actualData)
+                usage.analytics[currentDate] = dataToString
+            }
+            const analytics = usage.analytics
+            // await usage.save()
+            await usageAnalyticsModel.updateOne({userID}, {analytics})
+        }
         res.send({successful: true})
-    }).catch(()=>{
+    } catch(e){
         res.send({successful: false, message: 'An error occured from the server side'})
-    })
+    }
 }
 
 module.exports = userDailyAnalytics

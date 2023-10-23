@@ -1,25 +1,17 @@
 // getBubblesForEveryone
 const {doc, getDoc, updateDoc, increment} = require('firebase/firestore')
 const {database} = require('../../database/firebase')
+const bubblesForEveryone = require('../../models/bubblesForEveryone')
 
 async function getBubblesForEveryone(req, res){
-    const userID = req.body.userID // user.id
-
-
-    const bubblesForEveryoneRef = doc(database, 'bubblesForEveryone', 'Everyone')
-    await getDoc(bubblesForEveryoneRef).then(async(docsnap)=>{
-        let bubbleRefs = []
-        if(docsnap.exists()){
-            const thisData = [...docsnap.data().bubbleRefs]
-            // For future reference, use the USERID to filter result
-            bubbleRefs = thisData
-        }
-        return bubbleRefs
-    }).then((bubbleRefs)=>{
-        res.send({successful: true, bubbleRefs})
-    }).catch(()=>{
-        res.send({successful: false, message: 'Error from the server'})
-    })
+    const allPublicBubble = await bubblesForEveryone.findOne({name: "Everyone"}).lean()
+    if(allPublicBubble === null){
+        const newPublicBubbles = new bubblesForEveryone({name: "Everyone", bubbleRefs: []})
+        await newPublicBubbles.save().catch(()=>{})
+        res.send({successful: true, bubbleRefs: []})
+    } else {
+        res.send({successful: true, bubbleRefs: allPublicBubble.bubbleRefs})
+    }
 }
 
 module.exports = getBubblesForEveryone

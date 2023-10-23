@@ -1,5 +1,7 @@
 const {doc, getDoc, updateDoc} = require('firebase/firestore')
 const {database} = require('../../database/firebase')
+const bubble = require('../../models/bubble')
+const bot = require('../../models/bot')
 
 async function disengageBot(req, res){
     const userID = req.body.userID
@@ -7,35 +9,38 @@ async function disengageBot(req, res){
     const postID = req.body.postID
     // const taskID = req.body.taskID
 
-    // const userRef = doc(database, 'users', userID)
-    const userRef = doc(database, 'bubbles', postID)
-    await getDoc(userRef).then(async(docsnap)=>{
-        if(docsnap.exists()){
-            const post = {...docsnap.data()}
-            const allBots = post.settings.botData
-            if(allBots[botID]){
-                const botRef = doc(database, 'bots', botID)
-                await getDoc(botRef).then(async(docsnap)=>{
-                    const bot = {...docsnap.data()}
-                    const data = [...docsnap.data().data]
-                    for(let i=0; i<data.length; i++){
-                        if(data[i]===postID){
-                            data.splice(i, 1)
-                        }
-                    }
-                    await updateDoc(botRef, {data}).then(async()=>{
-                        delete post.settings.botData[botID]
-                        const settings = post.settings
-                        await updateDoc(userRef, {settings})
-                        bot.data = data
-                        res.send({successful: true, bot: bot})
-                    })
-                })
+    const thisBubble = await bubble.findOne({postID}).lean()
+    if(thisBubble === null){
+        res.send({successful:false, message: 'Server Error: failed to disengage bot'})
+        return 
+    }
+
+    const post = {...thisBubble}
+    const allBots = post.settings.botData
+    if(allBots[botID]){
+        const thisBot = await bot.findOne({id: botID}).lean()
+        if(!thisBot){
+            res.send({successful:false, message: 'Server Error: bot was not found'})
+            return
+        }
+
+        for(let i=0; i<thisBot.data.length; i++){
+            if(thisBot.data[i]===postID){
+                thisBot.data.splice(i, 1)
             }
         }
-    }).catch(()=>{
-        res.send({successful:false, message: 'Server Error: failed to disengage bot'})
-    })
+
+        await bot.updateOne({id: botID}, {data: thisBot.data}).then(async ()=>{
+        // await thisBot.save().then(async ()=>{
+            // console.log("i got here");
+            delete post.settings.botData[botID]
+            const settings = post.settings
+            await bubble.updateOne({postID}, {settings})    
+            res.send({successful: true, bot: thisBot})
+        }).catch(()=>{
+            res.send({successful: false, message: "failed to save bot"})
+        })
+    }
 }
 
 module.exports = disengageBot

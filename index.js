@@ -18,7 +18,20 @@ const chats = require('./api/chatApi')
 const http = require('http')
 const socketio = require('socket.io');
 const socketApi = require('./api/socketApi');
+const { connectWithMongoose} = require('./database/mongooseConncetion');
+const { default: mongoose } = require('mongoose');
+const watchAllStreams = require('./controllers/watches/watchAllStreams');
+const copyAll = require('./controllers/copy/copyAll');
 // const pushNotification = require('./api/pushNotificationApi')
+
+
+// CONNECT TO DATABASE
+// connectToDB()
+// connectWithMongoose(copyAll)
+connectWithMongoose(()=>{})
+watchAllStreams()
+mongoose.pluralize(null)
+// copyAll()
 
 
 const server = http.createServer(app)
@@ -62,6 +75,7 @@ app.use('/api/user', user)
 app.use('/api/bot', bot)
 app.use('/api/bubble', bubble)
 app.use('/api/chats', chats)
+// app.use('/api/copy', copyAll)
 
 app.use('/api/test', (req, res)=>{
     res.status(200).send('testing api')

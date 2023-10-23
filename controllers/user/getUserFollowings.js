@@ -6,18 +6,12 @@ async function getUserFollowings(req, res){
     let userID = req.body.userID
 
     try{
-        const followingRef = doc(database, 'following', userID)
-        await getDoc(followingRef).then((docs)=>{
-            if(docs.exists()){
-                const following = {...docs.data()}
-                res.send({successful: true, following})
-            } else {
-                res.send({successful: false, message: 'bubbles not found'})
-            }
-        }).catch(()=>{
-            res.send({successful: false, message: 'Server error: bubbles not found'})
-
-        })
+        const userFollowing = await Following.findOne({userID}).lean()
+        if(userFollowing){
+            res.send({successful: true, following: userFollowing.following})
+        } else {
+            res.send({successful: false, message: 'followings not found'})
+        }
     } catch(e){
         res.send({successful: false, message: 'Server error: unable to get bubbles'})
     }

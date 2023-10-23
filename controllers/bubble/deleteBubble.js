@@ -2,6 +2,15 @@ const {doc, getDoc, updateDoc, setDoc, deleteDoc} = require('firebase/firestore'
 const {getDownloadURL, ref, uploadBytes, deleteObject} = require('firebase/storage')
 const date = require('date-and-time')
 const {database, storage} = require('../../database/firebase')
+const bubble = require('../../models/bubble')
+const bot = require('../../models/bot')
+const Feeds = require('../../models/Feeds')
+const userBubbles = require('../../models/userBubbles')
+const userReplies = require('../../models/userReplies')
+const userShares = require('../../models/userShares')
+// const userLikes = require('../../models/userLikes.JS')
+const bubblesForEveryone = require('../../models/bubblesForEveryone')
+const LikeModel = require('../../models/LikeModel')
 
 async function deleteBubble(req, res){
 
@@ -10,12 +19,12 @@ async function deleteBubble(req, res){
     const thisBubble = {...req.body.thisBubble}
     // console.log(thisBubble);
 
-    const bubble = thisBubble.bubble
+    const bubblex = thisBubble.bubble
     const allFilePaths = []
 
     // prepare all files to be deleted by pushing their path to the allFilesPath
-    for(let i=0; i<bubble.length; i++){
-        const files = bubble[i].file
+    for(let i=0; i<bubblex.length; i++){
+        const files = bubblex[i].file
         for(let j=0; j<files.length; j++){
             const file = files[j]
             allFilePaths.push(file.path)
@@ -37,6 +46,7 @@ async function deleteBubble(req, res){
             }).catch((err)=>{
                 // console.log('failed down');
                 res.send({successful: false, message: 'unable to delete files'})
+                return
             })
         }
     } else {
@@ -45,120 +55,118 @@ async function deleteBubble(req, res){
     }
 
     async function delBubble(){
-        const theBubbleRef = doc(database, 'bubbles', thisBubble.postID)
-        await getDoc(theBubbleRef).then(async(theBubble)=>{
-            if(theBubble.exists()){
-                const bubble = {...theBubble.data()}
-
-                const everyoneWhoHasIt = [...Object.keys(bubble.activities.iAmOnTheseFeeds)]
-                
-                // clear bubble from all bots
-                const bots = [...Object.keys(bubble.settings.botData)]
-                for(let i=0; i<bots.length; i++){
-                    const botRef = doc(database, 'bots', bots[i])
-                    await getDoc(botRef).then(async(docsnap)=>{
-                        if(docsnap.exists()){
-                            const data = [...docsnap.data().data]
-                            for(let j=0; j<data.length; j++){
-                                if(data[j]===bubble.postID){
-                                    data.splice(j, 1)
-                                    updateDoc(botRef, {data})
-                                    break
-                                }
-                            }
-                        }
-                    })
-                }
-
-                // delete bubble from eceryone who already got it
-                for(let j=0; j<everyoneWhoHasIt.length; j++){
-                    const current = everyoneWhoHasIt[j]
-
-                    const feedsRef = doc(database, 'feeds', current)
-                    await getDoc(feedsRef).then(async(docsnap)=>{
-                        if(docsnap.exists()){
-                            const bubbles = [...docsnap.data().bubbles]
-                            for(let i=0; i<bubbles.length; i++){
-                                let current = bubbles[i]
-                                if(current.postID === thisBubble.postID){
-                                    bubbles[i]='deleted'
-                                }
-                            }
-                            updateDoc(feedsRef, {bubbles})
-                        }
-                    })
-
-                    const userBubblesRef = doc(database, 'userBubbles', current)
-                    await getDoc(userBubblesRef).then(async(docsnap)=>{
-                        if(docsnap.exists()){
-                            const bubbles = [...docsnap.data().bubbles]
-                            for(let i=0; i<bubbles.length; i++){
-                                let current = bubbles[i]
-                                if(current.postID === thisBubble.postID){
-                                    bubbles[i]='deleted'
-                                }
-                            }
-                            updateDoc(userBubblesRef, {bubbles})
-                        }
-                    })
-
-                    const userRepliesRef = doc(database, 'userReplies', current)
-                    await getDoc(userRepliesRef).then(async(docsnap)=>{
-                        if(docsnap.exists()){
-                            const bubbles = [...docsnap.data().bubbles]
-                            for(let i=0; i<bubbles.length; i++){
-                                let current = bubbles[i]
-                                if(current.postID === thisBubble.postID){
-                                    bubbles[i]='deleted'
-                                }
-                            }
-                            updateDoc(userRepliesRef, {bubbles})
-                        }
-                    })
-
-                    const userLikesRef = doc(database, 'userLikes', current)
-                    await getDoc(userLikesRef).then(async(docsnap)=>{
-                        if(docsnap.exists()){
-                            const bubbles = [...docsnap.data().bubbles]
-                            for(let i=0; i<bubbles.length; i++){
-                                let current = bubbles[i]
-                                if(current.postID === thisBubble.postID){
-                                    bubbles[i]='deleted'
-                                }
-                            }
-                            updateDoc(userLikesRef, {bubbles})
-                        }
-                    })
-
-                    const userSharesRef = doc(database, 'userShares', current)
-                    await getDoc(userSharesRef).then(async(docsnap)=>{
-                        if(docsnap.exists()){
-                            const bubbles = [...docsnap.data().bubbles]
-                            for(let i=0; i<bubbles.length; i++){
-                                let current = bubbles[i]
-                                if(current.postID === thisBubble.postID){
-                                    bubbles[i]='deleted'
-                                }
-                            }
-                            updateDoc(userSharesRef, {bubbles})
-                        }
-                    })
-
-                    if(j===everyoneWhoHasIt.length-1){
-                        await deleteDoc(theBubbleRef).then(()=>{
-                            res.send({successful: true})
-                        }).catch(()=>{
-                            res.send({successful: false, message: 'failed to delete bubble'})
-                        })
-                    }
-                    
-                }
-                // console.log('good');
-            } else {
-                res.send({successful: false, message: 'Bubble not found'})
-                // console.log('failed down');
+        const flaggedBubble = await bubble.findOne({postID: thisBubble.postID}).lean()
+        if(flaggedBubble === null){
+            res.send({successful: false, message: 'Bubble not found'})
+        } else {
+            if(typeof(flaggedBubble.activities)==="string"){
+                const activities = JSON.parse(flaggedBubble.activities)
+                flaggedBubble.activities = activities
             }
-        })
+
+            const everyoneWhoHasIt = [...Object.keys(flaggedBubble.activities.iAmOnTheseFeeds)]
+            const bots = [...Object.keys(flaggedBubble.settings.botData)]
+            for(let i=0; i<bots.length; i++){
+                const thisBot = await bot.findOne({id: bots[i]}).lean()
+                if(thisBot){
+                    for(let j=0; j<thisBot.data.length; j++){
+                        if(thisBot.data[j]===thisBubble.postID){
+                            thisBot.data.splice(j, 1)
+                            await bot.updateOne({id: bots[i]}, {data: thisBot.data})
+                            break
+                        }
+                    }
+                }
+            }
+
+
+            for(let j=0; j<everyoneWhoHasIt.length; j++){
+                const currentID = everyoneWhoHasIt[j]
+                const userFeed = await Feeds.findOne({userID: currentID})
+                if(userFeed){
+                    for(let i=0; i<userFeed.bubbles.length; i++){
+                        const current = userFeed.bubbles[i]
+                        if(current.postID === thisBubble.postID){
+                            userFeed.bubbles[i]='deleted'
+                        }
+                    }
+                    // await userFeed.save()
+                    await Feeds.updateOne({userID: currentID}, {bubbles: [...userFeed.bubbles]})
+                }
+
+                const thisUserbubbles = await userBubbles.findOne({userID: currentID})
+                if(thisUserbubbles){
+                    for(let i=0; i<thisUserbubbles.bubbles.length; i++){
+                        const current = thisUserbubbles.bubbles[i]
+                        if(current.postID === thisBubble.postID){
+                            thisUserbubbles.bubbles[i]='deleted'
+                        }
+                    }
+                    // await thisUserbubbles.save()
+                    await userBubbles.updateOne({userID: currentID}, {bubbles: thisUserbubbles.bubbles})
+                }
+
+                const thisUserReplies = await userReplies.findOne({userID: currentID})
+                if(thisUserReplies){
+                    for(let i=0; i<thisUserReplies.bubbles.length; i++){
+                        const current = thisUserReplies.bubbles[i]
+                        if(current.postID === thisBubble.postID){
+                            thisUserReplies.bubbles[i]='deleted'
+                        }
+                    }
+                    // await thisUserReplies.save()
+                    await userReplies.updateOne({userID: currentID}, {bubbles: [...thisUserReplies.bubbles]})
+                }
+
+                const thisUserLikes = await LikeModel.findOne({userID: currentID})
+                // const thisUserLikes = await userLikes.findOne({userID: currentID})
+                if(thisUserLikes){
+                    for(let i=0; i<thisUserLikes.bubbles.length; i++){
+                        const current = thisUserLikes.bubbles[i]
+                        if(current.postID === thisBubble.postID){
+                            thisUserLikes.bubbles[i]='deleted'
+                        }
+                    }
+                    // await thisUserLikes.save()
+                    await LikeModel.updateOne({userID: currentID}, {bubbles: [...thisUserLikes.bubbles]})
+                }
+
+                const thisuserShares = await userShares.findOne({userID: currentID})
+                if(thisuserShares){
+                    for(let i=0; i<thisuserShares.bubbles.length; i++){
+                        const current = thisuserShares.bubbles[i]
+                        if(current.postID === thisBubble.postID){
+                            thisuserShares.bubbles[i]='deleted'
+                        }
+                    }
+                    // await thisuserShares.save()
+                    await userShares.updateOne({userID: currentID}, {bubbles: [...thisuserShares.bubbles]})
+                }
+
+                if(j===everyoneWhoHasIt.length-1){
+                    const publicBubbles = await bubblesForEveryone.findOne({name: "Everyone"})
+                    if(publicBubbles){
+                        for(let i=0; i<publicBubbles.bubbleRefs.length; i++){
+                            const current = publicBubbles.bubbleRefs[i]
+                            if(current.postID === thisBubble.postID){
+                                publicBubbles.bubbleRefs[i]='deleted'
+                            }
+                        }
+                        // await publicBubbles.save()
+                        await bubblesForEveryone.updateOne({name: "Everyone"}, {bubbleRefs: [...publicBubbles.bubbleRefs]})
+                    }
+
+                    await bubble.findOneAndDelete({postID: thisBubble.postID}).then(async()=>{
+                        const fire_ref = doc(database, "bubbles", thisBubble.postID)
+                        await setDoc(fire_ref, {bubbleNotFound: true}).catch(()=>{})
+                        res.send({successful: true})
+                    }).catch(()=>{
+                        res.send({successful: false, message: 'failed to delete bubble'})
+                    })
+                }
+
+            }
+        }
     }
 
 }

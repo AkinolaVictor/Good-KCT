@@ -3,6 +3,8 @@ const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
 // const {getDownloadURL, ref, uploadBytes, deleteObject} = require('firebase/storage')
 // const date = require('date-and-time')
 const {database} = require('../../database/firebase')
+const botActivities = require('../../models/BotActivities')
+const bubble = require('../../models/bubble')
 
 async function bubbleBotUpdate(req, res){
     const userID = req.body.userID
@@ -12,88 +14,97 @@ async function bubbleBotUpdate(req, res){
     const audienceActivity = req.body.audienceActivity
     const currentTask = req.body.currentTask
 
-
-
     // NETWORK
     async function updateCreatorBotActivities(bubbleCreatorID, activity){
         if(bubbleCreatorID !== userID){
-            const userActivityRef = doc(database, 'botActivities', bubbleCreatorID)
-            await getDoc(userActivityRef).then(async(docsnap)=>{
-                if(docsnap.exists()){
-                    const userBotActivities = [...docsnap.data().userBotActivities]
-                    userBotActivities.push(activity)
-                    await updateDoc(userActivityRef, {userBotActivities})
-                } else {
-                    setDoc(userActivityRef, {
-                        otherBotActivities: [],
-                        userBotActivities: [activity]
-                    })
+            const userBotActivities = await botActivities.findOne({userID: bubbleCreatorID})
+            if(userBotActivities === null){
+                const newUserBotActivities = new botActivities({
+                    userID: bubbleCreatorID, 
+                    otherBotActivities: [],
+                    userBotActivities: [activity]
+                })
+                await newUserBotActivities.save()
+            } else {
+                for(let i=0; i<userBotActivities.userBotActivities.length; i++){
+                    const current = userBotActivities.userBotActivities[i]
+                    if((current.taskID === activity.taskID) && (current.postID === activity.postID) && (current.audienceID === activity.audienceID)){
+                        return
+                    }
                 }
-            })
+                userBotActivities.userBotActivities.push(activity)
+                await botActivities.updateOne({userID: bubbleCreatorID}, {userBotActivities: [...userBotActivities.userBotActivities]})
+                // await userBotActivities.save()
+            }
         }
     }
 
     // NETWORK
     async function updateAudienceBotActivities(bubbleCreatorID, activity){
         if(bubbleCreatorID !== userID){
-            const audienceActivityRef = doc(database, 'botActivities', userID)
-            await getDoc(audienceActivityRef).then(async(docsnap)=>{
-                if(docsnap.exists()){
-                    const otherBotActivities = [...docsnap.data().otherBotActivities]
-                    otherBotActivities.push(activity)
-                    await updateDoc(audienceActivityRef, {otherBotActivities})
-                } else {
-                    setDoc(audienceActivityRef, {
-                        otherBotActivities: [activity],
-                        userBotActivities: []
-                    })
+            const thisBotActivities = await botActivities.findOne({userID})
+            if(thisBotActivities === null){
+                const newUserBotActivities = new botActivities({
+                    userID, 
+                    otherBotActivities: [activity],
+                    userBotActivities: []
+                })
+                await newUserBotActivities.save()
+            } else {
+                for(let i=0; i<thisBotActivities.otherBotActivities.length; i++){
+                    const current = thisBotActivities.otherBotActivities[i]
+                    if((current.taskID === activity.taskID) && (current.postID === activity.postID) && (current.audienceID === activity.audienceID)){
+                        return
+                    }
                 }
-            })
+                thisBotActivities.otherBotActivities.push(activity)
+                // await thisBotActivities.save()
+                await botActivities.updateOne({userID}, {otherBotActivities: [...thisBotActivities.otherBotActivities]})
+            }
         }
     }
 
+    const thisBubble = await bubble.findOne({postID: bubbleID}).lean()
+    if(thisBubble){
+        const bubbleBots = thisBubble.settings.botData
+        if(bubbleBots){
+            if(bubbleBots[currentBot]){
+                const thisBot = bubbleBots[currentBot].audience
+                if(thisBot[userID]){
+                    const userInBot = thisBot[userID]
+                    if(!userInBot.fulfilledTasks.includes(currentTask)){
 
-    const bubbleRef = doc(database, 'bubbles', bubbleID)
-    await getDoc(bubbleRef).then(async(snapshot)=>{
-        if(snapshot.exists()){
-            const posts = {...snapshot.data()}
-            const bubbleBots = posts.settings.botData
-            if(bubbleBots){
-                if(bubbleBots[currentBot]){
-                    const thisBot = bubbleBots[currentBot].audience
-                    if(thisBot[userID]){
-                        const userInBot = thisBot[userID]
-                        if(!userInBot.fulfilledTasks.includes(currentTask)){
-
-                            posts.settings.botData[currentBot].audience[userID].fulfilledTasks.push(currentTask)
-                            updateCreatorBotActivities(posts.user.id, creatorActivity)
-                            updateAudienceBotActivities(posts.user.id, audienceActivity)
-                            
-                            const settings = posts.settings
-                            await updateDoc(bubbleRef, {settings})
-                        }
-
+                        thisBubble.settings.botData[currentBot].audience[userID].fulfilledTasks.push(currentTask)
+                        await updateCreatorBotActivities(thisBubble.user.id, creatorActivity)
+                        await updateAudienceBotActivities(thisBubble.user.id, audienceActivity)
+                        
+                        const settings = thisBubble.settings
+                        await bubble.updateOne({postID: bubbleID}, {settings})
+                        res.send({successful: true})
                     } else {
-                        posts.settings.botData[currentBot].audience[userID] = {}
-                        posts.settings.botData[currentBot].audience[userID].fulfilledTasks=[]
-                        posts.settings.botData[currentBot].audience[userID].fulfilledTasks.push(currentTask)
-                        updateCreatorBotActivities(posts.user.id, creatorActivity)
-                        updateAudienceBotActivities(posts.user.id, audienceActivity)
-
-                        const settings = posts.settings
-                        await updateDoc(bubbleRef, {settings})
+                        res.send({successful: false, message: 'Bot already acted'})
                     }
+
+                } else {
+                    thisBubble.settings.botData[currentBot].audience[userID] = {}
+                    thisBubble.settings.botData[currentBot].audience[userID].fulfilledTasks=[]
+                    thisBubble.settings.botData[currentBot].audience[userID].fulfilledTasks.push(currentTask)
+                    await updateCreatorBotActivities(thisBubble.user.id, creatorActivity)
+                    await updateAudienceBotActivities(thisBubble.user.id, audienceActivity)
+
+                    const settings = thisBubble.settings
+                    await bubble.updateOne({postID: bubbleID}, {settings})
+                    res.send({successful: true})
                 }
             } else {
                 res.send({successful: false, message: 'Bot not in bubble...'})
             }
+        } else {
+            res.send({successful: false, message: 'Bubble does not have a botdata'})
         }
-    }).then(()=>{
-        res.send({successful: true})
-    }).catch(()=>{
-        res.send({successful: false})
-    })
-    
+    } else {
+        res.send({successful: false, message: "bubble not found"})
+    }
 }
 
 module.exports = bubbleBotUpdate

@@ -3,21 +3,17 @@ const {getDownloadURL, ref, uploadBytes} = require('firebase/storage')
 const date = require('date-and-time')
 const {database, storage} = require('../../database/firebase')
 const sendPushNotification = require('../pushNotification/sendPushNotification')
+const bot = require('../../models/bot')
+const bubble = require('../../models/bubble')
+const Feeds = require('../../models/Feeds')
+const userBubbles = require('../../models/userBubbles')
+const bubblesForEveryone = require('../../models/bubblesForEveryone')
 
 async function createBubble(req, res){
-    // res.send({successful: true})
-    // console.log(req.body);
-    // const data = JSON.parse(req.body.data)
-    // console.log(data);
-    // return
-    // const userID = data.userID
-    // const thisBubble = {...data.thisBubble}
-
     const userID = req.body.userID
     const thisBubble = {...req.body.thisBubble}
     const secrecySettings = thisBubble.settings.secrecyData
     const postID = thisBubble.postID
-    // const bubbleName = req.body.bubbleName
     const bubbleName = thisBubble.type
     
     
@@ -94,20 +90,20 @@ async function createBubble(req, res){
         const settings = thisBubble.settings
         settings.selfDestructData.currentDate = thisBubble.createdDate
 
+
+
         const botData = [...Object.keys(settings.botData)]
         if(botData.length){
             for(let k=0; k<botData.length; k++){
                 const eachBot = botData[k]
-                const botRef = doc(database, 'bots', eachBot)
-                await getDoc(botRef).then(async(snapshot)=>{
-                    const data = [...snapshot.data().data]
-                    if(!data.includes(postID)){
-                        data.push(postID)
-                        await updateDoc(botRef, {data})
+                const thisBot = await bot.findOne({id: eachBot}).lean()
+                if(thisBot){
+                    if(!thisBot.data.includes(postID)){
+                        thisBot.data.push(postID)
+                        // await thisBot.save()
+                        await bot.updateOne({id: eachBot}, {data: [...thisBot.data]})
                     }
-                    // if(k===botData.length-1){
-                    // }
-                })
+                }
             }
         }
 
@@ -125,12 +121,6 @@ async function createBubble(req, res){
         }
 
         thisBubble.feedRef = feedRef
-        // DO ALL STRINGIFY HERE
-        const emptyReply = []
-        const emptyShareStructure = {}
-
-        thisBubble.reply = JSON.stringify(emptyReply)
-        thisBubble.shareStructure = JSON.stringify(emptyShareStructure)
         
         const allBubbleAudience = [...thisBubble.audience]
         for(let i=0; i<allBubbleAudience.length; i++){
@@ -146,89 +136,102 @@ async function createBubble(req, res){
             }
         }
 
+        // DO ALL STRINGIFY HERE
+        const emptyReply = []
+        const emptyShareStructure = {}
+        const activities = {...thisBubble.activities}
+
+        thisBubble.reply = JSON.stringify(emptyReply)
+        thisBubble.shareStructure = JSON.stringify(emptyShareStructure)
+        thisBubble.activities = JSON.stringify(activities)
+        // thisBubble.settings = JSON.stringify(settings)
+
         // setup bubble creation 
         // New data structure
 
         thisBubble.audience = []
         
-        
-        const bubbleRef = doc(database, 'bubbles', postID)
-        const userBubbleRef = doc(database, 'userBubbles', userID)
-        const userFeedRef = doc(database, 'feeds', userID)
-        const bubblesForEveryoneRef = doc(database, 'bubblesForEveryone', 'Everyone')
-        // const userRef = doc(database, 'users', userID)
-    
-        // create bubble
-        await setDoc(bubbleRef, {...thisBubble}).then(async(result)=>{
-    
+        const newBubble = new bubble({...thisBubble})
+        await newBubble.save().then(async()=>{
             // update user feed
-            await getDoc(userFeedRef).then((docsnap)=>{
-                if(docsnap.exists()){
-                    const bubbles = [...docsnap.data().bubbles]
-                    bubbles.push(feedRef)
-                    updateDoc(userFeedRef, {bubbles})
-                } else {
-                    setDoc(userFeedRef, {
-                        bubbles: [feedRef]
-                    })
-                }
-            }).catch(()=>{
-                
-            })
-    
-            // update user bubble
-            await getDoc(userBubbleRef).then((docsnap)=>{
-                if(docsnap.exists()){
-                    const bubbles = [...docsnap.data().bubbles]
-                    bubbles.push(feedRef)
-                    updateDoc(userBubbleRef, {bubbles})
-                } else {
-                    setDoc(userBubbleRef, {
-                        bubbles: [feedRef]
-                    })
-                }
-            }).catch(()=>{
-                
-            })
+            const userFeed = await Feeds.findOne({userID}).lean()
+            if(userFeed === null){
+                const feeds = new Feeds({userID, bubbles: [feedRef]})
+                await feeds.save().catch(()=>{ })
+            } else {
+                userFeed.bubbles.push(feedRef)
+                // await userFeed.save().catch(()=>{ })
+                await Feeds.updateOne({userID}, {bubbles: [...userFeed.bubbles]}).catch(()=>{ })
+            }
 
-            // console.log('small');
-            // console.log('small');
-            // console.log('small');
-
-            // // add to user
-            // await getDoc(userRef).then((docsnap)=>{
-            //     const postIDs = [...docsnap.data().postIDs]
-            //     postIDs.push(feedRef)
-            //     updateDoc(userRef, {postIDs})
-            // })
             
-            // give feed to others
-            // const allBubbleAudience = [...thisBubble.audience]
-            for(let i=0; i<allBubbleAudience.length; i++){
-                const followersRef = doc(database, 'feeds', allBubbleAudience[i])
-                await getDoc(followersRef).then(async(docsnap)=>{
-                    if(docsnap.exists()){
-                        const bubbles = [...docsnap.data().bubbles]
-                        bubbles.push(feedRef)
-                        await updateDoc(followersRef, {bubbles})
-                    } else {
-                        setDoc(followersRef, {
-                            bubbles: [feedRef]
-                        })
-                    }
-                }).then(()=>{
-                    function constructTitle(){
-                        if(discernUserIdentity()){
-                            return "someone you're following created a bubble"
-                        } else {
-                            return `${thisBubble.user.name} created a bubble`
-                        }
-                    }
+            // update user bubble
+            const allUserBubbles = await userBubbles.findOne({userID}).lean()
+            if(allUserBubbles === null){
+                const bubbles = new userBubbles({userID, bubbles: [feedRef]})
+                await bubbles.save().catch(()=>{ })
+            } else {
+                allUserBubbles.bubbles.push(feedRef)
+                // await allUserBubbles.save().catch(()=>{ })
+                await userBubbles.updateOne({userID}, {bubbles: [...allUserBubbles.bubbles]}).catch(()=>{ })
+            }
 
-                    const discernMessage = () => {
-                        const bubble = thisBubble.bubble
-                        for(let i=0; i<bubble.length; i++){
-                            if(bubble[i].name==='Everyone'){
+            
+            for(let i=0; i<allBubbleAudience.length; i++){
+                const followerFeed = await Feeds.findOne({userID: allBubbleAudience[i]})
+                if(followerFeed === null){
+                    const newUserFeed = new Feeds({userID: allBubbleAudience[i], bubbles: [feedRef]})
+                    await newUserFeed.save().then(async()=>{
+                        await afterFeedingEachFollower(allBubbleAudience[i])
+                    }).catch(()=>{ })
+                } else {
+                    followerFeed.bubbles.push(feedRef)
+
+                    await Feeds.updateOne({userID: allBubbleAudience[i]}, {bubbles: [...followerFeed.bubbles]}).then(async()=>{
+                    // await followerFeed.save().then(async()=>{
+                        await afterFeedingEachFollower(allBubbleAudience[i])
+                    }).catch(()=>{ })
+                }
+
+            }
+
+            async function afterFeedingEachFollower(currentID){
+                function constructTitle(){
+                    if(discernUserIdentity()){
+                        return "someone you're following created a bubble"
+                    } else {
+                        return `${thisBubble.user.name} created a bubble`
+                    }
+                }
+
+                const discernMessage = () => {
+                    const bubble = thisBubble.bubble
+                    for(let i=0; i<bubble.length; i++){
+                        if(bubble[i].name==='Everyone'){
+                            let message = ''
+
+                            // building message
+                            const config = bubble[i].config
+                            for(let j=0; j<config.length; j++){
+                                const tweak = config[j].tweak
+                                const word = config[j].word
+                                if(word ==='(%%%---!!!@@@###&&&)'){
+                                } else if( word ==='(%%%%----!!!!@@@@####&&&&)'){
+                                } else {
+                                    if(tweak.name === 'none'){
+                                        message = message + `${word} `
+                                    } else if (tweak.name ==='description'){
+                                        message = message + `${word} `
+                                    } else if (tweak.name ==='hide'){
+                                        // message = message + `${word} `
+                                    } else{
+                                        message = message + `*** `
+                                    }
+                                }
+                            }
+                            return message.length?message:`You're selected among those who can view the content of this bubble.`
+                        } else {
+                            if(bubble[i].audience.includes(currentID)){
                                 let message = ''
 
                                 // building message
@@ -236,81 +239,47 @@ async function createBubble(req, res){
                                 for(let j=0; j<config.length; j++){
                                     const tweak = config[j].tweak
                                     const word = config[j].word
-                                    if(word ==='(%%%---!!!@@@###&&&)'){
-                                    } else if( word ==='(%%%%----!!!!@@@@####&&&&)'){
-                                    } else {
-                                        if(tweak.name === 'none'){
-                                            message = message + `${word} `
-                                        } else if (tweak.name ==='description'){
-                                            message = message + `${word} `
-                                        } else if (tweak.name ==='hide'){
-                                            // message = message + `${word} `
-                                        } else{
-                                            message = message + `*** `
-                                        }
+                                    if(tweak.name === 'none'){
+                                        message = message + `${word} `
+                                    } else if (tweak.name ==='description'){
+                                        message = message + `${word} `
+                                    } else if (tweak.name ==='hide'){
+                                        // message = message + `${word} `
+                                    } else{
+                                        message = message + `*** `
                                     }
                                 }
 
 
                                 return message.length?message:`You're selected among those who can view the content of this bubble.`
                             } else {
-                                if(bubble[i].audience.includes(allBubbleAudience[i])){
-                                    let message = ''
-
-                                    // building message
-                                    const config = bubble[i].config
-                                    for(let j=0; j<config.length; j++){
-                                        const tweak = config[j].tweak
-                                        const word = config[j].word
-                                        if(tweak.name === 'none'){
-                                            message = message + `${word} `
-                                        } else if (tweak.name ==='description'){
-                                            message = message + `${word} `
-                                        } else if (tweak.name ==='hide'){
-                                            // message = message + `${word} `
-                                        } else{
-                                            message = message + `*** `
-                                        }
-                                    }
-
-
-                                    return message.length?message:`You're selected among those who can view the content of this bubble.`
-                                } else {
-                                    return `You're selected among those who can view the content of this bubble.`
-                                }
+                                return `You're selected among those who can view the content of this bubble.`
                             }
                         }
-                        return `You're selected among those who can view the content of this bubble.`
                     }
+                    return `You're selected among those who can view the content of this bubble.`
+                }
 
-                    const data = {
-                        title: `${constructTitle()}`,
-                        body: discernMessage(),
-                        icon: decideNotifyIcon()
-                    }
-                    sendPushNotification(allBubbleAudience[i], data)
-                })
+                const data = {
+                    title: `${constructTitle()}`,
+                    body: discernMessage(),
+                    icon: decideNotifyIcon()
+                }
+
+                await sendPushNotification(currentID, data)
             }
 
             if(checkForEveryoneAndFollowers()){
-                // feed everyone with this bubbbles
-                await getDoc(bubblesForEveryoneRef).then(async(docsnap)=>{
-                    if(docsnap.exists()){
-                        const bubbleRefs = [...docsnap.data().bubbleRefs]
-                        bubbleRefs.push(feedRef)
-                        await updateDoc(bubblesForEveryoneRef, {bubbleRefs})
-                    } else {
-                        setDoc(bubblesForEveryoneRef, {
-                            bubbleRefs: [feedRef]
-                        })
-                    }
-                }).then(()=>{
-                    
-                }).catch(()=>{
-                    
-                })
+                const publicBubbles = await bubblesForEveryone.findOne({name: "Everyone"})
+                if(publicBubbles === null){
+                    const newPublicBubbles = new bubblesForEveryone({name: "Everyone", bubbleRefs: [feedRef]})
+                    await newPublicBubbles.save().then(()=>{})
+                } else {
+                    publicBubbles.bubbleRefs.push(feedRef)
+                    await bubblesForEveryone.updateOne({name: "Everyone"}, {bubbleRefs: [...publicBubbles.bubbleRefs]}).catch(()=>{})
+                    // await publicBubbles.save().then(()=>{})
+                }
             }
-            
         }).then(()=>{
             res.send({successful: true})
         }).catch(()=>{

@@ -3,6 +3,7 @@ const {doc, getDoc, updateDoc, setDoc, deleteField} = require('firebase/firestor
 const date = require('date-and-time')
 const {database} = require('../../database/firebase')
 const webPush = require('web-push')
+const savePush = require('../../models/savePush')
 
 async function sendPushNotification(userID, data){
     // const userID = req.body.userID / user.id
@@ -42,21 +43,16 @@ async function sendPushNotification(userID, data){
         vibrate: [200, 100, 200],
         ...data
     })
-    const userSubscriptionRef = doc(database, 'savedPushSubscriptions', userID)
-    await getDoc(userSubscriptionRef).then((docsnap)=>{
-        if(docsnap.exists()){
-            const subscription = JSON.parse(docsnap.data().subscription)
-            // console.log(subscription);
-            webPush.sendNotification(subscription, payload).then((res)=>{
-                // console.log(res);
-            }).catch(()=>{
-                // console.log('caught');
-            })
-        }
-    }).catch(()=>{
-        res.send({successful: 'fail'})
-    })
+    const userSub = await savePush.findOne({userID})
+    if(userSub === null){
+        // res.send({successful: 'fail'})
+    } else {
+        const subscription = JSON.parse(userSub.subscription)
+        webPush.sendNotification(subscription, payload).then((res)=>{
+        }).catch(()=>{
+        })
+    }
             
 }
         
-        module.exports = sendPushNotification
+module.exports = sendPushNotification

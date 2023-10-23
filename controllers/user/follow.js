@@ -2,6 +2,9 @@ const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
 // const {getDownloadURL, ref, uploadBytes} = require('firebase/storage')
 const date = require('date-and-time')
 const {database} = require('../../database/firebase')
+const Following = require('../../models/Following')
+const Followers = require('../../models/Followers')
+const notifications = require('../../models/notifications')
 
 async function follow(req, res){
     const userID = req.body.userID // user.id
@@ -11,9 +14,6 @@ async function follow(req, res){
 
     async function FollowNotifier(which){
         if(userID !== newUserID){
-            const creatorNotificationsRef = doc(database, 'notifications', newUserID)
-            // const userNotificationsRef = doc(database, 'notifications', user.id)
-            
             // data
             function getDate(){
                 const now = new Date()
@@ -46,90 +46,52 @@ async function follow(req, res){
                 // feed: thisBubble.refDoc,
                 type: 'follow'
             }
-            // followData.feed.env='feed'
     
             // check if
-            await getDoc(creatorNotificationsRef).then(async(snapshot)=>{
-                if(!snapshot.exists()){
-                    setDoc(creatorNotificationsRef, {
-                        all: [followData]
-                    })
-                } else {
-                    // update all
-                    const all=[...snapshot.data().all]
-                    all.push(followData)
-                    updateDoc(creatorNotificationsRef, {all})
-                }
-            })
-    
+            const userNotification = await notifications.findOne({userID: newUserID})
+            if(userNotification===null){
+                const newNotifications = new notifications({userID: newUserID, all: [followData]})
+                await newNotifications.save()
+            } else {
+                userNotification.all.push(followData)
+                // await userNotification.save()
+                await notifications.updateOne({userID: newUserID}, {all: [...userNotification.all]})
+                // await notifications.updateOne({userID: newUserID}, {all: userNotification.all})
+            }
         }
     }
 
     const Follow = async () => {
-        
         // add user id to my following
-        const docz = doc(database, 'following', userID)
-        await getDoc(docz).then(async(docsnap)=>{
-            if(docsnap.exists()){
-                const following = {...docsnap.data()}
-
-                if(!following[newUserID]){
-                    following[newUserID] = {
-                        name: newUserName,
-                        id: newUserID,
-                        imageUrl: '',
-                    }
-
-                    await updateDoc(docz, {...following}).then(()=>{
-                        
-                    }).catch((err)=>{
-                        res.send({successful: false, message: '`Sorry, unable to follow, error encountered while trying to follow ${newUserName}`'})
-                    })
-                    // setClickFollow(false)
-                }
-            } else {
-                setDoc(docz, {
-                    [newUserID]: {
-                        name: newUserName,
-                        id: newUserID,
-                        imageUrl: ''
-                    }
-                })
+        const userFollowing = await Following.findOne({userID}).lean()
+        if(userFollowing===null){
+            const following = new Following({userID, following: { [newUserID]: {name: newUserName, id: newUserID}}})
+            await following.save()
+        } else {
+            if(!userFollowing.following){userFollowing.following = {}}
+            if(!userFollowing.following[newUserID]){
+                userFollowing.following[newUserID] = {name: newUserName, id: newUserID}
+                await Following.updateOne({userID}, {following: userFollowing.following})
             }
-        })
-
+        }
 
         // add my id to user followers
-        const docz2 = doc(database, 'followers', newUserID)
-        await getDoc(docz2).then(async(docsnap)=>{
-            if(docsnap.exists()){
-                const followers = {...docsnap.data()}
-                if(!followers[userID]){
-                    followers[userID] = {
-                        name: userName,
-                        id: userID,
-                        imageUrl: ''
-                    }
-                    await updateDoc(docz2, {...followers}).then(()=>{
-                        FollowNotifier('follow')
-                    }).catch((err)=>{
-                        res.send({successful: false, message: '`Sorry, unable to follow, error encountered while trying to follow ${newUserName}`'})
-                        // setClickFollow(false)
-                    })
-                }
-            } else {
-                setDoc(docz2, {
-                    [userID]: {
-                        name: userName,
-                        id: userID,
-                        imageUrl: ''
-                    }
-                }).catch(()=>{
-                    res.send({successful: false, message: '`Sorry, unable to follow, error encountered while trying to follow ${newUserName}`'})
-                })
+        const userFollowers = await Followers.findOne({userID: newUserID}).lean()
+        if(userFollowers===null){
+            const followers = new Followers({userID: newUserID, followers: {
+                [userID]: {name: userName, id: userID}
+            }})
+            await followers.save()
+            await FollowNotifier("follow")
+        } else {
+            if(!userFollowers.followers){userFollowers.followers = {}}
+            if(!userFollowers.followers[userID]){
+                userFollowers.followers[userID] = {name: userName, id: userID}
+                await Followers.updateOne({userID: newUserID}, {followers: userFollowers.followers})
+                await FollowNotifier("follow")
             }
-        })
-        
+        }
+
         res.send({successful: true})
     }
 

@@ -4,6 +4,8 @@ const { v4: uuidv4 } = require('uuid')
 const date = require('date-and-time')
 const {database} = require('../../database/firebase')
 const sendPushNotification = require('../pushNotification/sendPushNotification')
+const notifications = require('../../models/notifications')
+const bubble = require('../../models/bubble')
 
 async function likeReply(req, res){
     const bubbleID = req.body.bubbleID
@@ -19,7 +21,6 @@ async function likeReply(req, res){
     const replyCreatorID = req.body.replyCreatorID
     const replyDataID = req.body.replyDataID
     
-    // remove from audience
     // remove from audience
     let overallRep = []
     let eachReply = []
@@ -93,8 +94,6 @@ async function likeReply(req, res){
         }
         
         if(userID!==bubbleCreator){
-            const creatorNotificationsRef = doc(database, 'notifications', bubbleCreator)
-            
             function constructCreatorMessage(){
                 if(discernUserIdentity()){
                     return `someone likes a reply`
@@ -118,36 +117,32 @@ async function likeReply(req, res){
             creatorData.feed.env='feed'
 
             // update creator
-            await getDoc(creatorNotificationsRef).then(async(snapshot)=>{
-                if(!snapshot.exists()){
-                    setDoc(creatorNotificationsRef, {
-                        all: [creatorData]
-                    })
-                } else {
-                    // update all
-                    const all = [...snapshot.data().all]
-                    all.push(creatorData)
-                    updateDoc(creatorNotificationsRef, {all})
-                }
-            }).then(()=>{
-                const data = {
-                    title: `${creatorData.message}`,
-                    body: notificationData.message,
-                    icon: decideNotifyIcon()
-                }
-                sendPushNotification(bubbleCreator, data)
-            })
+            const creatorNotification = await notifications.findOne({userID: bubbleCreator})
+            if(creatorNotification === null){
+                const newNotif = new notifications({userID: bubbleCreator, all: [creatorData]})
+                await newNotif.save()
+            } else {
+                creatorNotification.all.push(creatorData)
+                // await creatorNotification.save()
+                await notifications.updateOne({userID: bubbleCreator}, {all: [...creatorNotification.all]})
+            }
+
+            const data = {
+                title: `${creatorData.message}`,
+                body: notificationData.message,
+                icon: decideNotifyIcon()
+            }
+            await sendPushNotification(bubbleCreator, data)
         }
 
 
         // update user
         if(path.length>0 && replyCreatorID!==bubbleCreator){
-            const mainUserNotificationsRef = doc(database, 'notifications', replyCreatorID)
             function constructMainUserMessage(){
                 if(discernUserIdentity()){
                     return `someone likes your reply`
                 } else {
-                    return `${replyCreatorName} likes your reply`
+                    return `${fullname} likes your reply`
                 }
             }
 
@@ -165,42 +160,34 @@ async function likeReply(req, res){
             }
             mainReplyData.feed.env='feed'
 
-            await getDoc(mainUserNotificationsRef).then(async(snapshot)=>{
-                if(!snapshot.exists()){
-                    setDoc(mainUserNotificationsRef, {
-                        all: [mainReplyData]
-                    })
-                } else {
-                    // update all
-                    const all=[...snapshot.data().all]
-                    all.push(mainReplyData)
-                    updateDoc(mainUserNotificationsRef, {all})
-                }
-            }).then(()=>{
-                const data = {
-                    title: `${mainReplyData.message}`,
-                    body: notificationData.message,
-                    icon: decideNotifyIcon()
-                }
-                sendPushNotification(replyCreatorID, data)
-            })
+            const mainUserNotification = await notifications.findOne({userID: replyCreatorID})
+            if(mainUserNotification === null){
+                const newNotif = new notifications({userID: replyCreatorID, all: [mainReplyData]})
+                await newNotif.save()
+            } else {
+                mainUserNotification.all.push(mainReplyData)
+                // await mainUserNotification.save()
+                await notifications.updateOne({userID: replyCreatorID}, {all: [...mainUserNotification.all]})
+            }
+            const data = {
+                title: `${mainReplyData.message}`,
+                body: notificationData.message,
+                icon: decideNotifyIcon()
+            }
+            sendPushNotification(replyCreatorID, data)
         }
     }
 
-    const docz = doc(database, 'bubbles', bubbleID)
-    await getDoc(docz).then(async(docsnap)=>{
-        // console.log('i ran');
-        if(docsnap.exists()){
-            let posts = {...docsnap.data()}
-            // console.log(posts.reply);
-            let replys = posts.reply
-            if(typeof(posts.reply) === "string"){
-                replys = JSON.parse(posts.reply)
+    try {
+        const thisBubble = await bubble.findOne({postID: bubbleID}).lean()
+        if(thisBubble === null){
+            res.send({successful: false, message: 'Bubble not found'})
+        } else {
+            let replys = thisBubble.reply
+            if(typeof(thisBubble.reply) === "string"){
+                replys = JSON.parse(thisBubble.reply)
             }
-
-            // let path = [...path]
             buildReply(path, replys)
-    
             // destructured replies
             let dR = [...overallRep]
             // add like if its absent
@@ -208,35 +195,28 @@ async function likeReply(req, res){
             if(!(dR[dR.length-1].like.includes(userID))){
                 dR[dR.length-1].like.push(userID)
             }
-            
             let final;
             // loop through path and create final
             for(let i=path.length-1; i>0; i=i-1){
                 dR[i-1].reply[path[i]] = dR[i]
             }
             final = dR[0]
-            
-            // posts.reply[path[0]] = final;
-            // const reply = posts.reply
 
             replys[path[0]] = final;
             const reply = JSON.stringify(replys)
-            await updateDoc(docz, {totalLikes: increment(1), reply}).then(()=>{
+            // const totalLikes = thisBubble.totalLikes + 1
+            await bubble.updateOne({postID: bubbleID}, {reply}).then(async()=>{
                 const notificationData = {
                     message: `Reply: ${message}`
                 }
-                LikeReplyNotifier(notificationData)
-            })
+                await LikeReplyNotifier(notificationData)
+            }).catch(()=>{})
 
-        } else {
-            res.send({successful: false, message: 'Bubble not found'})
+            res.send({successful: true})
         }
-    }).then(()=>{
-        res.send({successful: true})
-    }).catch(()=>{
+    } catch (e){
         res.send({successful: false, message: 'An error occured from the server side'})
-    })
-
+    }
     
 }
 

@@ -1,210 +1,110 @@
-const {doc, getDoc} = require('firebase/firestore')
-const {database} = require('../../database/firebase')
+const User = require('../../models/User')
+const userBubbles = require('../../models/userBubbles')
+const Followers = require('../../models/Followers')
+const Following = require('../../models/Following')
+// const userLikes = require('../../models/userLikes.JS')
+const userReplies = require('../../models/userReplies')
+const userShares = require('../../models/userShares')
+const savedAudience = require('../../models/savedAudience')
+const Feeds = require('../../models/Feeds')
+const LikeModel = require('../../models/LikeModel')
 
 async function initializeUser(req, res){
     let userID = req.body.userID
     const startUp = req.body.startUp
     
-    let initialize = {}
-    const result = {
-        successful: false,
-        message: 'User data not gotten'
+    let user = await User.findOne({id: userID}).lean()
+    let data = {}
+    if(user){
+        data = {...user}
+        // GET BUBBLES
+        const allUserBubbles = await userBubbles.findOne({userID}).lean()
+        if(allUserBubbles){
+            const bubbles = [...allUserBubbles.bubbles]
+            let postsData = {}
+            for(let j=0; j<bubbles.length; j++){
+                if(typeof bubbles[j] === "object"){
+                    if(bubbles[j].postID){
+                        postsData[bubbles[j].postID] = true
+                    }
+                }
+            }
+            data.bubbles = bubbles
+            data.posts = postsData
+        } else {
+            data.bubbles = []
+            data.posts = {}
+        }
+
+        // GET FOLLOWERS
+        const userFollowers = await Followers.findOne({userID}).lean()
+        if(userFollowers){
+            const followers =  {...userFollowers.followers}
+            data.followers = followers
+        } else {
+            data.followers = {}
+        }
+
+        // GET FOLLOWING
+        const userFollowing = await Following.findOne({userID}).lean()
+        if(userFollowing){
+            const following =  {...userFollowing.following}
+            data.following = following
+        } else {
+            data.following = {}
+        }
+
+        // GET LIKES
+        // const allUserLikes = await userLikes.findOne({userID}).lean()
+        const allUserLikes = await LikeModel.findOne({userID}).lean()
+        if(allUserLikes){
+            const likes = [...allUserLikes.bubbles]
+            data.likes = likes
+        } else {
+            data.likes = []
+        }
+
+        // GET REPLIES
+        const allUserReplies = await userReplies.findOne({userID}).lean()
+        if(allUserReplies){
+            const replies = [...allUserReplies.bubbles]
+            data.replies = replies
+        } else {
+            data.replies = []
+        }
+
+        // GET SHARES
+        const allUserShares = await userShares.findOne({userID}).lean()
+        if(allUserShares){
+            const shares = [...allUserShares.bubbles]
+            data.shares = shares
+        } else {
+            data.shares = []
+        }
+        
+        // GET SAVED AUDIENCE
+        if(startUp){
+            const userSavedAudience = await savedAudience.findOne({userID}).lean()
+            if(userSavedAudience){
+                const audience = {...userSavedAudience.audience}
+                data.audience = audience
+            } else {
+                data.audience = {}
+            }
+
+            const userFeeds = await Feeds.findOne({userID}).lean()
+            if(userFeeds){
+                const feed = [...userFeeds.bubbles]
+                data.feed = feed
+            } else {
+                data.feed = []
+            }
+        }
+        res.send({successful: true, data})
+
+    } else {
+        res.send({successful:false, data: null, message: 'Server error: error encountered from the server when trying to get user, please try to reload this page. If problem persists, user data was not found.'})
     }
-
-    const userRef = doc(database, 'users', userID)
-    await getDoc(userRef).then((docSnap)=>{
-        if(docSnap.exists()){
-            let thisUser = {...docSnap.data()}
-            thisUser.hide = false
-            return thisUser
-        } else {
-            return null
-        }
-    }).then(async(user)=>{
-        // bubbles
-        if(user!==null){
-            const bubblesRef = doc(database, 'userBubbles', userID)
-            let thisUser = {...user}
-            await getDoc(bubblesRef).then((docs)=>{
-                if(docs.exists()){
-
-                    const bubbles = [...docs.data().bubbles]
-                    let postsData = {}
-                    for(let j=0; j<bubbles.length; j++){
-                        if(typeof bubbles[j] === "object"){
-                            if(bubbles[j].postID){
-                                postsData[bubbles[j].postID] = true
-                            }
-                        }
-                    }
-
-                    thisUser.bubbles = bubbles
-                    thisUser.posts = postsData
-                } else {
-                    thisUser.bubbles = []
-                    thisUser.posts = {}
-                }
-            }).catch(()=>{
-                thisUser.bubbles = []
-                thisUser.posts = {}
-            })
-
-            return thisUser
-        } else {
-            return user
-        }
-    }).then(async(user)=>{
-        // followers
-        if(user!==null){
-            let thisUser = {...user}
-            const followersRef = doc(database, 'followers', userID)
-            await getDoc(followersRef).then((docs)=>{
-                if(docs.exists()){
-                    const followers =  {...docs.data()}
-                    thisUser.followers = followers
-                } else {
-                    thisUser.followers = {}
-                }
-            }).catch(()=>{
-                thisUser.followers = {}
-            })
-
-            return thisUser
-        } else {
-            return user
-        }
-    }).then(async(user)=>{
-        // following
-        if(user!==null){
-            let thisUser = {...user}
-            const followersRef = doc(database, 'following', userID)
-            await getDoc(followersRef).then((docs)=>{
-                if(docs.exists()){
-                    const following = {...docs.data()}
-                    thisUser.following = following
-                } else {
-                    thisUser.following = {}
-                }
-            }).catch(()=>{
-                thisUser.following = {}
-            })
-            return thisUser
-        } else {
-            return user
-        }
-    }).then(async(user)=>{
-        // likes
-        if(user!==null){
-            const thisUser = {...user}
-            const bubblesRef = doc(database, 'userLikes', userID)
-            await getDoc(bubblesRef).then((docs)=>{
-                if(docs.exists()){
-                    const likes = [...docs.data().bubbles]
-                    thisUser.likes = likes
-                } else {
-                    thisUser.likes = []
-                }
-            }).catch(()=>{
-                thisUser.likes = []
-            })
-            return thisUser
-        } else {
-            return user
-        }
-    }).then(async(user)=>{
-        // replies
-        if(user!==null){
-            const thisUser = {...user}
-            const bubblesRef = doc(database, 'userReplies', userID)
-            await getDoc(bubblesRef).then((docs)=>{
-                if(docs.exists()){
-                    const replies = [...docs.data().bubbles]
-                    thisUser.replies = replies
-                } else {
-                    thisUser.replies = []
-                }
-            }).catch(()=>{
-                thisUser.replies = []
-            })
-            return thisUser
-        } else {
-            return user
-        }
-    }).then(async(user)=>{
-        // shares
-        if(user!==null){
-            const thisUser = {...user}
-            const bubblesRef = doc(database, 'userShares', userID)
-            await getDoc(bubblesRef).then((docs)=>{
-                if(docs.exists()){
-                    const shares = [...docs.data().bubbles]
-                    thisUser.shares = shares
-                } else {
-                    thisUser.shares = []
-                }
-            }).catch(()=>{
-                thisUser.shares = []
-            })
-            return thisUser
-        } else {
-            return user
-        }
-    }).then(async(user)=>{
-        // audience
-        if(startUp){
-            if(user!==null){
-                let thisUser = {...user}
-                const savedAudienceRef = doc(database, 'savedAudience', userID)
-                await getDoc(savedAudienceRef).then((docs)=>{
-                    if(docs.exists()){
-                        const audience = {...docs.data()}
-                        thisUser.audience = audience
-                    } else {
-                        thisUser.audience = {}
-                    }
-                }).catch(()=>{
-                    thisUser.audience = {}
-                })
-                return thisUser
-            } else {
-                return user
-            }
-        } else {
-            return user
-        }
-    }).then(async(user)=>{
-        // feed
-        if(startUp){
-            if(user!==null){
-                let thisUser = {...user}
-                const userFeedRef = doc(database, 'feeds', userID)
-                await getDoc(userFeedRef).then((docs)=>{
-                    if(docs.exists()){
-                        const feed = [...docs.data().bubbles]
-                        thisUser.feed = feed
-                    } else {
-                        thisUser.feed = []
-                    }
-                }).catch(()=>{
-                    thisUser.feed = []
-                })
-                return thisUser
-            } else {
-                return user
-            }
-        } else {
-            return user
-        }
-    }).then((user)=>{
-        // setup result
-        if(user===null){
-            res.send({successful:false, message: 'Failed to get user data, prease try again...'})
-        } else {
-            res.send({successful: true, data: user})
-        }
-    }).catch(()=>{
-        res.send({successful:false, message: 'Server error: error encountered from the server when trying to get user, please try to reload this page'})
-    })
 }
 
 module.exports = initializeUser

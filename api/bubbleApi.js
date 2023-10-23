@@ -7,10 +7,10 @@ const likeBubble = require('../controllers/bubble/likeBubble')
 const dislikeBubble = require('../controllers/bubble/dislikeBubble')
 const openedReply = require('../controllers/bubble/openedReply')
 const openedChart = require('../controllers/bubble/openedChart')
-const impression = require('../controllers/bubble/impression')
+// const impression = require('../controllers/bubble/impression')
 const shareBubble = require('../controllers/bubble/shareBubble')
 const deleteBubbleForMe = require('../controllers/bubble/deleteBubbleForMe')
-const hideBubbleForMe = require('../controllers/bubble/hideBubbleFromMe')
+// const hideBubbleForMe = require('../controllers/bubble/hideBubbleFromMe')
 const deleteReply = require('../controllers/bubble/deleteReply')
 const likeReply = require('../controllers/bubble/likeReply')
 const dislikeReply = require('../controllers/bubble/dislikeReply')
@@ -33,7 +33,7 @@ router.post('/deleteBubble', deleteBubble)
 router.post('/deleteBubbleForMe', deleteBubbleForMe)
 
 // delete bubble
-router.post('/hideBubbleForMe', hideBubbleForMe)
+// router.post('/hideBubbleForMe', hideBubbleForMe)
 
 // create a reply
 router.post('/createReply', createReply_Old)
@@ -60,7 +60,7 @@ router.post('/openedReply', openedReply)
 router.post('/openedChart', openedChart)
 
 // opened chart
-router.post('/impression', impression)
+// router.post('/impression', impression)
 
 // opened chart
 router.post('/shareBubble', shareBubble)

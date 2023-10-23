@@ -4,14 +4,18 @@ const date = require('date-and-time')
 const { v4: uuidv4 } = require('uuid')
 const {database} = require('../../database/firebase')
 const { dataType } = require('../../utils/utilsExport')
+const bubble = require('../../models/bubble')
+// const userLikes = require('../../models/userLikes.JS')
+const notifications = require('../../models/notifications')
+const LikeModel = require('../../models/LikeModel')
 
 async function dislikeBubble(req, res){
     const userID = req.body.userID // user.id
     const userFullname = req.body.userFullname // user.userInfo.fullname
-    const thisBubble = {...req.body.thisBubble}
+    const currentBubble = {...req.body.thisBubble}
     // thisBubble.userID = thisBubble.user.id
     // settings, userID
-    let secrecySettings = thisBubble.settings.secrecyData
+    let secrecySettings = currentBubble.settings.secrecyData
     // console.log(req.body);
     function discernUserIdentity(){
         if(secrecySettings.atmosphere === 'Night'){
@@ -40,11 +44,8 @@ async function dislikeBubble(req, res){
     }
 
     async function LikeNotifier(which){
-        if(userID!==thisBubble.userID){
-            const creatorNotificationsRef = doc(database, 'notifications', thisBubble.userID)
-            // const userNotificationsRef = doc(database, 'notifications', userID)
+        if(userID!==currentBubble.userID){
             
-            // data
             function getDate(){
                 const now = new Date()
                 const time = date.format(now, 'h:mmA')
@@ -60,96 +61,98 @@ async function dislikeBubble(req, res){
 
             const likeData = {
                 time: getDate(),
-                bubbleID: thisBubble.postID,
-                creatorID: thisBubble.userID,
+                bubbleID: currentBubble.postID,
+                creatorID: currentBubble.userID,
                 userID: userID,
                 id: uuidv4(),
                 message: `${discernUserIdentity()?'someone':userFullname} ${which==='like'?'likes':'dislikes'} your bubble`,
                 identityStatus: discernUserIdentity(),
-                feed: thisBubble.refDoc,
+                feed: currentBubble.refDoc,
                 type: 'like'
             }
+
             likeData.feed.env='feed'
     
             // check if 
-            await getDoc(creatorNotificationsRef).then(async(snapshot)=>{
-                if(!snapshot.exists()){
-                    setDoc(creatorNotificationsRef, {
-                        all: [likeData]
-                    })
-                } else {
-                    // update all
-                    const all=[...snapshot.data().all]
-                    all.push(likeData)
-                    updateDoc(creatorNotificationsRef, {all})
-                }
-            })
+            const userNotification = await notifications.findOne({userID: currentBubble.userID})
+            if(userNotification === null){
+                const newUserNotification = new notifications({userID: currentBubble.userID, all: [likeData]})
+                await newUserNotification.save()
+            } else {
+                userNotification.all.push(likeData)
+                // await userNotification.save()
+                await notifications.updateOne({userID: currentBubble.userID}, {all: [...userNotification.all]})
+            }
         }
     }
 
-    const docz = doc(database, 'bubbles', thisBubble.postID)
-    await getDoc(docz).then(async(docsnap)=>{
-        if(docsnap.exists()){
-            const posts = {...docsnap.data()}
-            if(posts.like.includes(userID)){
-                // posts.like.push(userID)
-                const postLikes = posts.like
-                for(let i=0; i<postLikes.length; i++){
-                    if(postLikes[i]===userID){
-                        posts.like.splice(i, 1)
-                        break
-                    }
-                }
-                
-                if(!posts.totalLikes){
-                    posts.totalLikes = 0
-                } else {
-                    posts.totalLikes--
-                }
-                
-                // console.log(posts.activities)
-                const like = posts.like
-                const totalLikesValue = posts.totalLikes||0
-                await updateDoc(docz, {totalLikes:totalLikesValue>0?increment(-1):0, like}).then(async()=>{
-                // await updateDoc(docz, {...posts}).then(async()=>{
-                    // console.log('done');
-                    LikeNotifier('dislikes')
-                    
-                    if(thisBubble.userID!==userID){
-                        const userLikesRef = doc(database, 'userLikes', userID)
-                        await getDoc(userLikesRef).then((userLikes)=>{
-                            if(userLikes.exists()){
-                                const bubbles = [...userLikes.data().bubbles]
-                                const allLikesID = []
-                                
-                                for(let i=0; i<bubbles.length; i++){
-                                    if(dataType(bubbles[i])==='object'){
-                                        // allLikesID.push(bubbles[i].postID)
-                                        if(bubbles[i].postID === thisBubble.postID){
-                                            bubbles.splice(i, 1)
-                                        }
-                                    }
+    const thisBubble = await bubble.findOne({postID: currentBubble.postID}).lean()
+    if(thisBubble){
+        if(thisBubble.like.includes(userID)){
+            if(typeof thisBubble.activities === "string"){
+                const activities = JSON.parse(thisBubble.activities)
+                thisBubble.activities = activities
+            }
 
-                                    if(i===bubbles.length-1){
-                                        updateDoc(userLikesRef, {bubbles})
-                                    }
-                                }
-                            }
-                        })
-                    }
-                }).catch(()=>{
-                    // alert('failed to update like')
-                })
+            if(thisBubble.activities.iAmOnTheseFeeds[userID]){
+                if(thisBubble.activities.iAmOnTheseFeeds[userID].myActivities.liked){
+                    delete thisBubble.activities.iAmOnTheseFeeds[userID].myActivities.liked
+                }
+            }
+
+            for(let i=0; i<thisBubble.like.length; i++){
+                if(thisBubble.like[i]===userID){
+                    thisBubble.like.splice(i, 1)
+                    break
+                }
             }
             
-        } else {
-            res.send({successful: false, message: 'bubble not found'})
+        //    thisBubble.activities.iAmOnTheseFeeds[userID].myActivities.liked=true
+                
+            if(!thisBubble.totalLikes){
+                thisBubble.totalLikes = 0
+            } else {
+                thisBubble.totalLikes--
+            }
+
+        }  else {
+            res.send({successful: false, message: 'bubble not liked'})
         }
-    }).then(()=>{
-        res.send({successful: true})
-    }).catch(()=>{
-        res.send({successful: false, message: 'Error from the server'})
-    })
+        
+        const like = thisBubble.like
+        // const totalLikes = thisBubble.totalLikes
+        const activities = JSON.stringify(thisBubble.activities)
+        await bubble.updateOne({postID: currentBubble.postID}, {like, activities}).then(async()=>{
+            await LikeNotifier('dislikes')
+
+            if(thisBubble.userID!==userID){
+                // const thisUserLikes = await userLikes.findOne({userID})
+                const thisUserLikes = await LikeModel.findOne({userID})
+
+                if(thisUserLikes){
+                    for(let i=0; i<thisUserLikes.bubbles.length; i++){
+                        if(dataType(thisUserLikes.bubbles[i])==='object'){
+                            if(thisUserLikes.bubbles[i].postID === thisBubble.postID){
+                                thisUserLikes.bubbles.splice(i, 1)
+                            }
+                        }
+
+                        if(i===thisUserLikes.length-1){
+                            // await thisUserLikes.save()
+                            await LikeModel.updateOne({userID}, {bubbles: [...thisUserLikes.bubbles]})
+                        }
+                    }
+                    res.send({successful: true})
+                } else {
+                    res.send({successful: false, message: 'userLikes not present'})
+                }
+            }
+        }).catch(()=>{
+            res.send({successful: false, message: 'unable to update bubble, or something went wrong in the aftermath'})
+        })
+    } else {
+        res.send({successful: false, message: 'bubble not found'})
+    }
 }
 
 module.exports = dislikeBubble

@@ -4,26 +4,26 @@ const date = require('date-and-time')
 const { v4: uuidv4 } = require('uuid')
 const {database} = require('../../database/firebase')
 const { dataType } = require('../../utils/utilsExport')
+const bubble = require('../../models/bubble')
 
 async function openedReply(req, res){
     const userID = req.body.userID // user.id
     const thisBubble = {...req.body.thisBubble}
     // thisBubble.userID = thisBubble.user.id
     // settings, userID
-    let secrecySettings = thisBubble.settings.secrecyData
 
-    function updateLastActivity(thisPost, activity, updateFunc){
-        function getDate(){
-            const now = new Date()
-            const time = date.format(now, 'h:mm:ssA')
-            const when = date.format(now, 'DD/MM/YYYY')
-            const dateString = date.format(now, 'YYYY,MM,DD,HH,mm,ss')
-            return {
-                time,
-                date: when,
-                dateString
-            }
+    function getDate(){
+        const now = new Date()
+        const time = date.format(now, 'h:mm:ssA')
+        const when = date.format(now, 'DD/MM/YYYY')
+        const dateString = date.format(now, 'YYYY,MM,DD,HH,mm,ss')
+        return {
+            time,
+            date: when,
+            dateString
         }
+    }
+    function updateLastActivity(thisPost, activity, updateFunc){
 
         if(!thisPost.activities.lastActivities){
             thisPost.activities.lastActivities=[]
@@ -60,34 +60,68 @@ async function openedReply(req, res){
 
     const docz = doc(database, 'bubbles', thisBubble.postID)
     // const docz = doc(database, 'users', thisBubble.user.id)
-    await getDoc(docz).then((docu)=>{
-        const posts = {...docu.data()}
-        if(posts){
-            if(posts.activities.iAmOnTheseFeeds[userID].myActivities.openedReply){
-            } else {
-                if(posts.activities.iAmOnTheseFeeds[userID].myActivities.activityIndex){
+    try {
+        const currentBubble = await bubble.findOne({postID: thisBubble.postID}).lean()
+        if(currentBubble === null){
+            res.send({successful: false, messahe: "Bubble not found"})
+        } else {
+            if(typeof(currentBubble.activities) === "string"){
+                const activities = JSON.parse(currentBubble.activities)
+                currentBubble.activities = activities
+            }
+
+            if(!currentBubble.activities.iAmOnTheseFeeds[userID].myActivities.openedReply){
+                if(currentBubble.activities.iAmOnTheseFeeds[userID].myActivities.activityIndex){
 
                 } else {
-                    posts.activities.lastActivityIndex++
-                    posts.activities.iAmOnTheseFeeds[userID].myActivities.activityIndex=posts.activities.lastActivityIndex
+                    currentBubble.activities.lastActivityIndex++
+                    currentBubble.activities.iAmOnTheseFeeds[userID].myActivities.activityIndex=currentBubble.activities.lastActivityIndex
                 }
-                posts.activities.iAmOnTheseFeeds[userID].seenAndVerified=true
-                posts.activities.iAmOnTheseFeeds[userID].myActivities.openedReply=true
-                const activities = posts.activities
-                updateDoc(docz, {activities})
+                currentBubble.activities.iAmOnTheseFeeds[userID].seenAndVerified=true
+                currentBubble.activities.iAmOnTheseFeeds[userID].myActivities.openedReply=true
             }
-            
-            // update last activities
-            const activities = posts.activities
-            updateLastActivity(posts, 'opened reply', ()=>{updateDoc(docz, {activities})})
-            updateDoc(docz, {openedReplyCount: increment(1)})
-        }
 
-    }).then(()=>{
-        res.send({successful: true})
-    }).catch(()=>{
+            const activity = 'opened reply'
+
+            if(!currentBubble.activities.lastActivities){
+                currentBubble.activities.lastActivities=[]
+            }
+    
+            const lastActivities = currentBubble.activities.lastActivities
+            const activityData = {
+                activity,
+                userID,
+                date: getDate()
+            }
+
+            if(lastActivities.length>0){
+                const last = lastActivities[lastActivities.length - 1]
+                if(last.activity!==activity){
+                    for(let i=0; i<lastActivities.length; i++){
+                        const current = lastActivities[i]
+                        if(current.userID===userID && current.activity===activity){
+                            break
+                        }
+                        if(i===lastActivities.length-1){
+                            currentBubble.activities.lastActivities.push(activityData)
+                            if(currentBubble.activities.lastActivities.length>10){
+                                currentBubble.activities.lastActivities.shift()
+                            }
+                        }
+                    }
+                }
+            } else {
+                currentBubble.activities.lastActivities.push(activityData)
+            }
+
+            const activities = JSON.stringify(currentBubble.activities)
+            const openedReplyCount = currentBubble.openedReplyCount + 1
+            await updateOne({postID: thisBubble.postID}, {activities, openedReplyCount})
+            res.send({successful: true})
+        }
+    } catch(e){
         res.send({successful: false, message: 'Error from the server'})
-    })
+    }
 }
 
 module.exports = openedReply

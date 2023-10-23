@@ -2,6 +2,7 @@ const {doc, getDoc, updateDoc, setDoc, deleteField} = require('firebase/firestor
 // const {getDownloadURL, ref, uploadBytes} = require('firebase/storage')
 const date = require('date-and-time')
 const {database} = require('../../database/firebase')
+const Followers = require('../../models/Followers')
 // const webPush = require('web-push')
 
 async function checkReplyEligibity(req, res){
@@ -9,57 +10,41 @@ async function checkReplyEligibity(req, res){
     const replyCreator = req.body.replyCreator // user.id
     const bubbleCreator = req.body.bubbleCreator // user.userInfo.fullname
     const type = req.body.type
+
     
-    // console.log("called");
-    const replyCreatorRef = doc(database, 'followers', replyCreator)
-    const bubbleCreatorRef = doc(database, 'followers', bubbleCreator)
-    await getDoc(replyCreatorRef).then(async(docsnap)=>{
-        if(docsnap.exists()){
-            return {
-                replyCreator:{...docsnap.data()},
-                bubbleCreator: {}
+    if(type==="replyCreator"){
+        const replyCreatorFollowers = await Followers.findOne({userID: replyCreator}).lean()
+        if(replyCreatorFollowers){
+            if(replyCreatorFollowers.followers[userID]){
+                res.send({successful: true, pass: true})
+            } else {
+                res.send({successful: false, pass: false})
             }
         } else {
-            return {
-                replyCreator: {},
-                bubbleCreator: {}
-            }
+            res.send({successful: false, pass: false, message: "reply creator followers not found"})
         }
-    }).then(async(result)=>{
-        if(type==="replyCreator"){
-            return result
-        } else if(type === "mutual"){
-            let returnValue = {...result}
-            await getDoc(bubbleCreatorRef).then(async(docsnap)=>{
-                if(docsnap.exists()){
-                    returnValue.bubbleCreator = {...docsnap.data()}
+    } else if(type === "mutual"){
+        await Followers.findOne({userID: replyCreator}).lean().then(async(replyCreatorFollowersResp)=>{
+            if(replyCreatorFollowersResp){
+                const bubbleCreatorFollowers = await Followers.findOne({userID: bubbleCreator}).lean()
+                if(bubbleCreatorFollowers){
+                    if(bubbleCreatorFollowers.followers[userID] && replyCreatorFollowersResp.followers[userID]){
+                        res.send({successful: true, pass: true})
+                    } else {
+                        res.send({successful: false, pass: false, message: "you are not a mutual follower"})
+                    }
+                } else {
+                    res.send({successful: false, pass: false, message: "bubble creator followers not found"})
                 }
-            }).catch(()=>{
-                // returnValue = re
-            })
-            return returnValue 
-        } else {
-            return result
-        }
-    }).then((result)=>{
-        if(type==="replyCreator"){
-            if(result.replyCreator[userID]){
-                res.send({successful: true, pass: true})
             } else {
-                res.send({successful: false, pass: false})
+                res.send({successful: false, pass: false, message: "reply creator followers not found"})
             }
-        } else if(type==="mutual"){
-            if(result.replyCreator[userID] && result.bubbleCreator[userID]){
-                res.send({successful: true, pass: true})
-            } else {
-                res.send({successful: false, pass: false})
-            }
-        } else {
-            res.send({successful: false, pass: false})
-        }
-    }).catch(()=>{
-        res.send({successful: false})
-    })
+        }).catch(()=>{
+            res.send({successful: false, pass: false, message: "error from the server"})
+        })
+    } else {
+        res.send({successful: false, pass: false, message: "unknown type"})
+    }
 }
 
 module.exports = checkReplyEligibity

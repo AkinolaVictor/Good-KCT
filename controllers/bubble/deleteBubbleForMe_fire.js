@@ -1,14 +1,14 @@
-const {doc, getDoc, updateDoc, setDoc, deleteDoc} = require('firebase/firestore')
-const {getDownloadURL, ref, uploadBytes, deleteObject} = require('firebase/storage')
-const date = require('date-and-time')
-const {database, storage} = require('../../database/firebase')
+const {doc, getDoc, updateDoc} = require('firebase/firestore')
+// const {getDownloadURL, ref, uploadBytes, deleteObject} = require('firebase/storage')
+// const date = require('date-and-time')
+const {database} = require('../../database/firebase')
 
-async function hideBubbleForMe(req, res){
+async function deleteBubbleForMe(req, res){
 
     const userID = req.body.userID
     // const postID = req.body.postID // thisBubble.postID
     const thisBubble = {...req.body.thisBubble}
-    // console.log(thisBubble/.);
+    // console.log(thisBubble.);
     if(thisBubble.userID!==userID){
         const feedsRef = doc(database, 'feeds', userID)
         await getDoc(feedsRef).then(async(docsnap)=>{
@@ -88,4 +88,4 @@ async function hideBubbleForMe(req, res){
 
 }
 
-module.exports = hideBubbleForMe
+module.exports = deleteBubbleForMe

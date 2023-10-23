@@ -1,30 +1,22 @@
-const {doc, getDoc, updateDoc} = require('firebase/firestore')
-const {database} = require('../../database/firebase')
+// const {doc, getDoc, updateDoc} = require('firebase/firestore')
+// const {database} = require('../../database/firebase')
+const bot = require('../../models/bot')
+const date = require('date-and-time')
 
 async function getAllBots(req, res){
     const userBots = req.body.userBots
+    const now = new Date()
+    const formattedDate = date.format(now, 'YYYY,MM,DD,HH,mm,ss,SS')
 
     try{
-        const bots = []
-        for(let i=0; i<userBots.length; i++){
-            const current = userBots[i]
-            const botRef = doc(database, 'bots', current)
-            await getDoc(botRef).then((docSnap)=>{
-                if(docSnap.exists()){
-                    const thisBot = {...docSnap.data()}
-                    bots.push(thisBot)
-                }
-            }).then(()=>{
-                if(i===userBots.length-1){
-                    res.send({successful: true, bots})
-                }
-            }).catch(()=>{
-                res.send({successful:false})
-            })
-            
+        const botList = await bot.find({id: {$in: [...userBots]}}).lean()
+        if(botList){
+            res.send({successful: true, bots: botList, formattedDate})
+        } else{
+            res.send({successful: false, message: 'Data not found', bots: [], formattedDate})
         }
     } catch(e){
-        res.send({successful: false, bots: []})
+        res.send({successful: false, bots: [], formattedDate})
     }
 }
 

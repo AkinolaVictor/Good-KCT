@@ -1,34 +1,49 @@
 const {doc, setDoc, getDoc, updateDoc} = require('firebase/firestore')
 const {database} = require('../../database/firebase')
+const bot = require('../../models/bot')
+const User = require('../../models/User')
+const botActivities = require('../../models/BotActivities')
 
 async function createBot(req, res){
-    const bot = req.body.bot
+    const Bot = req.body.bot
     const userID = req.body.userID
     const id = req.body.id
-    await setDoc(doc(database, "bots", id), {...bot}).then(async()=>{
-        const userRef = doc(database, 'users', userID)
-        await getDoc(userRef).then(async(snapShot)=>{
-            const data = {...snapShot.data()}
-            const bots = [...data.bots]
-            if(!bots.includes(id)){
-                bots.push(id)
-                await updateDoc(userRef, {bots})
+
+    
+    const newBot = new bot({
+        ...Bot
+    })
+    
+    await newBot.save().then(async()=>{
+        await saveBotForUser()
+        async function saveBotForUser(){
+            let thisUser = await User.findOne({id: userID}).lean()
+
+            if(thisUser === null){
+              return
             }
-            
-            // setup activity if it doesn't exist
-            const botActivityRef = doc(database, 'botActivities', userID)
-            await getDoc(botActivityRef).then(async (docsnap)=>{
-                if(!docsnap.exists()){
-                    setDoc(botActivityRef, {
-                        otherBotActivities: [],
-                        userBotActivities: []
-                    })
-                }
-            })
-            res.send({successful: true})
-        }).catch(()=>{
-            res.send({successful: false})
-        })
+
+            thisUser.bots.push(id)
+            // await thisUser.save()
+            await User.updateOne({id: userID}, {bots: [...thisUser.bots]})
+        }
+
+        await saveBotActivity()
+        async function saveBotActivity(){
+            const botActivity = await botActivities.findOne({userID})
+            if(!botActivity){
+              const activities = new botActivities({
+                userID,
+                otherBotActivities: [],
+                userBotActivities: []
+              })
+
+              await activities.save()
+              return
+            }
+        }
+
+        res.send({successful: true})
     }).catch(()=>{
         res.send({successful: false})
     })

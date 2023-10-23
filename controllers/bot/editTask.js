@@ -1,27 +1,32 @@
 const {doc, getDoc, updateDoc} = require('firebase/firestore')
 const {database} = require('../../database/firebase')
+const bot = require('../../models/bot')
 
 async function editTask(req, res){
     const botID = req.body.botID
     const taskID = req.body.taskID
     const freshData = req.body.freshData
 
-    const botRef = doc(database, 'bots', botID)
-    await getDoc(botRef).then(async(snapshot)=>{
-        const tasks = [...snapshot.data().tasks]
-        for(let i=0; i<tasks.length; i++){
-            if(tasks[i].id === taskID){
-                tasks[i] = freshData
-            }
+    
+    let thisBot = await bot.findOne({id: botID}).lean()
+
+    if(!thisBot){
+        res.send({successful:false, message: 'Bot not found'})
+        return
+    }
+    
+    const savedTasks = thisBot.tasks
+    for(let i=0; i<savedTasks.length; i++){
+        if(savedTasks[i].id === taskID){
+            savedTasks[i] = freshData
         }
-        
-        await updateDoc(botRef, {tasks}).then(()=>{
-            res.send({successful:true, tasks})
-        }).catch(()=>{
-            res.send({successful:false})
-        })
+    }
+    
+    const _id = thisBot._id
+    await bot.findByIdAndUpdate(_id, {tasks: savedTasks}).then(()=>{
+        res.send({successful:true, tasks: savedTasks})
     }).catch(()=>{
-        res.send({successful:false})
+        res.send({successful:false, message: 'Failed to update changes'})
     })
 }
 
