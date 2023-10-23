@@ -5,6 +5,8 @@ const botActivities = require('../../models/botActivities')
 async function deleteBotActivity(req, res){
     const userID = req.body.userID
     const activityID = req.body.activityID
+    
+    // console.log("test");
 
     const userBotActivites = await botActivities.findOne({userID}).lean()
     if(!userBotActivites){
