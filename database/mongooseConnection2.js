@@ -39,7 +39,7 @@ async function dbConnect(server){
             return modelPack(mongo)
         }).catch((err)=>{
             global.mongooseConne = null
-            console.log("MONGODB CONNECTION FAILED");
+            console.log(err, "MONGODB CONNECTION FAILED");
             return null
         });
         return thisConnection
