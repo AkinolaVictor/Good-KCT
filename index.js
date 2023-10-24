@@ -74,6 +74,7 @@ app.use(morgan("dev")) //dev, tiny, ...
 // app.use('/api/user', user)
 // app.use('/api/bot', bot)
 // app.use('/api/bubble', bubble)
+// console.log(his);
 let saved_connection_models = null
 async function cachedConnection(){
   if(saved_connection_models){
