@@ -1,8 +1,10 @@
-const {doc, getDoc} = require('firebase/firestore')
-const {database} = require('../../database/firebase')
-const userShares = require('../../models/userShares')
+// const {doc, getDoc} = require('firebase/firestore')
+// const {database} = require('../../database/firebase')
+// const userShares = require('../../models/userShares')
 
 async function getUserShares(req, res){
+    const {userShares} = req.dbModels
+
     let userID = req.body.userID
 
     try{

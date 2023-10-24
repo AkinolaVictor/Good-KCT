@@ -3,9 +3,10 @@
 // const chats = require('../../models/chats')
 
 async function seenMessage(req, res){
+    const {chats} = req.dbModels
+    
     let chatID = req.body.chatID // data.chatID
     let userID = req.body.userID // data.chatID
-    const {chats} = req.dbModels
     
     try{
         const usersChat = await chats.findOne({chatID}).lean()

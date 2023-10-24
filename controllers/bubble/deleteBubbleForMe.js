@@ -1,15 +1,13 @@
-const {doc, getDoc, updateDoc} = require('firebase/firestore')
-// const {getDownloadURL, ref, uploadBytes, deleteObject} = require('firebase/storage')
-// const date = require('date-and-time')
-const {database} = require('../../database/firebase')
-const Feeds = require('../../models/Feeds')
-const userBubbles = require('../../models/userBubbles')
-const userReplies = require('../../models/userReplies')
-// const userLikes = require('../../models/userLikes.JS')
-const userShares = require('../../models/userShares')
-const LikeModel = require('../../models/LikeModel')
+// const {doc, getDoc, updateDoc} = require('firebase/firestore')
+// const {database} = require('../../database/firebase')
+// const Feeds = require('../../models/Feeds')
+// const userBubbles = require('../../models/userBubbles')
+// const userReplies = require('../../models/userReplies')
+// const userShares = require('../../models/userShares')
+// const LikeModel = require('../../models/LikeModel')
 
 async function deleteBubbleForMe(req, res){
+    const {LikeModel, userBubbles, userShares, userReplies, Feeds} = req.dbModels
 
     const userID = req.body.userID
     // const postID = req.body.postID // thisBubble.postID

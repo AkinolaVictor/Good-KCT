@@ -5,10 +5,11 @@
 // const usageAnalyticsModel = require('../../models/usageAnalytics')
 
 async function userDailyAnalytics(req, res){
+    const usageAnalyticsModel = req.dbModels.usageAnalytics
+    
     const analytics = req.body.data || {}
     const userID = req.body.userID
     const currentDate = req.body.currentDate
-    const usageAnalyticsModel = req.dbModels.usageAnalytics
 
 
     try{

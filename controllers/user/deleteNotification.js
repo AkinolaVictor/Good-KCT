@@ -3,9 +3,10 @@
 // const notifications = require('../../models/notifications')
 
 async function deleteNotification(req, res){
+    const {notifications} = req.dbModels
+    
     let userID = req.body.userID
     let notificationID = req.body.notificationID
-    const {notifications} = req.dbModels
 
     try{
         const userNotif = await notifications.findOne({userID})

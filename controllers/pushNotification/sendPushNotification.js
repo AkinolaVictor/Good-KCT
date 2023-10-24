@@ -1,11 +1,11 @@
-const {doc, getDoc, updateDoc, setDoc, deleteField} = require('firebase/firestore')
-// const {getDownloadURL, ref, uploadBytes} = require('firebase/storage')
-const date = require('date-and-time')
-const {database} = require('../../database/firebase')
 const webPush = require('web-push')
-const savePush = require('../../models/savePush')
+// const {doc, getDoc, updateDoc, setDoc, deleteField} = require('firebase/firestore')
+// const date = require('date-and-time')
+// const {database} = require('../../database/firebase')
+// const savePush = require('../../models/savePush')
 
 async function sendPushNotification(userID, data){
+    const {savePush} = req.dbModels
     // const userID = req.body.userID / user.id
     // const data = req.body.data // user.userInfo.fullname
     // const newUserID = req.body.newUserID // props.data.id

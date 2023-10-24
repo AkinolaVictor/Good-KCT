@@ -11,10 +11,9 @@
 // const notifications = require('../../models/notifications')
 
 async function createNewUser(req, res){
-    // const userData = req.body.userData // user.userInfo.fullname
+  const {User, allUser, notifications, userBubbles, Followers, Following, userReplies, Feeds, userShares, savedAudience, LikeModel} = req.dbModels
+  
     const data = req.body.data
-    const {} = req.dbModels
-    const {User, allUser, notifications, userBubbles, Followers, Following, userReplies, Feeds, userShares, savedAudience, LikeModel} = req.dbModels
 
     try{
       const user = new User({...data})

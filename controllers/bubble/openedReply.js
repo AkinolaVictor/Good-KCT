@@ -1,12 +1,13 @@
-const {doc, getDoc, updateDoc, setDoc, increment} = require('firebase/firestore')
-// const {getDownloadURL, ref, uploadBytes, deleteObject} = require('firebase/storage')
 const date = require('date-and-time')
-const { v4: uuidv4 } = require('uuid')
-const {database} = require('../../database/firebase')
-const { dataType } = require('../../utils/utilsExport')
-const bubble = require('../../models/bubble')
+// const { dataType } = require('../../utils/utilsExport')
+// const {database} = require('../../database/firebase')
+// const bubble = require('../../models/bubble')
+// const {doc, getDoc, updateDoc, setDoc, increment} = require('firebase/firestore')
+// const { v4: uuidv4 } = require('uuid')
 
 async function openedReply(req, res){
+    const {bubble} = req.dbModels
+
     const userID = req.body.userID // user.id
     const thisBubble = {...req.body.thisBubble}
     // thisBubble.userID = thisBubble.user.id
@@ -58,7 +59,7 @@ async function openedReply(req, res){
         }
     }
 
-    const docz = doc(database, 'bubbles', thisBubble.postID)
+    // const docz = doc(database, 'bubbles', thisBubble.postID)
     // const docz = doc(database, 'users', thisBubble.user.id)
     try {
         const currentBubble = await bubble.findOne({postID: thisBubble.postID}).lean()

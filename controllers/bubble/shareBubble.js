@@ -1,17 +1,18 @@
-const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
-// const {getDownloadURL, ref, uploadBytes, deleteObject} = require('firebase/storage')
 const date = require('date-and-time')
 const { v4: uuidv4 } = require('uuid')
-const {database} = require('../../database/firebase')
-const { dataType } = require('../../utils/utilsExport')
 const sendPushNotification = require('../pushNotification/sendPushNotification')
-const notifications = require('../../models/notifications')
-const bubble = require('../../models/bubble')
-const Followers = require('../../models/Followers')
-const Feeds = require('../../models/Feeds')
-const userShares = require('../../models/userShares')
+// const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
+// const {database} = require('../../database/firebase')
+// const { dataType } = require('../../utils/utilsExport')
+// const notifications = require('../../models/notifications')
+// const bubble = require('../../models/bubble')
+// const Followers = require('../../models/Followers')
+// const Feeds = require('../../models/Feeds')
+// const userShares = require('../../models/userShares')
 
 async function shareBubble(req, res){
+    const {userShares, Feeds, Followers, bubble, notifications} = req.dbModels
+
     const userID = req.body.userID // userID
     const userIcon = req.body.userIcon // user.id
     const notificationMessage = req.body.notificationMessage // user.id

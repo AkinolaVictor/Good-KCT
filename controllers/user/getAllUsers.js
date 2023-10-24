@@ -3,7 +3,6 @@
 // const User = require('../../models/User');
 
 async function getAllUsers(req, res){
-    
     const {User} = req.dbModels
     
     try {

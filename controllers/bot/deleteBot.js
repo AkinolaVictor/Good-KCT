@@ -1,10 +1,12 @@
-const {doc, getDoc, updateDoc, deleteDoc, setDoc} = require('firebase/firestore')
+const {doc, setDoc} = require('firebase/firestore')
 const {database} = require('../../database/firebase')
-const User = require('../../models/User')
-const bot = require('../../models/bot')
-const bubble = require('../../models/bubble')
+// const User = require('../../models/User')
+// const bot = require('../../models/bot')
+// const bubble = require('../../models/bubble')
 
 async function deleteBot(req, res){
+    const {bubble, bot, User} = req.dbModels
+    
     const userID = req.body.userID
     const id = req.body.id
     const botPosts = [...req.body.botPosts]

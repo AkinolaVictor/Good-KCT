@@ -1,9 +1,11 @@
 // getBubblesForEveryone
-const {doc, getDoc, updateDoc, increment} = require('firebase/firestore')
-const {database} = require('../../database/firebase')
-const bubblesForEveryone = require('../../models/bubblesForEveryone')
+// const {doc, getDoc, updateDoc, increment} = require('firebase/firestore')
+// const {database} = require('../../database/firebase')
+// const bubblesForEveryone = require('../../models/bubblesForEveryone')
 
 async function getBubblesForEveryone(req, res){
+    const {bubblesForEveryone} = req.dbModels
+
     const allPublicBubble = await bubblesForEveryone.findOne({name: "Everyone"}).lean()
     if(allPublicBubble === null){
         const newPublicBubbles = new bubblesForEveryone({name: "Everyone", bubbleRefs: []})

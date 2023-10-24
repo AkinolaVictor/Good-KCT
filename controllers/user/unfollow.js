@@ -7,11 +7,12 @@ const date = require('date-and-time')
 // const savedAudience = require('../../models/savedAudience')
 
 async function unFollow(req, res){
+    const {savedAudience, Followers, Following, notifications} = req.dbModels
+    
     const userID = req.body.userID // user.id
     const userName = req.body.userName // user.userInfo.fullname
     const newUserID = req.body.newUserID // props.data.id
     // const newUserName = req.body.newUserName // props.data.userInfo.fullname
-    const {savedAudience, Followers, Following, notifications} = req.dbModels
 
     async function FollowNotifier(which){
         if(userID !== newUserID){

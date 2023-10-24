@@ -1,11 +1,12 @@
-const {doc, getDoc, updateDoc, setDoc, deleteField} = require('firebase/firestore')
-// const {getDownloadURL, ref, uploadBytes} = require('firebase/storage')
-const date = require('date-and-time')
-const {database} = require('../../database/firebase')
-const Followers = require('../../models/Followers')
+// const {doc, getDoc, updateDoc, setDoc, deleteField} = require('firebase/firestore')
+// const date = require('date-and-time')
+// const {database} = require('../../database/firebase')
+// const Followers = require('../../models/Followers')
 // const webPush = require('web-push')
 
 async function checkReplyEligibity(req, res){
+    const {Followers} = req.dbModels
+    
     const userID = req.body.userID // user.id
     const replyCreator = req.body.replyCreator // user.id
     const bubbleCreator = req.body.bubbleCreator // user.userInfo.fullname

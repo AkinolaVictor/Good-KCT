@@ -3,8 +3,9 @@
 // const User = require('../../models/User')
 
 async function getUsers(req, res){
-    let users = [...req.body.users]
     const {User} = req.dbModels
+    
+    let users = [...req.body.users]
     try{
         if(users.length===1){
             const user = await User.findOne({id: users[0]}).lean()

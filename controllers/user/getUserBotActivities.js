@@ -3,8 +3,9 @@
 // const botActivities = require('../../models/botActivities')
 
 async function getUserBotActivities(req, res){
-    let userID = req.body.userID
     const {botActivities} = req.dbModels
+    
+    let userID = req.body.userID
     
     const userBotActivities = await botActivities.findOne({userID}).lean()
     if(userBotActivities === null){

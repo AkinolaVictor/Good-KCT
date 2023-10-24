@@ -1,12 +1,12 @@
 // bubbleBotUpdate
-const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
-// const {getDownloadURL, ref, uploadBytes, deleteObject} = require('firebase/storage')
-// const date = require('date-and-time')
-const {database} = require('../../database/firebase')
-const botActivities = require('../../models/botActivities')
-const bubble = require('../../models/bubble')
+// const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
+// const {database} = require('../../database/firebase')
+// const botActivities = require('../../models/botActivities')
+// const bubble = require('../../models/bubble')
 
 async function bubbleBotUpdate(req, res){
+    const {botActivities, bubble} = req.dbModels
+    
     const userID = req.body.userID
     const bubbleID = req.body.bubbleID
     const currentBot = req.body.currentBot

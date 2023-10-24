@@ -1,9 +1,11 @@
-const {doc, getDoc, updateDoc} = require('firebase/firestore')
-const {database} = require('../../database/firebase')
-const bubble = require('../../models/bubble')
-const bot = require('../../models/bot')
+// const {doc, getDoc, updateDoc} = require('firebase/firestore')
+// const {database} = require('../../database/firebase')
+// const bubble = require('../../models/bubble')
+// const bot = require('../../models/bot')
 
 async function disengageBot(req, res){
+    const {bot, bubble} = req.dbModels
+    
     const userID = req.body.userID
     const botID = req.body.botID
     const postID = req.body.postID

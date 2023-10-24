@@ -1,3 +1,4 @@
+const date = require('date-and-time')
 // const {doc, getDoc, updateDoc} = require('firebase/firestore')
 // const {database} = require('../../database/firebase')
 // const bubble = require('../../models/bubble')
@@ -6,12 +7,12 @@
 // const Feeds = require('../../models/Feeds')
 // const User = require('../../models/User')
 // const { dataType } = require('../../utils/utilsExport')
-const date = require('date-and-time')
 
 async function getBasicBubble(req, res){
+    const {User, Feeds, bot, Followers, bubble} = req.dbModels
+    
     let userID = req.body.userID
     const feedRef = req.body.feedRef
-    const {User, Feeds, bot, Followers, bubble} = req.dbModels
     
     function checkForSecrecy(thisBubble){
         const secrecySettings = thisBubble.settings.secrecyData.atmosphere

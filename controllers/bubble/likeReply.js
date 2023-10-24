@@ -1,13 +1,14 @@
-const {doc, getDoc, updateDoc, setDoc, increment} = require('firebase/firestore')
-// const {getDownloadURL, ref, uploadBytes} = require('firebase/storage')
 const { v4: uuidv4 } = require('uuid')
 const date = require('date-and-time')
-const {database} = require('../../database/firebase')
 const sendPushNotification = require('../pushNotification/sendPushNotification')
-const notifications = require('../../models/notifications')
-const bubble = require('../../models/bubble')
+// const {doc, getDoc, updateDoc, setDoc, increment} = require('firebase/firestore')
+// const {database} = require('../../database/firebase')
+// const notifications = require('../../models/notifications')
+// const bubble = require('../../models/bubble')
 
 async function likeReply(req, res){
+    const {notifications, bubble} = req.dbModels
+
     const bubbleID = req.body.bubbleID
     const userIcon = req.body.userIcon // user.id
     const bubbleCreator = req.body.bubbleCreator

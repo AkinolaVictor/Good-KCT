@@ -3,9 +3,10 @@
 // const chats = require('../../models/chats')
 
 async function deleteMessage(req, res){
+    const {chats} = req.dbModels
+    
     let chatID = req.body.chatID // data.chatID
     let messageID = req.body.messageID // data.chatID
-    const {chats} = req.dbModels
     
     try{
         const userChats = await chats.findOne({chatID})

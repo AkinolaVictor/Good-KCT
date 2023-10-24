@@ -3,8 +3,9 @@
 // const LikeModel = require('../../models/LikeModel')
 
 async function getUserLikes(req, res){
-    let userID = req.body.userID
     const {LikeModel} = req.dbModels
+    
+    let userID = req.body.userID
 
     try{
         const likes = await LikeModel.findOne({userID}).lean()

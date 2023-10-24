@@ -3,8 +3,9 @@
 // const userBubbles = require('../../models/userBubbles')
 
 async function getUserBubbles(req, res){
-    let userID = req.body.userID
     const {userBubbles} = req.dbModels
+    
+    let userID = req.body.userID
 
     try{
         const bubbleRef = await userBubbles.findOne({userID}).lean()

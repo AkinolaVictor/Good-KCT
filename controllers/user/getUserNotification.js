@@ -4,8 +4,8 @@
 // const date = require('date-and-time')
 
 async function getUserNotification(req, res){
-    // const userID = req.body.userID
     const {notifications} = req.dbModels
+    
     const notif = await notifications.findOne({userID}).lean()
     // const now = new Date()
     // const formattedDate = date.format(now, 'YYYY,MM,DD,HH,mm,ss,SS')

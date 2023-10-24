@@ -1,16 +1,17 @@
-const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
-// const {getDownloadURL, ref, uploadBytes, deleteObject} = require('firebase/storage')
 const date = require('date-and-time')
-const { v4: uuidv4 } = require('uuid')
-const {database} = require('../../database/firebase')
-const { dataType } = require('../../utils/utilsExport')
 const sendPushNotification = require('../pushNotification/sendPushNotification')
-const notifications = require('../../models/notifications')
-const bubble = require('../../models/bubble')
-const Feeds = require('../../models/Feeds')
-const Followers = require('../../models/Followers')
+// const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
+// const { v4: uuidv4 } = require('uuid')
+// const {database} = require('../../database/firebase')
+// const { dataType } = require('../../utils/utilsExport')
+// const notifications = require('../../models/notifications')
+// const bubble = require('../../models/bubble')
+// const Feeds = require('../../models/Feeds')
+// const Followers = require('../../models/Followers')
 
 async function confirmShareRequest(req, res){
+    const {Feeds, Followers, bubble, notifications} = req.dbModels
+    
     const userID = req.body.userID // user.id
     let data = req.body.data
     let pathOfShare = [...data.feed.sharePath]

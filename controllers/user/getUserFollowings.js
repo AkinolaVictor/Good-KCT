@@ -3,8 +3,9 @@
 // const {database} = require('../../database/firebase')
 
 async function getUserFollowings(req, res){
-    let userID = req.body.userID
     const {Following} = req.dbModels
+    
+    let userID = req.body.userID
 
     try{
         const userFollowing = await Following.findOne({userID}).lean()

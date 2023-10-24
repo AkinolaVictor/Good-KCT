@@ -1,13 +1,15 @@
-const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
-const {getDownloadURL, ref, uploadBytes} = require('firebase/storage')
-const date = require('date-and-time')
-const {database, storage} = require('../../database/firebase')
-const sendPushNotification = require('../pushNotification/sendPushNotification')
 const { dataType } = require('../../utils/utilsExport')
-const bubble = require('../../models/bubble')
-const Feeds = require('../../models/Feeds')
+// const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
+// const {getDownloadURL, ref, uploadBytes} = require('firebase/storage')
+// const date = require('date-and-time')
+// const {database, storage} = require('../../database/firebase')
+// const sendPushNotification = require('../pushNotification/sendPushNotification')
+// const bubble = require('../../models/bubble')
+// const Feeds = require('../../models/Feeds')
 
 async function registerAudience(req, res){
+    const {Feeds, bubble} = req.dbModels
+
     const userID = req.body.userID
     const bubbleID = req.body.bubbleID
     const creatorID = req.body.creatorID

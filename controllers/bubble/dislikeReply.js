@@ -1,12 +1,13 @@
-const {doc, getDoc, updateDoc, setDoc, increment} = require('firebase/firestore')
-// const {getDownloadURL, ref, uploadBytes} = require('firebase/storage')
-const { v4: uuidv4 } = require('uuid')
-const date = require('date-and-time')
-const {database} = require('../../database/firebase')
-const { default: sizeof } = require('firestore-size')
-const bubble = require('../../models/bubble')
+// const {doc, getDoc, updateDoc, setDoc, increment} = require('firebase/firestore')
+// const { v4: uuidv4 } = require('uuid')
+// const date = require('date-and-time')
+// const {database} = require('../../database/firebase')
+// const { default: sizeof } = require('firestore-size')
+// const bubble = require('../../models/bubble')
 
 async function dislikeReply(req, res){
+    const {bubble} = req.dbModels
+
     const bubbleID = req.body.bubbleID
     const userID = req.body.userID
     const path = req.body.path // path

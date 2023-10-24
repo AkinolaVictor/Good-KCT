@@ -4,9 +4,10 @@ const { ref, deleteObject } = require('firebase/storage')
 // const User = require('../../models/User')
 
 async function deleteProfileImages(req, res){
+    const {User} = req.dbModels
+    
     const whichPhoto = req.body.whichPhoto
     const userID = req.body.userID
-    const {User} = req.dbModels
     
     const fileRef = ref(storage,  `users/${userID}/profile/${whichPhoto}`);
     await deleteObject(fileRef).then(async()=>{

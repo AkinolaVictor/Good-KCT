@@ -1,15 +1,17 @@
-const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
-const {getDownloadURL, ref, uploadBytes} = require('firebase/storage')
-const date = require('date-and-time')
-const {database, storage} = require('../../database/firebase')
 const sendPushNotification = require('../pushNotification/sendPushNotification')
-const bot = require('../../models/bot')
-const bubble = require('../../models/bubble')
-const Feeds = require('../../models/Feeds')
-const userBubbles = require('../../models/userBubbles')
-const bubblesForEveryone = require('../../models/bubblesForEveryone')
+// const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
+// const {getDownloadURL, ref, uploadBytes} = require('firebase/storage')
+// const date = require('date-and-time')
+// const {database, storage} = require('../../database/firebase')
+// const bot = require('../../models/bot')
+// const bubble = require('../../models/bubble')
+// const Feeds = require('../../models/Feeds')
+// const userBubbles = require('../../models/userBubbles')
+// const bubblesForEveryone = require('../../models/bubblesForEveryone')
 
 async function createBubble(req, res){
+    const {bubblesForEveryone, userBubbles, Feeds, bubble, bot} = req.dbModels
+    
     const userID = req.body.userID
     const thisBubble = {...req.body.thisBubble}
     const secrecySettings = thisBubble.settings.secrecyData

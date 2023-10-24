@@ -9,10 +9,11 @@
 // const LikeModel = require('../../models/LikeModel')
 
 async function initializeUser(req, res){
+    const {User, userBubbles, Followers, Following, userReplies, Feeds, userShares, savedAudience, LikeModel} = req.dbModels
+    
     let userID = req.body.userID
     const startUp = req.body.startUp
     // console.log(req.dbModels);
-    const {User, userBubbles, Followers, Following, userReplies, Feeds, userShares, savedAudience, LikeModel} = req.dbModels
     
     let user = await User.findOne({id: userID}).lean()
     let data = {}

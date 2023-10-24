@@ -3,8 +3,9 @@
 // const Followers = require('../../models/Followers')
 
 async function getUserFollowers(req, res){
-    let userID = req.body.userID
     const {Followers} = req.dbModels
+    
+    let userID = req.body.userID
 
     try{
         const userFollowers = await Followers.find({userID}).lean()

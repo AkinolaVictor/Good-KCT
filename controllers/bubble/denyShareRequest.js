@@ -1,17 +1,18 @@
-const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
-// const {getDownloadURL, ref, uploadBytes, deleteObject} = require('firebase/storage')
 const date = require('date-and-time')
-const { v4: uuidv4 } = require('uuid')
-const {database} = require('../../database/firebase')
-const { dataType } = require('../../utils/utilsExport')
 const sendPushNotification = require('../pushNotification/sendPushNotification')
-const notifications = require('../../models/notifications')
-const bubble = require('../../models/bubble')
+// const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
+// const { v4: uuidv4 } = require('uuid')
+// const {database} = require('../../database/firebase')
+// const { dataType } = require('../../utils/utilsExport')
+// const notifications = require('../../models/notifications')
+// const bubble = require('../../models/bubble')
 
 
 // https://www.tutsmake.com/file-upload-in-mongodb-using-node-js/
 
 async function denyShareRequest(req, res){
+    const {bubble, notifications} = req.dbModels
+    
     const userID = req.body.userID // user.id
     const data = req.body.data
     

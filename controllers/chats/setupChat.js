@@ -4,9 +4,10 @@
 // const chats = require('../../models/chats')
 
 async function setupChat(req, res){
+    const {User, chats} = req.dbModels
+    
     let userID = req.body.userID // user.id
     let followerID = req.body.followerID //item.id
-    const {User, chats} = req.dbModels
 
     const generatedID = `${userID}-${followerID}`
     const generatedID2 = `${followerID}-${userID}`

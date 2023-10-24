@@ -1,15 +1,17 @@
-const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
-const {database} = require('../../database/firebase')
 const date = require('date-and-time')
 const { v4: uuidv4 } = require('uuid')
 const { dataType } = require('../../utils/utilsExport')
 const sendPushNotification = require('../pushNotification/sendPushNotification')
-const bubble = require('../../models/bubble')
-const userReplies = require('../../models/userReplies')
-const notifications = require('../../models/notifications')
+// const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
+// const {database} = require('../../database/firebase')
+// const bubble = require('../../models/bubble')
+// const userReplies = require('../../models/userReplies')
+// const notifications = require('../../models/notifications')
 
 
 async function createReply_Old(req, res){
+    const {userReplies, notifications, bubble} = req.dbModels
+    
     const path = req.body.path /* props.path */
     const creatorID = req.body.creatorID /* thisBubble.user.id */
     const postID = req.body.postID /* thisBubble.postID */
@@ -138,8 +140,6 @@ async function createReply_Old(req, res){
         // if(path.length>0 && (props.replyData.userID!==creatorID || props.replyData.userID!==userID)){
         // console.log(parentID);
         if(path.length>0 && (parentID!==userID)){
-
-            const mainUserNotificationsRef = doc(database, 'notifications', parentID)
 
             function constructMainUserMessage(){
                 if(discernUserIdentity){

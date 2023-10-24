@@ -4,10 +4,11 @@
 // const chats = require('../../models/chats')
 
 async function initializeChats(req, res){
+    const {chats, User} = req.dbModels
+    
     let thisChats = req.body.chats  // thisChats[i].recipient
     let allData = {}
     let success = false
-    const {chats, User} = req.dbModels
 
     try{
         for(let i=0; i<thisChats.length; i++){

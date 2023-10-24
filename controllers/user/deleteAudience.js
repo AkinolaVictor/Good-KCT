@@ -1,13 +1,14 @@
-const {doc, getDoc, updateDoc, setDoc, deleteField} = require('firebase/firestore')
+// const {doc, getDoc, updateDoc, setDoc, deleteField} = require('firebase/firestore')
 // const {getDownloadURL, ref, uploadBytes} = require('firebase/storage')
 // const date = require('date-and-time')
 // const {database} = require('../../database/firebase')
 // const savedAudience = require('../../models/savedAudience')
 
 async function deleteAudience(req, res){
+    const {savedAudience} = req.dbModels
+
     const data = req.body.data
     const userID = req.body.userID
-    const {savedAudience} = req.dbModels
 
     // remove from audience
     try {

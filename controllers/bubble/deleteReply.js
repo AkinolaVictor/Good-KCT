@@ -1,10 +1,11 @@
-const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
-// const {getDownloadURL, ref, uploadBytes} = require('firebase/storage')
-const date = require('date-and-time')
-const {database} = require('../../database/firebase')
-const bubble = require('../../models/bubble')
+// const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
+// const date = require('date-and-time')
+// const {database} = require('../../database/firebase')
+// const bubble = require('../../models/bubble')
 
 async function deleteReply(req, res){
+    const {bubble} = req.dbModels
+    
     const bubbleID = req.body.bubbleID
     // const userID = req.body.userID
     const path = req.body.path // props.path

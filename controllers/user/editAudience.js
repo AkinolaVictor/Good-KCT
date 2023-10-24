@@ -5,9 +5,10 @@
 // const savedAudience = require('../../models/savedAudience')
 
 async function editAudience(req, res){
+    const {savedAudience} = req.dbModels
+    
     const data = req.body.data
     const userID = req.body.userID
-    const {savedAudience} = req.dbModels
 
     // remove from audience
     try {

@@ -6,9 +6,10 @@
 // const webPush = require('web-push')
 
 async function savePushSubscribe(req, res){
+  const {savePush} = req.dbModels
+  
     const userID = req.body.userID // user.id
     const subscription = req.body.subscription // user.userInfo.fullname
-    const {savePush} = req.dbModels
     
     const userSubscription = await savePush.findOne({userID})
     if(userSubscription === null){

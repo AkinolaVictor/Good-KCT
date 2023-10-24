@@ -3,9 +3,10 @@
 // const bot = require('../../models/bot')
 
 async function activateTask(req, res){
+    const {bot} = req.dbModels
+    
     const botID = req.body.botID
     const taskID = req.body.taskID
-    const {bot} = req.dbModels
 
     
     

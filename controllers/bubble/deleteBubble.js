@@ -1,18 +1,18 @@
-const {doc, getDoc, updateDoc, setDoc, deleteDoc} = require('firebase/firestore')
-const {getDownloadURL, ref, uploadBytes, deleteObject} = require('firebase/storage')
-const date = require('date-and-time')
 const {database, storage} = require('../../database/firebase')
-const bubble = require('../../models/bubble')
-const bot = require('../../models/bot')
-const Feeds = require('../../models/Feeds')
-const userBubbles = require('../../models/userBubbles')
-const userReplies = require('../../models/userReplies')
-const userShares = require('../../models/userShares')
-// const userLikes = require('../../models/userLikes.JS')
-const bubblesForEveryone = require('../../models/bubblesForEveryone')
-const LikeModel = require('../../models/LikeModel')
+const {doc, setDoc} = require('firebase/firestore')
+const { ref, deleteObject} = require('firebase/storage')
+// const date = require('date-and-time')
+// const bubble = require('../../models/bubble')
+// const bot = require('../../models/bot')
+// const Feeds = require('../../models/Feeds')
+// const userBubbles = require('../../models/userBubbles')
+// const userReplies = require('../../models/userReplies')
+// const userShares = require('../../models/userShares')
+// const bubblesForEveryone = require('../../models/bubblesForEveryone')
+// const LikeModel = require('../../models/LikeModel')
 
 async function deleteBubble(req, res){
+    const {LikeModel, bubblesForEveryone, userBubbles, Feeds, userShares, userReplies, bot, bubble} = req.dbModels
 
     // const userID = req.body.userID
     // const postID = req.body.postID // thisBubble.postID

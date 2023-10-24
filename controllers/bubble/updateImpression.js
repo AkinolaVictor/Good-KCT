@@ -4,9 +4,10 @@
 // const bubble = require('../../models/bubble')
 
 async function updateImpression(req, res){
+    const {bubble} = req.dbModels
+    
     const userID = req.body.userID // user.id
     const postID = req.body.postID
-    const {bubble} = req.dbModels
 
     const thisBubble = await bubble.findOne({postID}).lean()
     if(thisBubble){
