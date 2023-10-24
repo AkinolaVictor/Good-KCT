@@ -75,7 +75,6 @@ app.use(morgan("dev")) //dev, tiny, ...
 // app.use('/api/bot', bot)
 // app.use('/api/bubble', bubble)
 // app.use('/api/chats', chats)
-// console.log("still testing");
 connectWithMongoose2((models)=>{
   watchAllStreams(models)
 })
