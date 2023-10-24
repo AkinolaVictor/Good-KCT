@@ -74,18 +74,17 @@ app.use(morgan("dev")) //dev, tiny, ...
 // app.use('/api/user', user)
 // app.use('/api/bot', bot)
 // app.use('/api/bubble', bubble)
-let saved_models = null
+let saved_connection_models = null
 async function cachedConnection(){
-  // console.log({saved_models, global: global.saved_models});
-  if(saved_models){
-    return saved_models
-  } else if(global.saved_models){
-    return global.saved_models
+  if(saved_connection_models){
+    return saved_connection_models
+  } else if(global.saved_connection_models){
+    return global.saved_connection_models
   } else {
     const models = await connectWithMongoose2()
     if(models){
-      saved_models = models
-      global.saved_models = models
+      saved_connection_models = models
+      global.saved_connection_models = models
       watchAllStreams(models)
     }
     return models
