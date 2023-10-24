@@ -76,6 +76,7 @@ app.use(morgan("dev")) //dev, tiny, ...
 // app.use('/api/bubble', bubble)
 let saved_models = null
 async function cachedConnection(){
+  // console.log({saved_models, global: global.saved_models});
   if(saved_models){
     return saved_models
   } else if(global.saved_models){

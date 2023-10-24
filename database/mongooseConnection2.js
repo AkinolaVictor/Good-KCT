@@ -14,7 +14,7 @@ const options = {
     // useFindAndModify: false, 
     // useCreateIndex: true, 
     // poolSize: 4, 
-    socketTimeoutMS: 10000,
+    // socketTimeoutMS: 10000,
 }
 
 async function dbConnect(server){
