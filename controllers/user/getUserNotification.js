@@ -5,6 +5,7 @@
 
 async function getUserNotification(req, res){
     const {notifications} = req.dbModels
+    const userID = req.body.userID
     
     const notif = await notifications.findOne({userID}).lean()
     // const now = new Date()

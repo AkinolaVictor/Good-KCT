@@ -1,13 +1,13 @@
-// feeds
-const { default: mongoose } = require("mongoose");
+// // feeds
+// const { default: mongoose } = require("mongoose");
 
-const followersSchema = mongoose.Schema({
-    userID: String,
-    followers: {},
-    createdAt: {type: Date, default: new Date()},
-    updatedAt: Date
-}, { strict: false, minimize: false })
+// const followersSchema = mongoose.Schema({
+//     userID: String,
+//     followers: {},
+//     createdAt: {type: Date, default: new Date()},
+//     updatedAt: Date
+// }, { strict: false, minimize: false })
 
-const Followers = mongoose.model("followers", followersSchema)
+// const Followers = mongoose.model("followers", followersSchema)
 
-module.exports = Followers
+// module.exports = Followers

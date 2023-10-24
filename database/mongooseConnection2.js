@@ -14,7 +14,7 @@ function connectionUri(){
 const dbname = process.env.DB_NAME
 
 const options = {
-    useNewUrlParser: true,
+    // useNewUrlParser: true,
     useUnifiedTopology: true,
     dbName: dbname,
     // hffj
@@ -22,7 +22,7 @@ const options = {
     // useCreateIndex: true, 
     // poolSize: 4, 
     // socketTimeoutMS: 10000,
-    // maxPoolSize: 10
+    maxPoolSize: 10
 }
 
 async function dbConnect(server){
