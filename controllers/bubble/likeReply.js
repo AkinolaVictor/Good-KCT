@@ -133,7 +133,7 @@ async function likeReply(req, res){
                 body: notificationData.message,
                 icon: decideNotifyIcon()
             }
-            await sendPushNotification(bubbleCreator, data)
+            await sendPushNotification(bubbleCreator, data, req)
         }
 
 
@@ -175,7 +175,7 @@ async function likeReply(req, res){
                 body: notificationData.message,
                 icon: decideNotifyIcon()
             }
-            sendPushNotification(replyCreatorID, data)
+            await sendPushNotification(replyCreatorID, data, req)
         }
     }
 

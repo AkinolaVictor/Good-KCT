@@ -12,7 +12,7 @@ const sendPushNotification = require('../pushNotification/sendPushNotification')
 
 async function denyShareRequest(req, res){
     const {bubble, notifications} = req.dbModels
-    
+
     const userID = req.body.userID // user.id
     const data = req.body.data
     
@@ -68,7 +68,7 @@ async function denyShareRequest(req, res){
             body: 'please check the notification section in the concealed app to see the bubble, you can also make another share request to the bubble creator.',
             icon: false
         }
-        sendPushNotification(data.userID, thisData)
+        await sendPushNotification(data.userID, thisData, req)
     }
     await notifyAudience()
 

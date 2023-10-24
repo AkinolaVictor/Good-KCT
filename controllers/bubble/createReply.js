@@ -132,7 +132,7 @@ async function createReply_Old(req, res){
                     body: notificationData.message,
                     icon: decideNotifyIcon()
                 }
-                sendPushNotification(creatorID, data)
+                await sendPushNotification(creatorID, data, req)
             }
         }
 
@@ -185,7 +185,7 @@ async function createReply_Old(req, res){
                     body: notificationData.message,
                     icon: decideNotifyIcon()
                 }
-                await sendPushNotification(parentID, data)
+                await sendPushNotification(parentID, data, req)
             }
         }
     }

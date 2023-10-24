@@ -148,7 +148,7 @@ async function shareBubble(req, res){
                     body: `Bubble: ${notificationMessage}`,
                     icon: decideNotifyIcon()
                 }
-                sendPushNotification(thisBubble.userID, data)
+                await sendPushNotification(thisBubble.userID, data, req)
             } catch(e){
                 // DO NOTHING
             }
@@ -201,7 +201,7 @@ async function shareBubble(req, res){
                     body: notificationData.message,
                     icon: decideNotifyIcon()
                 }
-                sendPushNotification(thisBubble.userID, data)
+                await sendPushNotification(thisBubble.userID, data, req)
             } catch (e){
                 // DO NOTHING
             }

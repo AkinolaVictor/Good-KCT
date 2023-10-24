@@ -4,7 +4,7 @@ const webPush = require('web-push')
 // const {database} = require('../../database/firebase')
 // const savePush = require('../../models/savePush')
 
-async function sendPushNotification(userID, data){
+async function sendPushNotification(userID, data, req){
     const {savePush} = req.dbModels
     // const userID = req.body.userID / user.id
     // const data = req.body.data // user.userInfo.fullname
