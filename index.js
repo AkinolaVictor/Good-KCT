@@ -74,13 +74,30 @@ app.use(morgan("dev")) //dev, tiny, ...
 // app.use('/api/user', user)
 // app.use('/api/bot', bot)
 // app.use('/api/bubble', bubble)
+let saved_models = null
+async function cachedConnection(){
+  if(saved_models){
+    return saved_models
+  } else if(global.saved_models){
+    return global.saved_models
+  } else {
+    const models = await connectWithMongoose2()
+    if(models){
+      saved_models = models
+      global.saved_models = models
+      watchAllStreams(models)
+    }
+    return models
+  }
+}
+cachedConnection()
 // app.use('/api/chats', chats)
-connectWithMongoose2((models)=>{
-  watchAllStreams(models)
-})
+// connectWithMongoose2((models)=>{
+//   watchAllStreams(models)
+// })
   
 app.use('/api/user', async function(req, res, next){
-  const models = await connectWithMongoose2()
+  const models = await cachedConnection()
   if(models){
     req.dbModels = models
     next()
@@ -90,7 +107,7 @@ app.use('/api/user', async function(req, res, next){
 }, user)
 
 app.use('/api/bot', async function(req, res, next){
-  const models = await connectWithMongoose2()
+  const models = await cachedConnection()
   if(models){
     req.dbModels = models
     next()
@@ -100,7 +117,7 @@ app.use('/api/bot', async function(req, res, next){
 }, bot)
 
 app.use('/api/bubble', async function(req, res, next){
-  const models = await connectWithMongoose2()
+  const models = await cachedConnection()
   if(models){
     req.dbModels = models
     next()
@@ -110,7 +127,7 @@ app.use('/api/bubble', async function(req, res, next){
 }, bubble)
   
 app.use('/api/chats', async function(req, res, next){
-  const models = await connectWithMongoose2()
+  const models = await cachedConnection()
   if(models){
     req.dbModels = models
     next()

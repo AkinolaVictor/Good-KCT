@@ -30,6 +30,7 @@ function watchAllStreams(models){
     watchUserStream(models)
     watchChatsStream(models)
     watchUserBubblesStream(models)
+    console.log("watching...");
 }
 
 module.exports = watchAllStreams
