@@ -15,6 +15,7 @@ const copyUsageAnalytics = require("./copyUsageAnalytics")
 const copyUserAudience = require("./copyUserAudience")
 const copyUserFollowers = require("./copyUserFollowers")
 const copyUserFollowings = require("./copyUserFollowings")
+const organizeFollowers = require("./organizeFollowers")
 
 async function copyAll(){
     // USE PRODUCTION
@@ -41,6 +42,8 @@ async function copyAll(){
     // await copySavedSubscription()
     // await copyUsageAnalytics()
     // await copyBubbles()
+
+    await organizeFollowers()
 
 }
 

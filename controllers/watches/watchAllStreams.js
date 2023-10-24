@@ -20,16 +20,17 @@ function watchAllStreams(models){
     watchUserFeedsStream(models)
     watchBubbleStream(models)
     watchBubblesForEveryoneStream(models)
-    watchFollowerStream(models)
-    watchFollowingtream(models)
     watchNotificationStream(models)
-    watchSavedAudienceStream(models)
     watchUserLikesStream(models)
     watchUserRepliesStream(models)
     watchUserShareStream(models)
     watchUserStream(models)
     watchChatsStream(models)
     watchUserBubblesStream(models)
+    
+    watchSavedAudienceStream(models)
+    watchFollowerStream(models)
+    watchFollowingtream(models)
     console.log("watching...");
 }
 
