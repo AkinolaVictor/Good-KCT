@@ -15,14 +15,15 @@ const dbname = process.env.DB_NAME
 
 const options = {
     // useNewUrlParser: true,
-    useUnifiedTopology: true,
+    // useUnifiedTopology: true,
     dbName: dbname,
     // hffj
     // useFindAndModify: false, 
     // useCreateIndex: true, 
     // poolSize: 4, 
     // socketTimeoutMS: 10000,
-    maxPoolSize: 10
+    maxPoolSize: 10,
+    socketTimeoutMS: 0
 }
 
 async function dbConnect(server){
