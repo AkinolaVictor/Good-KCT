@@ -103,7 +103,7 @@ async function likeBubble(req, res){
                     body: notificationData.message,
                     icon: decideNotifyIcon()
                 }
-                await sendPushNotification(currentBubble.userID, data)
+                await sendPushNotification(currentBubble.userID, data, req)
             }
         }
     }

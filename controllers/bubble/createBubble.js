@@ -11,7 +11,7 @@ const sendPushNotification = require('../pushNotification/sendPushNotification')
 
 async function createBubble(req, res){
     const {bubblesForEveryone, userBubbles, Feeds, bubble, bot} = req.dbModels
-    
+
     const userID = req.body.userID
     const thisBubble = {...req.body.thisBubble}
     const secrecySettings = thisBubble.settings.secrecyData
@@ -268,7 +268,7 @@ async function createBubble(req, res){
                     icon: decideNotifyIcon()
                 }
 
-                await sendPushNotification(currentID, data)
+                await sendPushNotification(currentID, data, req)
             }
 
             if(checkForEveryoneAndFollowers()){

@@ -20,18 +20,27 @@ const options = {
 async function dbConnect(server){
     // if(cached.conn) return cached.conn;
     if(!global.mongooseConne){
-        global.mongooseConne = await mongoose.connect(uri, options).then((mongo) => {
-            const models = modelPack(mongo)
-            server(models)
+        // global.mongooseConne = await mongoose.connect(uri, options).then((mongo) => {
+        const thisConnection = await mongoose.connect(uri, options).then((mongo) => {
+            if(server){
+                const models = modelPack(mongo)
+                server(models)
+            }
+            global.mongooseConne = mongo
             console.log('MONGODB CONNECTION SUCESSFUL');
-            return mongo
+            return modelPack(mongo)
         }).catch((err)=>{
-            console.log(err, "MONGODB CONNECTION ERROR");
+            global.mongooseConne = null
+            console.log("MONGODB CONNECTION FAILED");
             return null
         });
+        return thisConnection
     } else {
-        const models = modelPack(global.mongooseConne)
-        server(models)
+        if(server){
+            const models = modelPack(global.mongooseConne)
+            server(models)
+        }
+        return modelPack(global.mongooseConne)
     }
 }
 
