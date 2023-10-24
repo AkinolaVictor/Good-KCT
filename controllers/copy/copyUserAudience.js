@@ -13,9 +13,9 @@ async function copyUserAudience(){
                 await axios.post(baseUrl("user/initializeUser"), {userID: currentUser.id, startUp: true}).then(async(response)=>{
                     if(response.data.successful){
                         const thisData = {...response.data.data}
-                        // const audience = {...thisData.audience}
-                        const audience = {...thisData.audience.audience}
-                        console.log(audience);
+                        const audience = {...thisData.audience}
+                        // const audience = {...thisData.audience.audience}
+                        // console.log(audience);
                         const bubs = await savedAudience.findOne({userID: currentUser.id})
                         const num = i+1
                         const progress = (num/allUsers.length)*100

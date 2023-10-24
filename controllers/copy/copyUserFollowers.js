@@ -18,7 +18,7 @@ async function copyUserFollowers(){
                         const bubs = await Followers.findOne({userID: currentUser.id})
                         const num = i+1
                         const progress = (num/allUsers.length)*100
-                        console.log(Object.keys(followers).length);
+                        // console.log(Object.keys(followers).length);
                         if(bubs === null){
                             const newUserBubbles = new Followers({userID: currentUser.id, followers})
                             await newUserBubbles.save().then(()=>{

@@ -18,7 +18,7 @@ const chats = require('./api/chatApi')
 const http = require('http')
 const socketio = require('socket.io');
 const socketApi = require('./api/socketApi');
-// const { connectWithMongoose} = require('./database/mongooseConncetion');
+const { connectWithMongoose} = require('./database/mongooseConncetion');
 const { default: mongoose } = require('mongoose');
 const watchAllStreams = require('./controllers/watches/watchAllStreams');
 const copyAll = require('./controllers/copy/copyAll');
@@ -28,6 +28,23 @@ const { read } = require('fs');
 
 
 // CONNECT TO DATABASE
+let saved_connection_models = null
+async function cachedConnection(){
+  if(saved_connection_models){
+    return saved_connection_models
+  } else if(global.saved_connection_models){
+    return global.saved_connection_models
+  } else {
+    const models = await connectWithMongoose2()
+    if(models){
+      saved_connection_models = models
+      global.saved_connection_models = models
+      watchAllStreams(models)
+    }
+    return models
+  }
+}
+cachedConnection()
 // connectWithMongoose(copyAll)
 // connectWithMongoose(()=>{})
 // watchAllStreams()
@@ -74,28 +91,7 @@ app.use(morgan("dev")) //dev, tiny, ...
 // app.use('/api/user', user)
 // app.use('/api/bot', bot)
 // app.use('/api/bubble', bubble)
-// console.log(his);
-let saved_connection_models = null
-async function cachedConnection(){
-  if(saved_connection_models){
-    return saved_connection_models
-  } else if(global.saved_connection_models){
-    return global.saved_connection_models
-  } else {
-    const models = await connectWithMongoose2()
-    if(models){
-      saved_connection_models = models
-      global.saved_connection_models = models
-      watchAllStreams(models)
-    }
-    return models
-  }
-}
-cachedConnection()
 // app.use('/api/chats', chats)
-// connectWithMongoose2((models)=>{
-//   watchAllStreams(models)
-// })
   
 app.use('/api/user', async function(req, res, next){
   const models = await cachedConnection()
@@ -136,30 +132,6 @@ app.use('/api/chats', async function(req, res, next){
     res.send({successful: false, message: "database failed to connect"})
   }
 }, chats)
-
-// connectWithMongoose2((models)=>{
-//   watchAllStreams(models)
-  
-//   app.use('/api/user', function(req, res, next){
-//     req.dbModels=models
-//     next()
-//   }, user)
-
-//   app.use('/api/bot', function(req, res, next){
-//     req.dbModels=models
-//     next()
-//   }, bot)
-
-//   app.use('/api/bubble', function(req, res, next){
-//     req.dbModels=models
-//     next()
-//   }, bubble)
-  
-//   app.use('/api/chats', function(req, res, next){
-//     req.dbModels=models
-//     next()
-//   }, chats)
-// })
 
 app.use('/api/test', (req, res)=>{
     res.status(200).send('testing api')

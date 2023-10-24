@@ -38,9 +38,9 @@ async function copyAll(){
 
 
     // USE LOCALHOST IN PRODUCTION
-    // await copyBubbles()
     // await copySavedSubscription()
     // await copyUsageAnalytics()
+    // await copyBubbles()
 
 }
 

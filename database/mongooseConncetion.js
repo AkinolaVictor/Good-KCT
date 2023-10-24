@@ -48,14 +48,14 @@ async function connectWithMongoose(func){
     }
     if (process.env.CONCEALED_ENV === 'local-development') {
         if (!global._mongoClientPromise) {
-            await mongoose.connect(uri, options).then((mongodb)=>{
+            await mongoose.connect(uri, {...options}).then((mongodb)=>{
                 console.log("connected to db in local");
                 global._mongoClientPromise = mongodb
                 clientPromise = mongodb
                 mongoClient = mongodb.connection.getClient
                 func()
-            }).catch(()=>{
-                console.log("error encountered while trying to connect to db in local");
+            }).catch((err)=>{
+                console.log(err, "error encountered while trying to connect to db in local");
                 global._mongoClientPromise = null
             })
         } else {

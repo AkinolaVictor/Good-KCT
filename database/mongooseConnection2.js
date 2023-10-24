@@ -1,10 +1,8 @@
 const { default: mongoose } = require('mongoose');
 
-let cached = global.mongoose;
+// let cached = global.mongoose;
 
-if(!cached) cached = global.mongoose = {conn: null, promise: null};
-// const uri = process.env.MONGODB_URI_DEV
-const dbname = process.env.DB_NAME
+// if(!cached) cached = global.mongoose = {conn: null, promise: null};
 function connectionUri(){
     if(process.env.CONCEALED_ENV==='production'){
         return process.env.MONGODB_URI
@@ -12,6 +10,8 @@ function connectionUri(){
         return process.env.MONGODB_URI_DEV
     }
 }
+// const uri = process.env.MONGODB_URI_DEV
+const dbname = process.env.DB_NAME
 
 const options = {
     useNewUrlParser: true,
@@ -22,13 +22,14 @@ const options = {
     // useCreateIndex: true, 
     // poolSize: 4, 
     // socketTimeoutMS: 10000,
+    // maxPoolSize: 10
 }
 
 async function dbConnect(server){
     // if(cached.conn) return cached.conn;
     if(!global.mongooseConne){
         // global.mongooseConne = await mongoose.connect(uri, options).then((mongo) => {
-        const thisConnection = await mongoose.connect(connectionUri(), options).then((mongo) => {
+        const thisConnection = await mongoose.connect(connectionUri(), {...options}).then((mongo) => {
             if(server){
                 const models = modelPack(mongo)
                 server(models)
@@ -50,7 +51,6 @@ async function dbConnect(server){
         return modelPack(global.mongooseConne)
     }
 }
-
 function modelPack(db){
     const models = {
         allUser: function(){
@@ -308,6 +308,4 @@ function modelPack(db){
 
 module.exports = {
     connectWithMongoose2: dbConnect,
-    allUserModel: database.allUser,
-    UserModel: database.user
 }
