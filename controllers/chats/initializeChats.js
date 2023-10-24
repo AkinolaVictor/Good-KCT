@@ -1,12 +1,13 @@
-const {doc, getDoc} = require('firebase/firestore')
-const {database} = require('../../database/firebase')
-const User = require('../../models/User')
-const chats = require('../../models/chats')
+// const {doc, getDoc} = require('firebase/firestore')
+// const {database} = require('../../database/firebase')
+// const User = require('../../models/User')
+// const chats = require('../../models/chats')
 
 async function initializeChats(req, res){
     let thisChats = req.body.chats  // thisChats[i].recipient
     let allData = {}
     let success = false
+    const {chats, User} = req.dbModels
 
     try{
         for(let i=0; i<thisChats.length; i++){

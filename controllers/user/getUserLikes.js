@@ -1,10 +1,10 @@
-const {doc, getDoc} = require('firebase/firestore')
-const {database} = require('../../database/firebase')
-// const userLikes = require('../../models/userLikes.JS')
-const LikeModel = require('../../models/LikeModel')
+// const {doc, getDoc} = require('firebase/firestore')
+// const {database} = require('../../database/firebase')
+// const LikeModel = require('../../models/LikeModel')
 
 async function getUserLikes(req, res){
     let userID = req.body.userID
+    const {LikeModel} = req.dbModels
 
     try{
         const likes = await LikeModel.findOne({userID}).lean()

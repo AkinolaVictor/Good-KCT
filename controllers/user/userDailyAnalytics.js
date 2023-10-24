@@ -1,13 +1,14 @@
-const {doc, getDoc, updateDoc, setDoc, deleteField} = require('firebase/firestore')
+// const {doc, getDoc, updateDoc, setDoc, deleteField} = require('firebase/firestore')
 // const {getDownloadURL, ref, uploadBytes} = require('firebase/storage')
 // const date = require('date-and-time')
-const {database} = require('../../database/firebase')
-const usageAnalyticsModel = require('../../models/usageAnalytics')
+// const {database} = require('../../database/firebase')
+// const usageAnalyticsModel = require('../../models/usageAnalytics')
 
 async function userDailyAnalytics(req, res){
     const analytics = req.body.data || {}
     const userID = req.body.userID
     const currentDate = req.body.currentDate
+    const usageAnalyticsModel = req.dbModels.usageAnalytics
 
 
     try{

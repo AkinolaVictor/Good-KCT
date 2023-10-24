@@ -1,10 +1,11 @@
-const {doc, getDoc, updateDoc, getDocs, collection, setDoc} = require('firebase/firestore')
-const {database} = require('../../database/firebase')
-const chats = require('../../models/chats')
+// const {doc, getDoc, updateDoc, getDocs, collection, setDoc} = require('firebase/firestore')
+// const {database} = require('../../database/firebase')
+// const chats = require('../../models/chats')
 
 async function sendMessage(req, res){
     let chatID = req.body.chatID // data.chatID
     let chatData = req.body.chatData //chatData
+    const {chats} = req.dbModels
     
     try{
         const userChats = await chats.findOne({chatID})

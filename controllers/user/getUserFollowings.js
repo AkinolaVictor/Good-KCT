@@ -1,9 +1,10 @@
 
-const {doc, getDoc} = require('firebase/firestore')
-const {database} = require('../../database/firebase')
+// const {doc, getDoc} = require('firebase/firestore')
+// const {database} = require('../../database/firebase')
 
 async function getUserFollowings(req, res){
     let userID = req.body.userID
+    const {Following} = req.dbModels
 
     try{
         const userFollowing = await Following.findOne({userID}).lean()

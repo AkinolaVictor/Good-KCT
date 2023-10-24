@@ -1,13 +1,14 @@
 const {doc, getDoc, updateDoc, getDocs, collection} = require('firebase/firestore')
-const {database} = require('../../database/firebase')
-const User = require('../../models/User')
-const allUser = require('../../models/allUser')
+// const {database} = require('../../database/firebase')
+// const User = require('../../models/User')
+// const allUser = require('../../models/allUser')
 
 async function updateUserProfile(req, res){
     const userID = req.body.userID
     const which = req.body.which
     const datum = req.body.datum
     const generalModalProp = req.body.generalModalProp
+    const {allUser, User} = req.dbModels
 
 
     try{

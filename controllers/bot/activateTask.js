@@ -1,10 +1,11 @@
-const {doc, getDoc, updateDoc} = require('firebase/firestore')
-const {database} = require('../../database/firebase')
-const bot = require('../../models/bot')
+// const {doc, getDoc, updateDoc} = require('firebase/firestore')
+// const {database} = require('../../database/firebase')
+// const bot = require('../../models/bot')
 
 async function activateTask(req, res){
     const botID = req.body.botID
     const taskID = req.body.taskID
+    const {bot} = req.dbModels
 
     
     

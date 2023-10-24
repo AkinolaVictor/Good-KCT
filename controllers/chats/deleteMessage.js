@@ -1,10 +1,11 @@
-const {doc, getDoc, updateDoc, getDocs, collection, setDoc} = require('firebase/firestore')
-const {database} = require('../../database/firebase')
-const chats = require('../../models/chats')
+// const {doc, getDoc, updateDoc, getDocs, collection, setDoc} = require('firebase/firestore')
+// const {database} = require('../../database/firebase')
+// const chats = require('../../models/chats')
 
 async function deleteMessage(req, res){
     let chatID = req.body.chatID // data.chatID
     let messageID = req.body.messageID // data.chatID
+    const {chats} = req.dbModels
     
     try{
         const userChats = await chats.findOne({chatID})

@@ -1,11 +1,12 @@
-const {doc, getDoc, updateDoc, getDocs, collection, setDoc} = require('firebase/firestore')
-const {database} = require('../../database/firebase')
-const User = require('../../models/User')
-const chats = require('../../models/chats')
+// const {doc, getDoc, updateDoc, getDocs, collection, setDoc} = require('firebase/firestore')
+// const {database} = require('../../database/firebase')
+// const User = require('../../models/User')
+// const chats = require('../../models/chats')
 
 async function setupChat(req, res){
     let userID = req.body.userID // user.id
     let followerID = req.body.followerID //item.id
+    const {User, chats} = req.dbModels
 
     const generatedID = `${userID}-${followerID}`
     const generatedID2 = `${followerID}-${userID}`

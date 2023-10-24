@@ -1,9 +1,10 @@
-const {doc, getDoc} = require('firebase/firestore')
-const {database} = require('../../database/firebase')
-const Followers = require('../../models/Followers')
+// const {doc, getDoc} = require('firebase/firestore')
+// const {database} = require('../../database/firebase')
+// const Followers = require('../../models/Followers')
 
 async function getUserFollowers(req, res){
     let userID = req.body.userID
+    const {Followers} = req.dbModels
 
     try{
         const userFollowers = await Followers.find({userID}).lean()
