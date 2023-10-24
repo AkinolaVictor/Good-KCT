@@ -1,10 +1,11 @@
 const { setDoc, doc } = require("firebase/firestore");
 const { database } = require("../../database/firebase");
-const userReplies = require("../../models/userReplies");
+// const userReplies = require("../../models/userReplies");
 const date = require('date-and-time');
-const userBubbles = require("../../models/userBubbles");
+// const userBubbles = require("../../models/userBubbles");
 
-function watchUserBubblesStream(){
+function watchUserBubblesStream(models){
+    const {userBubbles } = models
     try{
         const userRepliesDoc = userBubbles.watch([], {fullDocument: "updateLookup"})
         userRepliesDoc.on("change", async(data)=>{

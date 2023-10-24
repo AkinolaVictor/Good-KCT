@@ -1,17 +1,18 @@
-const User = require('../../models/User')
-const userBubbles = require('../../models/userBubbles')
-const Followers = require('../../models/Followers')
-const Following = require('../../models/Following')
-// const userLikes = require('../../models/userLikes.JS')
-const userReplies = require('../../models/userReplies')
-const userShares = require('../../models/userShares')
-const savedAudience = require('../../models/savedAudience')
-const Feeds = require('../../models/Feeds')
-const LikeModel = require('../../models/LikeModel')
+// const User = require('../../models/User')
+// const userBubbles = require('../../models/userBubbles')
+// const Followers = require('../../models/Followers')
+// const Following = require('../../models/Following')
+// const userReplies = require('../../models/userReplies')
+// const userShares = require('../../models/userShares')
+// const savedAudience = require('../../models/savedAudience')
+// const Feeds = require('../../models/Feeds')
+// const LikeModel = require('../../models/LikeModel')
 
 async function initializeUser(req, res){
     let userID = req.body.userID
     const startUp = req.body.startUp
+    // console.log(req.dbModels);
+    const {User, userBubbles, Followers, Following, userReplies, Feeds, userShares, savedAudience, LikeModel} = req.dbModels
     
     let user = await User.findOne({id: userID}).lean()
     let data = {}

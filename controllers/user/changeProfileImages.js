@@ -1,11 +1,12 @@
 // const {doc, getDoc, updateDoc} = require('firebase/firestore')
 // const {database} = require('../../database/firebase')
-const User = require('../../models/User')
+// const User = require('../../models/User')
 
 async function changeProfileImages(req, res){
     const url = req.body.url
     const whichPhoto = req.body.whichPhoto
     const userID = req.body.userID
+    const {User} = req.dbModels
 
     const thisUser = await User.findOne({id: userID})
     if(!thisUser){

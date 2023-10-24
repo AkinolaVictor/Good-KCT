@@ -1,9 +1,10 @@
 const { setDoc, doc } = require("firebase/firestore");
 const { database } = require("../../database/firebase");
 const date = require('date-and-time');
-const chats = require("../../models/chats");
+// const chats = require("../../models/chats");
 
-function watchChatsStream(){
+function watchChatsStream(models){
+    const {chats} = models
     try{
         const chatsDoc = chats.watch([], {fullDocument: "updateLookup"})
         chatsDoc.on("change", async(data)=>{

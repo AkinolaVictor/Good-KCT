@@ -1,9 +1,10 @@
-const {doc, getDoc} = require('firebase/firestore')
-const {database} = require('../../database/firebase')
-const botActivities = require('../../models/botActivities')
+// const {doc, getDoc} = require('firebase/firestore')
+// const {database} = require('../../database/firebase')
+// const botActivities = require('../../models/botActivities')
 
 async function getUserBotActivities(req, res){
     let userID = req.body.userID
+    const {botActivities} = req.dbModels
     
     const userBotActivities = await botActivities.findOne({userID}).lean()
     if(userBotActivities === null){

@@ -22,7 +22,7 @@ const updateImpression = require('../controllers/bubble/updateImpression')
 const getBubblesForEveryone = require('../controllers/bubble/getBubblesForEveryone')
 const getBasicBubble = require('../controllers/bubble/getBasicBubble')
 const checkReplyEligibity = require('../controllers/bubble/checkReplyEligibity')
-
+// console.log(router);
 // create a bubble
 router.post('/createBubble', createBubble)
 

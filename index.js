@@ -10,7 +10,7 @@ const cors = require("cors")
 // const pushGen = webPush.generateVAPIDKeys()
 // console.log(pushGen);
 // routes
-const dbObj = require('./api/dbObj')
+// const dbObj = require('./api/dbObj')
 const bot = require('./api/botApi')
 const bubble = require('./api/bubbleApi')
 const user = require('./api/userApi')
@@ -28,9 +28,8 @@ const { connectWithMongoose2 } = require('./database/mongooseConnection2');
 
 // CONNECT TO DATABASE
 // connectWithMongoose(copyAll)
-connectWithMongoose2()
 // connectWithMongoose(()=>{})
-watchAllStreams()
+// watchAllStreams()
 mongoose.pluralize(null)
 // copyAll()
 
@@ -40,7 +39,6 @@ const io = socketio(server, {
   // transports: ["polling", "websocket", "webtransport"],
   cors: {
     // origin: '*',
-    // sample of how this origin works
     origin: ["https://concealed.vercel.app", "https://concealed-dev.vercel.app", "http://localhost:3000"]
   }
 })
@@ -70,12 +68,36 @@ app.use(allowCrossDomain);
 // conditional based om env
 app.use(morgan("dev")) //dev, tiny, ...
 
-app.use('/api', dbObj)
-app.use('/api/user', user)
-// app.use('/api/pushNotification', pushNotification)
-app.use('/api/bot', bot)
-app.use('/api/bubble', bubble)
-app.use('/api/chats', chats)
+// app.use('/api', dbObj)
+
+// app.use('/api/user', user)
+// app.use('/api/bot', bot)
+// app.use('/api/bubble', bubble)
+// app.use('/api/chats', chats)
+
+connectWithMongoose2((models)=>{
+  watchAllStreams(models)
+  
+  app.use('/api/user', function(req, res, next){
+    req.dbModels=models
+    next()
+  }, user)
+
+  app.use('/api/bot', function(req, res, next){
+    req.dbModels=models
+    next()
+  }, bot)
+
+  app.use('/api/bubble', function(req, res, next){
+    req.dbModels=models
+    next()
+  }, bubble)
+  
+  app.use('/api/chats', function(req, res, next){
+    req.dbModels=models
+    next()
+  }, chats)
+})
 
 app.use('/api/test', (req, res)=>{
     res.status(200).send('testing api')

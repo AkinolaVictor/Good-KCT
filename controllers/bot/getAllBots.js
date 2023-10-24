@@ -1,12 +1,13 @@
 // const {doc, getDoc, updateDoc} = require('firebase/firestore')
 // const {database} = require('../../database/firebase')
-const bot = require('../../models/bot')
+// const bot = require('../../models/bot')
 const date = require('date-and-time')
 
 async function getAllBots(req, res){
     const userBots = req.body.userBots
     const now = new Date()
     const formattedDate = date.format(now, 'YYYY,MM,DD,HH,mm,ss,SS')
+    const {bot} = req.dbModels
 
     try{
         const botList = await bot.find({id: {$in: [...userBots]}}).lean()

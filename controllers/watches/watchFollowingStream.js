@@ -1,9 +1,10 @@
 const { setDoc, doc } = require("firebase/firestore");
 const { database } = require("../../database/firebase");
 const date = require('date-and-time');
-const Following = require("../../models/Following");
+// const Following = require("../../models/Following");
 
-function watchFollowingtream(){
+function watchFollowingtream(models){
+    const {Following} = models
     try{
         const followingDoc = Following.watch([], {fullDocument: "updateLookup"})
         followingDoc.on("change", async(data)=>{

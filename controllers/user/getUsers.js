@@ -1,9 +1,10 @@
-const {doc, getDoc} = require('firebase/firestore')
-const {database} = require('../../database/firebase')
-const User = require('../../models/User')
+// const {doc, getDoc} = require('firebase/firestore')
+// const {database} = require('../../database/firebase')
+// const User = require('../../models/User')
 
 async function getUsers(req, res){
     let users = [...req.body.users]
+    const {User} = req.dbModels
     try{
         if(users.length===1){
             const user = await User.findOne({id: users[0]}).lean()

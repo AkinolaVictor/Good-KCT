@@ -2,9 +2,10 @@
 const { setDoc, doc } = require("firebase/firestore");
 const { database } = require("../../database/firebase");
 const date = require('date-and-time');
-const savedAudience = require("../../models/savedAudience");
+// const savedAudience = require("../../models/savedAudience");
 
-function watchSavedAudienceStream(){
+function watchSavedAudienceStream(models){
+    const {savedAudience} = models
     try{
         const savedAudienceDoc = savedAudience.watch([], {fullDocument: "updateLookup"})
         savedAudienceDoc.on("change", async(data)=>{

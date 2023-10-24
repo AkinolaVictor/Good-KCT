@@ -1,9 +1,10 @@
 const { setDoc, doc } = require("firebase/firestore");
 const { database } = require("../../database/firebase");
 const date = require('date-and-time');
-const bot = require("../../models/bot");
+// const bot = require("../../models/bot");
 
-function watchBotStream(){
+function watchBotStream(models){
+    const {bot} = models
     try{
         const botDoc = bot.watch([], {fullDocument: "updateLookup"})
         botDoc.on("change", async(data)=>{

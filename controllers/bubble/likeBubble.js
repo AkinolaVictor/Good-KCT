@@ -5,16 +5,17 @@ const { v4: uuidv4 } = require('uuid')
 const {database} = require('../../database/firebase')
 const { dataType } = require('../../utils/utilsExport')
 const sendPushNotification = require('../pushNotification/sendPushNotification')
-const bubble = require('../../models/bubble')
-// const userLikes = require('../../models/userLikes.JS')
-const notifications = require('../../models/notifications')
-const LikeModel = require('../../models/LikeModel')
+// const bubble = require('../../models/bubble')
+// const notifications = require('../../models/notifications')
+// const LikeModel = require('../../models/LikeModel')
 
 async function likeBubble(req, res){
     const userID = req.body.userID // user.id
     const userIcon = req.body.userIcon // user.id
     const userFullname = req.body.userFullname // user.userInfo.fullname
     const currentBubble = {...req.body.thisBubble}
+    
+    const {LikeModel, notifications, bubble} = req.dbModels
     // thisBubble.userID = thisBubble.user.id
     // settings, userID
     let secrecySettings = currentBubble.settings.secrecyData

@@ -1,10 +1,11 @@
-const {doc, getDoc, updateDoc} = require('firebase/firestore')
-const {database} = require('../../database/firebase')
-const notifications = require('../../models/notifications')
+// const {doc, getDoc, updateDoc} = require('firebase/firestore')
+// const {database} = require('../../database/firebase')
+// const notifications = require('../../models/notifications')
 
 async function deleteNotification(req, res){
     let userID = req.body.userID
     let notificationID = req.body.notificationID
+    const {notifications} = req.dbModels
 
     try{
         const userNotif = await notifications.findOne({userID})

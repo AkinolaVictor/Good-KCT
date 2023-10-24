@@ -1,9 +1,10 @@
 const { setDoc, doc } = require("firebase/firestore");
 const { database } = require("../../database/firebase");
-const userFeeds = require("../../models/Feeds");
+// const userFeeds = require("../../models/Feeds");
 const date = require('date-and-time');
 
-function watchUserFeedsStream(){
+function watchUserFeedsStream(models){
+    const {userFeeds} = models
     try{
         const userFeedsDoc = userFeeds.watch([], {fullDocument: "updateLookup"})
         userFeedsDoc.on("change", async(data)=>{

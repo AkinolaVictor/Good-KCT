@@ -1,16 +1,17 @@
-const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
+// const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
 // const {getDownloadURL, ref, uploadBytes} = require('firebase/storage')
 const date = require('date-and-time')
-const {database} = require('../../database/firebase')
-const Following = require('../../models/Following')
-const Followers = require('../../models/Followers')
-const notifications = require('../../models/notifications')
+// const {database} = require('../../database/firebase')
+// const Following = require('../../models/Following')
+// const Followers = require('../../models/Followers')
+// const notifications = require('../../models/notifications')
 
 async function follow(req, res){
     const userID = req.body.userID // user.id
     const userName = req.body.userName // user.userInfo.fullname
     const newUserID = req.body.newUserID // props.data.id
     const newUserName = req.body.newUserName // props.data.userInfo.fullname
+    const {notifications, Followers, Following} = req.dbModels
 
     async function FollowNotifier(which){
         if(userID !== newUserID){

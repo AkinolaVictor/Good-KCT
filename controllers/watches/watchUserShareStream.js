@@ -1,9 +1,10 @@
 const { setDoc, doc } = require("firebase/firestore");
 const { database } = require("../../database/firebase");
-const userShares = require("../../models/userShares");
+// const userShares = require("../../models/userShares");
 const date = require('date-and-time');
 
-function watchUserShareStream(){
+function watchUserShareStream(models){
+    const {userShares} = models
     try{
         const userSharesDoc = userShares.watch([], {fullDocument: "updateLookup"})
         userSharesDoc.on("change", async(data)=>{

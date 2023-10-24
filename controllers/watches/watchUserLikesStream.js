@@ -1,9 +1,10 @@
 const { setDoc, doc } = require("firebase/firestore");
 const { database } = require("../../database/firebase");
-const userLikes = require("../../models/LikeModel");
+// const userLikes = require("../../models/LikeModel");
 const date = require('date-and-time');
 
-function watchUserLikesStream(){
+function watchUserLikesStream(models){
+    const userLikes = models.LikeModel
     try{
         const userLikesDoc = userLikes.watch([], {fullDocument: "updateLookup"})
         userLikesDoc.on("change", async(data)=>{

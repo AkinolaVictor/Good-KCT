@@ -1,22 +1,20 @@
-// const {doc, setDoc} = require('firebase/firestore')
-// const {database} = require('../../database/firebase')
-const User = require('../../models/User')
-// const { default: mongoose } = require('mongoose')
-const Feeds = require('../../models/Feeds')
-const userBubbles = require('../../models/userBubbles')
-// const userLikes = require('../../models/userLikes.JS')
-const userReplies = require('../../models/userReplies')
-const userShares = require('../../models/userShares')
-const Followers = require('../../models/Followers')
-const Following = require('../../models/Following')
-const savedAudience = require('../../models/savedAudience')
-const allUser = require('../../models/allUser')
-const LikeModel = require('../../models/LikeModel')
-const notifications = require('../../models/notifications')
+// const User = require('../../models/User')
+// const Feeds = require('../../models/Feeds')
+// const userBubbles = require('../../models/userBubbles')
+// const userReplies = require('../../models/userReplies')
+// const userShares = require('../../models/userShares')
+// const Followers = require('../../models/Followers')
+// const Following = require('../../models/Following')
+// const savedAudience = require('../../models/savedAudience')
+// const allUser = require('../../models/allUser')
+// const LikeModel = require('../../models/LikeModel')
+// const notifications = require('../../models/notifications')
 
 async function createNewUser(req, res){
     // const userData = req.body.userData // user.userInfo.fullname
     const data = req.body.data
+    const {} = req.dbModels
+    const {User, allUser, notifications, userBubbles, Followers, Following, userReplies, Feeds, userShares, savedAudience, LikeModel} = req.dbModels
 
     try{
       const user = new User({...data})

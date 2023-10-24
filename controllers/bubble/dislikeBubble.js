@@ -1,18 +1,19 @@
-const {doc, getDoc, updateDoc, setDoc, increment} = require('firebase/firestore')
+// const {doc, getDoc, updateDoc, setDoc, increment} = require('firebase/firestore')
 // const {getDownloadURL, ref, uploadBytes, deleteObject} = require('firebase/storage')
 const date = require('date-and-time')
 const { v4: uuidv4 } = require('uuid')
-const {database} = require('../../database/firebase')
+// const {database} = require('../../database/firebase')
 const { dataType } = require('../../utils/utilsExport')
-const bubble = require('../../models/bubble')
-// const userLikes = require('../../models/userLikes.JS')
-const notifications = require('../../models/notifications')
-const LikeModel = require('../../models/LikeModel')
+// const bubble = require('../../models/bubble')
+// const notifications = require('../../models/notifications')
+// const LikeModel = require('../../models/LikeModel')
 
 async function dislikeBubble(req, res){
     const userID = req.body.userID // user.id
     const userFullname = req.body.userFullname // user.userInfo.fullname
     const currentBubble = {...req.body.thisBubble}
+    
+    const {LikeModel, notifications, bubble} = req.dbModels
     // thisBubble.userID = thisBubble.user.id
     // settings, userID
     let secrecySettings = currentBubble.settings.secrecyData

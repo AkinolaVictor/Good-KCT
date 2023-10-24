@@ -1,9 +1,10 @@
 const { doc, setDoc } = require("firebase/firestore");
-const bubble = require("../../models/bubble");
+// const bubble = require("../../models/bubble");
 const { database } = require("../../database/firebase");
 const date = require('date-and-time')
 
-function watchBubbleStream(){
+function watchBubbleStream(models){
+    const {bubble} = models
     try{
         const bubbleDoc = bubble.watch([], {fullDocument: "updateLookup"})
         // const notificationDoc = notifications.watch([], {fullDocument: "updateLookup"})

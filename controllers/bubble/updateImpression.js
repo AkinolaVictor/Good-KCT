@@ -1,11 +1,12 @@
 // updateImpression
-const {doc, getDoc, updateDoc, increment} = require('firebase/firestore')
-const {database} = require('../../database/firebase')
-const bubble = require('../../models/bubble')
+// const {doc, getDoc, updateDoc, increment} = require('firebase/firestore')
+// const {database} = require('../../database/firebase')
+// const bubble = require('../../models/bubble')
 
 async function updateImpression(req, res){
     const userID = req.body.userID // user.id
     const postID = req.body.postID
+    const {bubble} = req.dbModels
 
     const thisBubble = await bubble.findOne({postID}).lean()
     if(thisBubble){

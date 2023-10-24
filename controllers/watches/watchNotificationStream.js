@@ -1,9 +1,10 @@
 const { setDoc, doc } = require("firebase/firestore");
-const notifications = require("../../models/notifications");
+// const notifications = require("../../models/notifications");
 const { database } = require("../../database/firebase");
 // const date = require('date-and-time')
 
-function watchNotificationStream(){
+function watchNotificationStream(models){
+    const {notifications} = models
     try{
         const notificationDoc = notifications.watch([], {fullDocument: "updateLookup"})
         notificationDoc.on("change", async(data)=>{

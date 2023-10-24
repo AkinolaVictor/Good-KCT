@@ -1,8 +1,9 @@
 const { setDoc, doc } = require("firebase/firestore");
 const { database } = require("../../database/firebase");
-const bubblesForEveryone = require("../../models/bubblesForEveryone");
+// const bubblesForEveryone = require("../../models/bubblesForEveryone");
 
-function watchBubblesForEveryoneStream(){
+function watchBubblesForEveryoneStream(models){
+    const {bubblesForEveryone} = models
     try{
         const bubblesDoc = bubblesForEveryone.watch([], {fullDocument: "updateLookup"})
         bubblesDoc.on("change", async(data)=>{

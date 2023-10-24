@@ -1,9 +1,10 @@
-const {doc, getDoc} = require('firebase/firestore')
-const {database} = require('../../database/firebase')
-const userBubbles = require('../../models/userBubbles')
+// const {doc, getDoc} = require('firebase/firestore')
+// const {database} = require('../../database/firebase')
+// const userBubbles = require('../../models/userBubbles')
 
 async function getUserBubbles(req, res){
     let userID = req.body.userID
+    const {userBubbles} = req.dbModels
 
     try{
         const bubbleRef = await userBubbles.findOne({userID}).lean()
