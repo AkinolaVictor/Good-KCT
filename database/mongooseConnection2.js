@@ -205,7 +205,7 @@ function modelPack(db){
                 updatedAt: Date
             }, { strict: false, minimize: false})
             
-            const bubblesForEveryone = db.models.bubblesforeveryone || db.model("bubblesforeveryone", bubblesForEveryoneSchema)
+            const bubblesForEveryone = db.models.bubblesforeveryones || db.model("bubblesforeveryones", bubblesForEveryoneSchema)
             return bubblesForEveryone
         }(),
         chats: function(){
@@ -249,7 +249,7 @@ function modelPack(db){
                 updatedAt: Date
             }, { strict: false, minimize: false })
             
-            const Following = db.models["following"] || db.model("following", followingSchema)
+            const Following = db.models["followings"] || db.model("followings", followingSchema)
             return Following
         }(),
         LikeModel: function(){
@@ -282,7 +282,7 @@ function modelPack(db){
                 updatedAt: Date
             }, { strict: false, minimize: false })
             
-            const savedAudience = db.models["savedaudience"] || db.model("savedaudience", savedAudienceSchema)
+            const savedAudience = db.models["savedaudiences"] || db.model("savedaudiences", savedAudienceSchema)
             return savedAudience
         }(),
         savePush: function(){
@@ -293,7 +293,7 @@ function modelPack(db){
                 updatedAt: Date
             }, { strict: false, minimize: false})
             
-            const savePush = db.models["savepushsubscribe"] || db.model("savepushsubscribe", savePushSchema)
+            const savePush = db.models["savepushsubscribes"] || db.model("savepushsubscribes", savePushSchema)
             return savePush
         }(),
         usageAnalytics: function(){
