@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
-const signUp = require('../controllers/user/signUp')
-const signIn = require('../controllers/user/signIn')
+// const signUp = require('../controllers/user/signUp')
+// const signIn = require('../controllers/user/signIn')
 const follow = require('../controllers/user/follow')
 const unFollow = require('../controllers/user/unfollow')
 const addAudience = require('../controllers/user/addAudience')
@@ -28,10 +28,10 @@ const getUserNotification = require('../controllers/user/getUserNotification')
 const getUserBotActivities = require('../controllers/user/getUserBotActivities')
 
 // create an account
-router.post('/createAccount', signUp)
+// router.post('/createAccount', signUp)
 
 // login
-router.post('/signIn', signIn)
+// router.post('/signIn', signIn)
 
 // follow
 router.post('/follow', follow)
