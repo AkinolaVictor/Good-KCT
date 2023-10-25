@@ -1,4 +1,6 @@
+const { doc, setDoc, getDoc, deleteDoc } = require('firebase/firestore');
 const { default: mongoose } = require('mongoose');
+const { database } = require('./firebase');
 
 // let cached = global.mongoose;
 
@@ -14,23 +16,56 @@ function connectionUri(){
 const dbname = process.env.DB_NAME
 
 const options = {
-    // useNewUrlParser: true,
-    // useUnifiedTopology: true,
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
     dbName: dbname,
-    // hffj
     // useFindAndModify: false, 
     // useCreateIndex: true, 
     // poolSize: 4, 
     // socketTimeoutMS: 10000,
-    maxPoolSize: 10,
-    socketTimeoutMS: 0
+    // maxPoolSize: 10,
+    // socketTimeoutMS: 0
+}
+
+async function dbConnectx(server){
+    const saveMongo = doc(database, "saveMongoDB", "mongoConnection")
+    const savedConnection = await getDoc(saveMongo).then(async(doc)=>{
+        if(doc.exists()){
+            const mongoDB = doc.data()
+            if(server){
+                const models = modelPack(mongoDB)
+                server(models)
+            }
+            return modelPack(global.mongooseConne)
+        } else {
+            const thisConnection = await mongoose.connect(connectionUri(), {...options}).then(async (mongo) => {
+                if(server){
+                    const models = modelPack(mongo)
+                    server(models)
+                }
+                await setDoc(saveMongo, {mongo}).then(()=>{
+                    console.log("saved to mongo");
+                }).catch(()=>{
+                    console.log("failed to save to mongo");
+                })
+                console.log('MONGODB CONNECTION SUCESSFUL');
+                return modelPack(mongo)
+            }).catch(async(err)=>{
+                global.mongooseConne = null
+                console.log(err, "MONGODB CONNECTION FAILED");
+                await deleteDoc(saveMongo)
+                return null
+            });
+            return thisConnection
+        }
+    })
+    return savedConnection
 }
 
 async function dbConnect(server){
-    // if(cached.conn) return cached.conn;
     if(!global.mongooseConne){
         // global.mongooseConne = await mongoose.connect(uri, options).then((mongo) => {
-        const thisConnection = await mongoose.connect(connectionUri(), {...options}).then((mongo) => {
+        const thisConnection = await mongoose.connect(connectionUri(), {...options}).then(async (mongo) => {
             if(server){
                 const models = modelPack(mongo)
                 server(models)
@@ -52,6 +87,7 @@ async function dbConnect(server){
         return modelPack(global.mongooseConne)
     }
 }
+
 function modelPack(db){
     const models = {
         allUser: function(){
