@@ -25,7 +25,7 @@ const firebaseConfig = {
   appId: process.env.CONCEALED_APP_ID,
   measurementId: process.env.CONCEALED_APP_MEASUREMENT_ID
 };
-// console.log("thedd");
+// console.log("theses");
 const firebasePlaygroundConfig = {
   apiKey: process.env.CONCEALED_PLAYGROUND_DB_API_KEY,
   authDomain: process.env.CONCEALED_PLAYGROUND_AUTH_DOMAIN,
