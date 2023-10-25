@@ -11,18 +11,17 @@ function connectionUri(){
         return process.env.MONGODB_URI
     } else {
         // console.log("i used development in db");
-        return process.env.MONGODB_URI_DEV || process.env.CONCEALED_MON_DB
+        return process.env.MONGODB_URI_DEV
     }
 }
 // const uri = process.env.MONGODB_URI_DEV
 const dbname = process.env.DB_NAME
 // console.log(`THIS IS THE MONGO URL ${connectionUri()}`);
+// console.log("working");
 const options = {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     dbName: dbname,
-    // useFindAndModify: false, 
-    // useCreateIndex: true, 
     // poolSize: 4, 
     // socketTimeoutMS: 10000,
     // maxPoolSize: 30,
