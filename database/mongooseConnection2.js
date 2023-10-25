@@ -15,14 +15,12 @@ function connectionUri(){
     }
 }
 // const uri = process.env.MONGODB_URI_DEV
-// const dbname = process.env.DB_NAME
+const dbname = process.env.DB_NAME
 // console.log(`THIS IS THE MONGO URL ${connectionUri()}`);
-const connect = "mongodb+srv://akinolavictor50:akinolavictor@cluster0.c9gxlzz.mongodb.net/?retryWrites=true&w=majority"
 const options = {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    dbName: "Concealed",
-    // dbName: dbname,
+    dbName: dbname,
     // useFindAndModify: false, 
     // useCreateIndex: true, 
     // poolSize: 4, 
@@ -68,8 +66,7 @@ async function dbConnectx(server){
 
 async function dbConnect(server){
     if(!global.mongooseConne){
-        // const thisConnection = await mongoose.connect(connectionUri(), {...options}).then(async (mongo) => {
-        const thisConnection = await mongoose.connect(connect, {...options}).then(async (mongo) => {
+        const thisConnection = await mongoose.connect(connectionUri(), {...options}).then(async (mongo) => {
             if(server){
                 const models = modelPack(mongo)
                 server(models)
