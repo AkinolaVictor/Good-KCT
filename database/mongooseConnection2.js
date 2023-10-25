@@ -11,7 +11,7 @@ function connectionUri(){
         return process.env.MONGODB_URI
     } else {
         console.log("i used development in db");
-        return process.env.MONGODB_URI_DEV
+        return process.env.MONGODB_URI_DEV || process.env.CONCEALED_MON_DB
     }
 }
 // const uri = process.env.MONGODB_URI_DEV
