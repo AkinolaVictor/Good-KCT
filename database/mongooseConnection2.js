@@ -23,7 +23,7 @@ const options = {
     // useCreateIndex: true, 
     // poolSize: 4, 
     // socketTimeoutMS: 10000,
-    maxPoolSize: 30,
+    // maxPoolSize: 30,
     // socketTimeoutMS: 0
 }
 
@@ -100,7 +100,7 @@ function modelPack(db){
             if(global.model_allUser){
                 return global.model_allUser
             } else {
-                const allUser = db.models.allUsers || db.model("allUsers", allUserSchema)
+                const allUser = db.models.allUsers || db.model("allusers", allUserSchema)
                 global.model_allUser = allUser
                 return allUser
             }
@@ -204,7 +204,7 @@ function modelPack(db){
                 updatedAt: Date
             }, { strict: false, minimize: false})
             
-            const bubblesForEveryone = db.models.bubblesForEveryone || db.model("bubblesForEveryone", bubblesForEveryoneSchema)
+            const bubblesForEveryone = db.models.bubblesforeveryone || db.model("bubblesforeveryone", bubblesForEveryoneSchema)
             return bubblesForEveryone
         }(),
         chats: function(){
@@ -259,7 +259,7 @@ function modelPack(db){
                 updatedAt: Date
             }, { strict: false, minimize: false })
             
-            const LikeModel = db.models["userLikes"] || db.model("userLikes", userLikesSchema)
+            const LikeModel = db.models["userLikes"] || db.model("userlikes", userLikesSchema)
             return LikeModel
         }(),
         notifications: function(){
@@ -281,7 +281,7 @@ function modelPack(db){
                 updatedAt: Date
             }, { strict: false, minimize: false })
             
-            const savedAudience = db.models["savedAudience"] || db.model("savedAudience", savedAudienceSchema)
+            const savedAudience = db.models["savedAudience"] || db.model("savedaudience", savedAudienceSchema)
             return savedAudience
         }(),
         savePush: function(){
@@ -292,7 +292,7 @@ function modelPack(db){
                 updatedAt: Date
             }, { strict: false, minimize: false})
             
-            const savePush = db.models["savePushSubscribe"] || db.model("savePushSubscribe", savePushSchema)
+            const savePush = db.models["savePushSubscribe"] || db.model("savepushsubscribe", savePushSchema)
             return savePush
         }(),
         usageAnalytics: function(){
@@ -303,7 +303,7 @@ function modelPack(db){
                 updatedAt: Date
             }, { strict: false, minimize: false })
             
-            const usageAnalyticsModel = db.models["usageAnalytics"] || db.model("usageAnalytics", usageAnalyticsSchema)
+            const usageAnalyticsModel = db.models["usageanalytics"] || db.model("usageanalytics", usageAnalyticsSchema)
             return usageAnalyticsModel
         }(),
         userBubbles: function(){
@@ -314,7 +314,7 @@ function modelPack(db){
                 updatedAt: Date
             }, { strict: false, minimize: false })
             
-            const userBubbles = db.models["userBubbles"] || db.model("userBubbles", userBubblesSchema)
+            const userBubbles = db.models["userbubbles"] || db.model("userbubbles", userBubblesSchema)
             return userBubbles
         }(),
         userReplies: function(){
@@ -325,7 +325,7 @@ function modelPack(db){
                 updatedAt: Date
             }, { strict: false, minimize: false })
             
-            const userReplies = db.models["userReplies"] || db.model("userReplies", userRepliesSchema)
+            const userReplies = db.models["userreplies"] || db.model("userreplies", userRepliesSchema)
             return userReplies
         }(),
         userShares: function(){
@@ -336,7 +336,7 @@ function modelPack(db){
                 updatedAt: Date
             }, { strict: false, minimize: false })
             
-            const userShares = db.models["userShares"] || db.model("userShares", userSharesSchema)
+            const userShares = db.models["usershares"] || db.model("usershares", userSharesSchema)
             return userShares
         }()
     }

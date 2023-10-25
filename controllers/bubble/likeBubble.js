@@ -175,7 +175,7 @@ async function likeBubble(req, res){
                     // const thisUserLikes = await userLikes.findOne({userID})
                     const thisUserLikes = await LikeModel.findOne({userID})
                     if(thisUserLikes === null){
-                        const newUserLike = new LikeModel.findOne({userID, bubbles: [currentBubble.refDoc]})
+                        const newUserLike = new LikeModel({userID, bubbles: [currentBubble.refDoc]})
                         // const newUserLike = new userLikes.findOne({userID, bubbles: [currentBubble.refDoc]})
                         await newUserLike.save()
                     } else {
@@ -197,7 +197,8 @@ async function likeBubble(req, res){
 
             }).then(()=>{
                 res.send({successful: true})
-            }).catch(()=>{
+            }).catch((e)=>{
+                console.log(e, "failed here 1");
                 res.send({successful: false, message: 'Error from the server'})
             })
         } else {

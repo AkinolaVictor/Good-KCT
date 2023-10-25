@@ -7,7 +7,7 @@
 async function userDailyAnalytics(req, res){
     const usageAnalyticsModel = req.dbModels.usageAnalytics
     
-    const analytics = req.body.data || {}
+    const newAnalytics = req.body.data || {}
     const userID = req.body.userID
     const currentDate = req.body.currentDate
 
@@ -15,27 +15,45 @@ async function userDailyAnalytics(req, res){
     try{
         const usage = await usageAnalyticsModel.findOne({userID})
         if(usage === null){
-            const finalData = [analytics]
-            const dataToString = JSON.stringify(finalData)
-            const newUsage = new usageAnalyticsModel({userID, analytics: {[currentDate]: dataToString}})
+            const newUsage = new usageAnalyticsModel({userID, analytics: {[currentDate]: [newAnalytics]}})
             await newUsage.save()
+
+            // const dataToString = JSON.stringify(finalData)
+            // const newUsage = new usageAnalyticsModel({userID, analytics: {[currentDate]: dataToString}})
+            // await newUsage.save()
         } else {
             if(!usage.analytics[currentDate]){
-                const finalData = [analytics]
-                let dataToString = JSON.stringify(finalData)
-                usage.analytics[currentDate] = dataToString
+                usage.analytics[currentDate] = [newAnalytics]
+
+                // const finalData = [analytics]
+                // let dataToString = JSON.stringify(finalData)
+                // usage.analytics[currentDate] = dataToString
             } else {
-                const actualData = [...JSON.parse(usage.analytics[currentDate])]
-                actualData.push(analytics)
-                let dataToString = JSON.stringify(actualData)
-                usage.analytics[currentDate] = dataToString
+                let actualData = []
+                if(typeof(usage.analytics[currentDate]) === "string"){
+                    actualData = [...JSON.parse(usage.analytics[currentDate])]
+                } else {
+                    actualData = usage.analytics[currentDate]
+                }
+                actualData.push(newAnalytics)
+                usage.analytics[currentDate] = actualData
+
+
+                
+
+                // const actualData = [...JSON.parse(usage.analytics[currentDate])]
+                // actualData.push(analytics)
+                // let dataToString = JSON.stringify(actualData)
+                // usage.analytics[currentDate] = dataToString
             }
             const analytics = usage.analytics
             // await usage.save()
             await usageAnalyticsModel.updateOne({userID}, {analytics})
         }
+        // console.log("success");
         res.send({successful: true})
     } catch(e){
+        // console.log(e, "false");
         res.send({successful: false, message: 'An error occured from the server side'})
     }
 }

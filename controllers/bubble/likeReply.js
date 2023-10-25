@@ -211,7 +211,8 @@ async function likeReply(req, res){
                     message: `Reply: ${message}`
                 }
                 await LikeReplyNotifier(notificationData)
-            }).catch(()=>{})
+            }).catch(()=>{
+            })
 
             res.send({successful: true})
         }
