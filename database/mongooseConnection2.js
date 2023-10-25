@@ -17,13 +17,13 @@ const dbname = process.env.DB_NAME
 
 const options = {
     useNewUrlParser: true,
-    // useUnifiedTopology: true,
+    useUnifiedTopology: true,
     dbName: dbname,
     // useFindAndModify: false, 
     // useCreateIndex: true, 
     // poolSize: 4, 
     // socketTimeoutMS: 10000,
-    maxPoolSize: 10,
+    maxPoolSize: 30,
     // socketTimeoutMS: 0
 }
 
