@@ -7,16 +7,16 @@ const { database } = require('./firebase');
 // if(!cached) cached = global.mongoose = {conn: null, promise: null};
 function connectionUri(){
     if(process.env.CONCEALED_ENV==='production'){
-        console.log("i used production in db");
+        // console.log("i used production in db");
         return process.env.MONGODB_URI
     } else {
-        console.log("i used development in db");
+        // console.log("i used development in db");
         return process.env.MONGODB_URI_DEV || process.env.CONCEALED_MON_DB
     }
 }
 // const uri = process.env.MONGODB_URI_DEV
 const dbname = process.env.DB_NAME
-console.log(`THIS IS THE MONGO URL ${connectionUri()}`);
+// console.log(`THIS IS THE MONGO URL ${connectionUri()}`);
 const options = {
     useNewUrlParser: true,
     useUnifiedTopology: true,
@@ -102,7 +102,7 @@ function modelPack(db){
             if(global.model_allUser){
                 return global.model_allUser
             } else {
-                const allUser = db.models.allUsers || db.model("allusers", allUserSchema)
+                const allUser = db.models.allusers || db.model("allusers", allUserSchema)
                 global.model_allUser = allUser
                 return allUser
             }
@@ -261,7 +261,7 @@ function modelPack(db){
                 updatedAt: Date
             }, { strict: false, minimize: false })
             
-            const LikeModel = db.models["userLikes"] || db.model("userlikes", userLikesSchema)
+            const LikeModel = db.models["userlikes"] || db.model("userlikes", userLikesSchema)
             return LikeModel
         }(),
         notifications: function(){
@@ -283,7 +283,7 @@ function modelPack(db){
                 updatedAt: Date
             }, { strict: false, minimize: false })
             
-            const savedAudience = db.models["savedAudience"] || db.model("savedaudience", savedAudienceSchema)
+            const savedAudience = db.models["savedaudience"] || db.model("savedaudience", savedAudienceSchema)
             return savedAudience
         }(),
         savePush: function(){
@@ -294,7 +294,7 @@ function modelPack(db){
                 updatedAt: Date
             }, { strict: false, minimize: false})
             
-            const savePush = db.models["savePushSubscribe"] || db.model("savepushsubscribe", savePushSchema)
+            const savePush = db.models["savepushsubscribe"] || db.model("savepushsubscribe", savePushSchema)
             return savePush
         }(),
         usageAnalytics: function(){
