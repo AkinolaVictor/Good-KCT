@@ -18,6 +18,7 @@ function connectionUri(){
 const dbname = process.env.DB_NAME
 // console.log(`THIS IS THE MONGO URL ${connectionUri()}`);
 // console.log("working");
+// console.log("test");
 const options = {
     useNewUrlParser: true,
     useUnifiedTopology: true,
