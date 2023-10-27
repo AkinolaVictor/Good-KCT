@@ -46,6 +46,7 @@ async function cachedConnection(){
   }
 }
 cachedConnection()
+// console.log("test for watching");
 // connectWithMongoose(copyAll)
 // connectWithMongoose(()=>{})
 // watchAllStreams()
