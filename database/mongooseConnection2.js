@@ -7,16 +7,16 @@ const { database } = require('./firebase');
 // if(!cached) cached = global.mongoose = {conn: null, promise: null};
 function connectionUri(){
     if(process.env.CONCEALED_ENV==='production'){
-        // console.log("i used production in db");
+        console.log("i used production in db");
         return process.env.MONGODB_URI_PROD
     } else {
-        // console.log("i used development in db");
+        console.log("i used development in db");
         return process.env.MONGODB_URI_DEV
     }
 }
 // const uri = process.env.MONGODB_URI_DEV
 const dbname = process.env.DB_NAME
-// console.log(`THIS IS THE MONGO URL ${connectionUri()}`);
+console.log(`THIS IS THE MONGO URL ${connectionUri()}`);
 // console.log("working");
 // console.log("test");
 const options = {
