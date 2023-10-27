@@ -23,6 +23,8 @@ const getBubblesForEveryone = require('../controllers/bubble/getBubblesForEveryo
 const getBasicBubble = require('../controllers/bubble/getBasicBubble')
 const checkReplyEligibity = require('../controllers/bubble/checkReplyEligibity')
 const getMultipleBubbles = require('../controllers/bubble/getMultipleBubbles')
+const getMultipleBubbles2 = require('../controllers/bubble/getMultipleBubbles2')
+const getMultipleBubbles3 = require('../controllers/bubble/getMultipleBubbles3')
 // console.log(router);
 // create a bubble
 router.post('/createBubble', createBubble)
@@ -87,7 +89,9 @@ router.post('/getBubblesForEveryone', getBubblesForEveryone)
 // opened chart
 router.post('/getBasicBubble', getBasicBubble)
 
-router.post('/getMultipleBubbles', getMultipleBubbles)
+// router.post('/getMultipleBubbles', getMultipleBubbles)
+// router.post('/getMultipleBubbles', getMultipleBubbles3)
+router.post('/getMultipleBubbles', getMultipleBubbles2)
 
 // opened chart
 router.post('/checkReplyEligibity', checkReplyEligibity)

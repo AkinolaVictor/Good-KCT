@@ -131,9 +131,15 @@ async function getBasicBubble(req, res){
             }
             
             if(!thisBubble.activities.iAmOnTheseFeeds){
-                // console.log(thisBubble.activities);
-                console.log(JSON.parse(thisBubble.activities));
-            } else {
+                const activities = JSON.parse(thisBubble.activities)
+                thisBubble.activities = activities
+            }
+            
+            if(!thisBubble.activities.iAmOnTheseFeeds){
+                console.log(thisBubble.postID);
+                res.send({successful:false, message: 'Failed to compile data'})
+                return
+                // console.log(JSON.parse(thisBubble.activities));
             }
     
             // IF THIS USER HAS NOT SEEN THIS BUBBLE BEFORE, UPDATE BUBBLE
@@ -229,53 +235,60 @@ async function getBasicBubble(req, res){
                         const activities = JSON.parse(sameBubble.activities)
                         sameBubble.activities = activities
                     }
-    
-                    if(!sameBubble.activities.iAmOnTheseFeeds[userID]){
-                        sameBubble.activities.iAmOnTheseFeeds[userID] = {
-                            index: Object.keys(sameBubble.activities.iAmOnTheseFeeds).length,
-                            onFeed: true, 
-                            mountedOnDevice: true,
-                            userID: userID,
-                            myImpressions: 0,
-                            seenAndVerified: false,
-                            replyPath: [],
-                            myActivities: {
-                                impression: true
+
+                    if(!sameBubble.activities.iAmOnTheseFeeds){
+                        const activities = JSON.parse(sameBubble.activities)
+                        sameBubble.activities = activities
+                    }
+
+                    if(!sameBubble.activities.iAmOnTheseFeeds){
+                    } else {
+                        if(!sameBubble.activities.iAmOnTheseFeeds[userID]){
+                            sameBubble.activities.iAmOnTheseFeeds[userID] = {
+                                index: Object.keys(sameBubble.activities.iAmOnTheseFeeds).length,
+                                onFeed: true, 
+                                mountedOnDevice: true,
+                                userID: userID,
+                                myImpressions: 0,
+                                seenAndVerified: false,
+                                replyPath: [],
+                                myActivities: {
+                                    impression: true
+                                }
                             }
-                        }
-                        
-                        thisBubble.activities = sameBubble.activities
-                        const activities = JSON.stringify(sameBubble.activities)
-                        await bubble.updateOne({postID: feedRef.postID}, {activities})
-    
-    
-                        // give feedRef to user---to be on a safe zone, i have to initialize as deleted...
-                        const userFeed = await Feeds.findOne({userID})
-                        if(userFeed){
-                        // if(!userFeed){
-                        //     const newUserFeed = new Feeds({userID, bubbles: [feedRef]})
-                        //     await newUserFeed.save()
-                        // } else {
-                            let access = true
-                            if(userFeed.bubbles){
-                                for(let i=0; i<userFeed.bubbles.length; i++){
-                                    if(dataType(userFeed.bubbles[i])==='object'){
-                                        if(userFeed.bubbles[i].postID === feedRef.postID){
-                                            access=false
-                                            break
+                            
+                            thisBubble.activities = sameBubble.activities
+                            const activities = JSON.stringify(sameBubble.activities)
+                            await bubble.updateOne({postID: feedRef.postID}, {activities})
+        
+        
+                            // give feedRef to user---to be on a safe zone, i have to initialize as deleted...
+                            const userFeed = await Feeds.findOne({userID})
+                            if(userFeed){
+                            // if(!userFeed){
+                            //     const newUserFeed = new Feeds({userID, bubbles: [feedRef]})
+                            //     await newUserFeed.save()
+                            // } else {
+                                let access = true
+                                if(userFeed.bubbles){
+                                    for(let i=0; i<userFeed.bubbles.length; i++){
+                                        if(dataType(userFeed.bubbles[i])==='object'){
+                                            if(userFeed.bubbles[i].postID === feedRef.postID){
+                                                access=false
+                                                break
+                                            }
                                         }
                                     }
-                                }
-                                
-                                if(access){
-                                    userFeed.bubbles.push(feedRef)
-                                    // await userFeed.save()
-                                    await Feeds.updateOne({userID}, {bubbles: [...userFeed.bubbles]})
+                                    
+                                    if(access){
+                                        userFeed.bubbles.push(feedRef)
+                                        // await userFeed.save()
+                                        await Feeds.updateOne({userID}, {bubbles: [...userFeed.bubbles]})
+                                    }
                                 }
                             }
                         }
                     }
-    
                 }
     
             }

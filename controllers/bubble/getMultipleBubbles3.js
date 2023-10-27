@@ -1,7 +1,7 @@
 const { dataType } = require("../../utils/utilsExport")
 const date = require('date-and-time')
 
-async function getMultipleBubbles(req, res){
+async function getMultipleBubbles3(req, res){
     const {User, Feeds, bot, Followers, bubble} = req.dbModels
     
     const userID = req.body.userID
@@ -131,8 +131,32 @@ async function getMultipleBubbles(req, res){
             res.send({successful:false, message: 'Bubble not found'})
             return
         } else {
+
+            const acquiredUsers = {}
+            const bubbleCreators = await User.find({id: {$in: [...creatorIDs]}}).lean()
+            if(!bubbleCreators.length){
+                res.send({successful:false, message: 'Bubble creators not found'})
+                return
+            } else {
+                for(i=0; i<bubbleCreators.length; i++){
+                    acquiredUsers[bubbleCreators[i].id] = bubbleCreators[i]
+                }
+            }
+
+            const acquiredFollowers = {}
+            const creatorFollowers = await Followers.find({userID: {$in: [...creatorIDs]}}).lean()
+            if(!creatorFollowers.length){
+                for(i=0; i<creatorFollowers.length; i++){
+                    acquiredFollowers[creatorFollowers[i].userID] = {...creatorFollowers[i].followers}
+                }
+            }
+
+
+
             for(let i=0; i<multipleBubbles.length; i++){
                 let currentBubble = {...multipleBubbles[i]}
+                const creator = currentBubble.user.id
+                
         
                 if(typeof(currentBubble.reply) === "string"){
                     const reply = JSON.parse(currentBubble.reply)
@@ -149,7 +173,7 @@ async function getMultipleBubbles(req, res){
                     currentBubble.activities = activities
                 }
 
-
+                // JUST IN CASE
                 if(!currentBubble.activities.iAmOnTheseFeeds){
                     const data = JSON.parse(currentBubble.activities)
                     currentBubble.activities = data
@@ -177,51 +201,8 @@ async function getMultipleBubbles(req, res){
                         await bubble.updateOne({postID: currentBubble.postID}, {activities})
                     }
                 }
-                multipleBubbles[i] = currentBubble
-                currentBubble = null
-            }
-        
 
-
-
-
-            const acquiredUsers = {}
-            const bubbleCreators = await User.find({id: {$in: [...creatorIDs]}}).lean()
-            if(!bubbleCreators.length){
-                res.send({successful:false, message: 'Bubble creators not found'})
-                return
-            } else {
-                for(i=0; i<bubbleCreators.length; i++){
-                    acquiredUsers[bubbleCreators[i].id] = bubbleCreators[i]
-                }
-            }
-
-
-
-
-
-
-
-
-            const acquiredFollowers = {}
-            const creatorFollowers = await Followers.find({userID: {$in: [...creatorIDs]}}).lean()
-            if(!creatorFollowers.length){
-                for(i=0; i<creatorFollowers.length; i++){
-                    acquiredFollowers[creatorFollowers[i].userID] = {...creatorFollowers[i].followers}
-                }
-            }
-
-
-
-
-
-
-
-
-            for(let i=0; i<multipleBubbles.length; i++){
                 // CHECK FOR ELIGIBITY
-                let currentBubble = {...multipleBubbles[i]}
-                const creator = currentBubble.user.id
                 let feedRef = null
                 if(!viewEligibity(currentBubble)){
                     multipleBubbles.splice(i, 1)
@@ -318,6 +299,16 @@ async function getMultipleBubbles(req, res){
                         }
 
                         if(!sameBubble.activities.iAmOnTheseFeeds){
+                            const activities = JSON.parse(sameBubble.activities)
+                            sameBubble.activities = activities
+                        }
+
+                        if(!sameBubble.activities.iAmOnTheseFeeds){
+                            const activities = JSON.parse(sameBubble.activities)
+                            sameBubble.activities = activities
+                        }
+
+                        if(!sameBubble.activities.iAmOnTheseFeeds){
                             
                         } else {
                             if(!sameBubble.activities.iAmOnTheseFeeds[userID]){
@@ -384,4 +375,4 @@ async function getMultipleBubbles(req, res){
         res.send({successful:false, message: 'Server error occured'})
     }
 }
-module.exports = getMultipleBubbles
+module.exports = getMultipleBubbles3
