@@ -1,4 +1,5 @@
 const date = require('date-and-time')
+const { dataType } = require('../../utils/utilsExport')
 // const {doc, getDoc, updateDoc} = require('firebase/firestore')
 // const {database} = require('../../database/firebase')
 // const bubble = require('../../models/bubble')
@@ -6,7 +7,6 @@ const date = require('date-and-time')
 // const bot = require('../../models/bot')
 // const Feeds = require('../../models/Feeds')
 // const User = require('../../models/User')
-// const { dataType } = require('../../utils/utilsExport')
 
 async function getBasicBubble(req, res){
     const {User, Feeds, bot, Followers, bubble} = req.dbModels
@@ -91,6 +91,17 @@ async function getBasicBubble(req, res){
         }
     }
 
+    function viewEligibity(thisBubble){
+        // CHECK IF USER IS ELIGIBLE TO SEE THIS BUBBLE
+        if((checkForSecrecy(thisBubble) || ifForAudience(thisBubble)) && feedRef.userID!==userID && feedRef.env==='profile'){
+            return false
+        } else if(ifForAudience(thisBubble) && feedRef.userID!==userID){
+            return false
+        } else {
+            return true
+        }
+    }
+
     if(!feedRef){
         res.send({successful: false, message: 'some error occured while trying to get bubble'})
         return
@@ -114,8 +125,15 @@ async function getBasicBubble(req, res){
             }
     
             if(typeof(thisBubble.activities) === "string"){
+            // if(typeof(thisBubble.activities) !== "object"){
                 const activities = JSON.parse(thisBubble.activities)
                 thisBubble.activities = activities
+            }
+            
+            if(!thisBubble.activities.iAmOnTheseFeeds){
+                console.log(thisBubble.activities);
+                console.log(JSON.parse(thisBubble.activities));
+            } else {
             }
     
             // IF THIS USER HAS NOT SEEN THIS BUBBLE BEFORE, UPDATE BUBBLE
@@ -173,12 +191,9 @@ async function getBasicBubble(req, res){
                 }
             }
             
-            // CHECK IF USER IS ELIGIBLE TO SEE THIS BUBBLE
-            if((checkForSecrecy(thisBubble) || ifForAudience(thisBubble)) && feedRef.userID!==userID && feedRef.env==='profile'){
-                res.send({successful:false, message: 'Bubble not found'})
-                return 
-            } else if(ifForAudience(thisBubble) && feedRef.userID!==userID){
-                res.send({successful:false, message: 'Bubble not found'})
+            // // CHECK IF USER IS ELIGIBLE TO SEE THIS BUBBLE
+            if(!viewEligibity(thisBubble)){
+                res.send({successful:false, message: 'ineligible to view bubble'})
                 return
             } else {
                 // prepare Data to be finally sent out (dont forget bot in client side)
@@ -189,6 +204,21 @@ async function getBasicBubble(req, res){
                     env: feedRef.env
                 }
             }
+            // if((checkForSecrecy(thisBubble) || ifForAudience(thisBubble)) && feedRef.userID!==userID && feedRef.env==='profile'){
+            //     res.send({successful:false, message: 'ineligible to view bubble'})
+            //     return 
+            // } else if(ifForAudience(thisBubble) && feedRef.userID!==userID){
+            //     res.send({successful:false, message: 'ineligible to view bubble'})
+            //     return
+            // } else {
+            //     // prepare Data to be finally sent out (dont forget bot in client side)
+            //     thisBubble = {
+            //         ...thisBubble,
+            //         ...feedRef.data,
+            //         refDoc: feedRef,
+            //         env: feedRef.env
+            //     }
+            // }
             
     
             // REGISTER USER TO BUBBLE ACTIVITIES IF ABSENT
@@ -204,7 +234,7 @@ async function getBasicBubble(req, res){
                         sameBubble.activities.iAmOnTheseFeeds[userID] = {
                             index: Object.keys(sameBubble.activities.iAmOnTheseFeeds).length,
                             onFeed: true, 
-                            mountedOnDevice: false,
+                            mountedOnDevice: true,
                             userID: userID,
                             myImpressions: 0,
                             seenAndVerified: false,
@@ -227,7 +257,7 @@ async function getBasicBubble(req, res){
                         //     await newUserFeed.save()
                         // } else {
                             let access = true
-                            if(userFeed.bubbles.length){
+                            if(userFeed.bubbles){
                                 for(let i=0; i<userFeed.bubbles.length; i++){
                                     if(dataType(userFeed.bubbles[i])==='object'){
                                         if(userFeed.bubbles[i].postID === feedRef.postID){
@@ -257,6 +287,7 @@ async function getBasicBubble(req, res){
             res.send({successful: true, bubble: thisBubble})
         }
     } catch (e){
+        console.log("failed to get bubble", e);
         res.send({successful:false, message: 'Server error occured'})
     }
 }

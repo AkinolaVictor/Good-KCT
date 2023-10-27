@@ -67,6 +67,7 @@ async function dbConnectx(server){
 async function dbConnect(server){
     if(!global.mongooseConne){
         const thisConnection = await mongoose.connect(connectionUri(), {...options}).then(async (mongo) => {
+            mongo.pluralize(null)
             if(server){
                 const models = modelPack(mongo)
                 server(models)
