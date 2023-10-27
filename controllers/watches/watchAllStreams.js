@@ -15,6 +15,7 @@ const watchUserShareStream = require("./watchUserShareStream")
 const watchUserStream = require("./watchUserStream")
 
 function watchAllStreams(models){
+    console.log("starting to watch");
     watchBotActivityStream(models)
     watchBotStream(models)
     watchUserFeedsStream(models)
