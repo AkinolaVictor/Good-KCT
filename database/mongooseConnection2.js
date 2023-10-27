@@ -8,7 +8,7 @@ const { database } = require('./firebase');
 function connectionUri(){
     if(process.env.CONCEALED_ENV==='production'){
         // console.log("i used production in db");
-        return process.env.MONGODB_URI
+        return process.env.MONGODB_URI_PROD
     } else {
         // console.log("i used development in db");
         return process.env.MONGODB_URI_DEV

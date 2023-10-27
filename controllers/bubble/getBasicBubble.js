@@ -131,7 +131,7 @@ async function getBasicBubble(req, res){
             }
             
             if(!thisBubble.activities.iAmOnTheseFeeds){
-                console.log(thisBubble.activities);
+                // console.log(thisBubble.activities);
                 console.log(JSON.parse(thisBubble.activities));
             } else {
             }
