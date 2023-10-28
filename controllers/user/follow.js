@@ -1,4 +1,5 @@
 const date = require('date-and-time')
+const sendPushNotification = require('../pushNotification/sendPushNotification')
 // const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
 // const {getDownloadURL, ref, uploadBytes} = require('firebase/storage')
 // const {database} = require('../../database/firebase')
@@ -56,9 +57,15 @@ async function follow(req, res){
                 await newNotifications.save()
             } else {
                 userNotification.all.push(followData)
-                // await userNotification.save()
-                await notifications.updateOne({userID: newUserID}, {all: [...userNotification.all]})
-                // await notifications.updateOne({userID: newUserID}, {all: userNotification.all})
+                await notifications.updateOne({userID: newUserID}, {all: [...userNotification.all]}).then(()=>{
+                    // const user = 
+                    const thisData = {
+                        title: `Concealed`,
+                        body: `${userName} is now following you`,
+                        icon: false
+                    }
+                    sendPushNotification(newUserID, thisData , req)
+                })
             }
         }
     }

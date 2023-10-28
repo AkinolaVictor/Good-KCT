@@ -210,21 +210,6 @@ async function getBasicBubble(req, res){
                     env: feedRef.env
                 }
             }
-            // if((checkForSecrecy(thisBubble) || ifForAudience(thisBubble)) && feedRef.userID!==userID && feedRef.env==='profile'){
-            //     res.send({successful:false, message: 'ineligible to view bubble'})
-            //     return 
-            // } else if(ifForAudience(thisBubble) && feedRef.userID!==userID){
-            //     res.send({successful:false, message: 'ineligible to view bubble'})
-            //     return
-            // } else {
-            //     // prepare Data to be finally sent out (dont forget bot in client side)
-            //     thisBubble = {
-            //         ...thisBubble,
-            //         ...feedRef.data,
-            //         refDoc: feedRef,
-            //         env: feedRef.env
-            //     }
-            // }
             
     
             // REGISTER USER TO BUBBLE ACTIVITIES IF ABSENT

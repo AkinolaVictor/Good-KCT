@@ -94,7 +94,8 @@ async function getMultipleBubbles2(req, res){
             return true
         }
     }
-    async function getEachBubble(feedRef){
+
+    async function getEachBubble(feedRef, data){
 
         if(!feedRef){
             const data = {pass: false}
@@ -102,7 +103,15 @@ async function getMultipleBubbles2(req, res){
         }
     
         try {
-            let thisBubble = await bubble.findOne({postID: feedRef.postID}).lean()
+            const {bubbles, users, followers} = data
+
+            let thisBubble = null
+            if(bubbles[feedRef.postID]){
+                thisBubble = bubbles[feedRef.postID]
+            } else {
+                thisBubble = await bubble.findOne({postID: feedRef.postID}).lean()
+            }
+
             if(thisBubble  === null){
                 const data = {pass: false}
                 return data
@@ -149,7 +158,13 @@ async function getMultipleBubbles2(req, res){
                 }
                 
                 // GET CREATOR'S DETAILS
-                const bubbleCreator = await User.findOne({id: feedRef.userID}).lean()
+                let bubbleCreator = null
+                if(users[feedRef.userID]){
+                    bubbleCreator = users[feedRef.userID]
+                } else {
+                    bubbleCreator = await User.findOne({id: feedRef.userID}).lean()
+                }
+                    
                 if(!bubbleCreator){
                     return {pass: false}
                 } else {
@@ -161,7 +176,13 @@ async function getMultipleBubbles2(req, res){
         
                 // LATE UPDATES: FIRST FIND IF BUBBLE NEEDS FOLLOWERS HERE 
                 // USER FOLLOWERS
-                const creatorFollowers = await Followers.findOne({userID: feedRef.userID}).lean()
+                let creatorFollowers = null
+                if(followers[feedRef.userID]){
+                    creatorFollowers = followers[feedRef.userID]
+                } else {
+                    creatorFollowers = await Followers.findOne({userID: feedRef.userID}).lean()
+                }
+
                 if(creatorFollowers){
                     thisBubble.followers = {...creatorFollowers.followers}
                     thisBubble.followersReady=true
@@ -287,15 +308,57 @@ async function getMultipleBubbles2(req, res){
 
     }
 
-    const requsetedBubbles = []
-    for(let i=0; i<allBubbles.length; i++){
-        const thisBubble = await getEachBubble(allBubbles[i])
-        // console.log(thisBubble);
-        if(thisBubble.pass){
-            requsetedBubbles.push(thisBubble.bubble)
+    try {
+        let postIDs = []
+        let creatorIDs = []
+    
+        for(let i=0; i<allBubbles.length; i++){
+            if(!postIDs.includes(allBubbles[i].postID)){
+                postIDs.push(allBubbles[i].postID)
+            }
+    
+            if(!creatorIDs.includes(allBubbles[i].userID)){
+                creatorIDs.push(allBubbles[i].userID)
+            }
         }
+
+        const bubbleObj = {}
+        const multipleBubbles = await bubble.find({postID: {$in: [...postIDs]}}).lean()
+        for(let i=0; i<multipleBubbles.length; i++){
+            bubbleObj[multipleBubbles[i].postID] = multipleBubbles[i]
+        }
+
+        const acquiredUsers = {}
+        const bubbleCreators = await User.find({id: {$in: [...creatorIDs]}}).lean()
+        for(i=0; i<bubbleCreators.length; i++){
+            acquiredUsers[bubbleCreators[i].id] = bubbleCreators[i]
+        }
+
+        const acquiredFollowers = {}
+        const creatorFollowers = await Followers.find({userID: {$in: [...creatorIDs]}}).lean()
+        for(i=0; i<creatorFollowers.length; i++){
+            acquiredFollowers[creatorFollowers[i].userID] = {...creatorFollowers[i].followers}
+        }
+
+        const data = {
+            bubbles: bubbleObj,
+            users: acquiredUsers,
+            followers: acquiredFollowers
+        }
+
+        const requsetedBubbles = []
+        for(let i=0; i<allBubbles.length; i++){
+            const thisBubble = await getEachBubble(allBubbles[i], data)
+            // console.log(thisBubble);
+            if(thisBubble.pass){
+                requsetedBubbles.push(thisBubble.bubble)
+            }
+        }
+        res.send({successful: true, bubbles: requsetedBubbles})
+    } catch(e){
+        res.send({successful: false, message: "some error occured"})
     }
-    res.send({successful: true, bubbles: requsetedBubbles})
+
 }
 
 module.exports = getMultipleBubbles2
