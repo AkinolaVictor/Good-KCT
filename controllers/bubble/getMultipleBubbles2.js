@@ -84,11 +84,108 @@ async function getMultipleBubbles2(req, res){
         }
     }
 
+    function check_for_viewCount(thisBubble){
+        if(!thisBubble.activities.iAmOnTheseFeeds){
+            return true
+        }
+
+        const allFirstSetRepliers = {}
+
+        function allWhoShare(userActivities){
+            if(userActivities){
+                const userActivity = userActivities.myActivities
+                if(userActivity.shared || thisBubble.user.id===userID){
+                    return true
+                } else {
+                    return false
+                }
+            } else {
+                return false
+            }
+        }
+
+        function firstRepliersAll(reply){
+            for(let i=0; i<reply.length; i++){
+                const current = reply[i]
+                if(dataType(reply[i])=='object'){
+                    allFirstSetRepliers[current.userID] = true
+
+                    if(reply[i].reply.length){
+                        firstRepliersAll(reply[i].reply)
+                    }
+                }
+            }
+            const pass = allFirstSetRepliers[userID]
+            return pass
+        }
+
+        const viewCountSettings = thisBubble.settings.secrecyData.viewCount
+        if(viewCountSettings){
+            const {count, data, value} = viewCountSettings
+            const userActivities = thisBubble.activities.iAmOnTheseFeeds[userID]
+            const likeCheck = thisBubble.like.includes(userID)
+            // console.log(value, count, data);
+
+            if(userActivities){
+                const userImpression = userActivities.myImpressions
+                if(value === "As many as possible"){
+                    return false
+                } else if(value === "Let me specify for everyone"){
+                    if(userImpression < count){
+                        return false
+                    } else {
+                        return true
+                    }
+                } else if(value === "Let me specify for selected few"){
+                    if(data[userID]){
+                        if((userImpression < count) || thisBubble.user.id===userID){
+                            return false
+                        } else {
+                            return true
+                        }
+                    } else {
+                        return false
+                    }
+                } else if(value === "Let me specify a few exceptions"){
+                    if(data[userID] || thisBubble.user.id===userID){
+                        return false
+                    } else {
+                        if((userImpression < count) || thisBubble.user.id===userID){
+                            return false
+                        } else {
+                            return true
+                        }
+                    }
+                } else if(value === "Specify for non-engaged audience"){
+                    if(likeCheck || allWhoShare(userActivities) || firstRepliersAll(thisBubble.reply)){
+                        return false
+                    } else {
+                        if((userImpression < count) || thisBubble.user.id===userID){
+                            return false
+                        } else {
+                            return true
+                        }
+                    }
+                } else {
+                    return true
+                }
+            } else {
+                // return true
+                return false
+            }
+        } else {
+            return false
+        }
+    }
+
     function viewEligibity(thisBubble){
+        // console.log(check_for_viewCount(thisBubble));
         // CHECK IF USER IS ELIGIBLE TO SEE THIS BUBBLE
         if((checkForSecrecy(thisBubble) || ifForAudience(thisBubble)) && feedRef.userID!==userID && feedRef.env==='profile'){
             return false
         } else if(ifForAudience(thisBubble) && feedRef.userID!==userID){
+            return false
+        } else if(check_for_viewCount(thisBubble)){
             return false
         } else {
             return true
@@ -251,7 +348,7 @@ async function getMultipleBubbles2(req, res){
                                     seenAndVerified: false,
                                     replyPath: [],
                                     myActivities: {
-                                        impression: true
+                                        // impression: true
                                     }
                                 }
                                 

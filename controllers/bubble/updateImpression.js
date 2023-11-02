@@ -16,6 +16,22 @@ async function updateImpression(req, res){
             thisBubble.activities = activities
         }
 
+        if(!thisBubble.activities.iAmOnTheseFeeds){
+            const activities = JSON.parse(thisBubble.activities)
+            thisBubble.activities = activities
+        }
+
+        if(!thisBubble.activities.iAmOnTheseFeeds){
+            const activities = JSON.parse(thisBubble.activities)
+            thisBubble.activities = activities
+        }
+
+        if(!thisBubble.activities.iAmOnTheseFeeds){
+            res.send({successful: false, message: 'server error: bubble doc invalid'})
+            return
+        }
+
+
         if(thisBubble.activities.iAmOnTheseFeeds[userID]){
             if(thisBubble.activities.iAmOnTheseFeeds[userID].myImpressions){
                 thisBubble.activities.iAmOnTheseFeeds[userID].myImpressions++
