@@ -1,6 +1,6 @@
 const emailSender = require("../../utils/emailSender")
 
-async function addToWaitlist(req, res){
+async function addAudienceToWaitlist(req, res){
     const name = req.body.name
     const email = req.body.email
     const {waitlist} = req.dbModels
@@ -34,4 +34,4 @@ async function addToWaitlist(req, res){
     }
 }
 
-module.exports = addToWaitlist
+module.exports = addAudienceToWaitlist
