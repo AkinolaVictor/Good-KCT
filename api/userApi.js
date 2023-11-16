@@ -26,6 +26,8 @@ const changeProfileImages = require('../controllers/user/changeProfileImages')
 const deleteProfileImages = require('../controllers/user/deleteProfileImage')
 const getUserNotification = require('../controllers/user/getUserNotification')
 const getUserBotActivities = require('../controllers/user/getUserBotActivities')
+const addToWaitlist = require('../controllers/waitlist/addToWaitList')
+const checkUserFollowers = require('../controllers/user/checkUserFollowers')
 
 // create an account
 // router.post('/createAccount', signUp)
@@ -107,6 +109,10 @@ router.post('/getUserNotification', getUserNotification)
 
 // pushNotification
 router.post('/getUserBotActivities', getUserBotActivities)
+
+router.post('/addToWaitlist', addToWaitlist)
+
+router.post('/checkUserFollowing', checkUserFollowers)
 
 
 

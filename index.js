@@ -23,6 +23,8 @@ const { default: mongoose } = require('mongoose');
 const watchAllStreams = require('./controllers/watches/watchAllStreams');
 // const copyAll = require('./controllers/copy/copyAll');
 const { connectWithMongoose2 } = require('./database/mongooseConnection2');
+const analytics_playground = require('./controllers/tools/analytics/analytics_playground');
+const majorToolsAndFixes = require('./controllers/tools/majorToolAndFixes');
 // const fs = require('fs');
 
 // const pushNotification = require('./api/pushNotificationApi')
@@ -30,7 +32,7 @@ const { connectWithMongoose2 } = require('./database/mongooseConnection2');
 // CONNECT TO DATABASE
 
 let saved_connection_models = null
-async function cachedConnection(){
+async function cachedConnection(cb){
   if(saved_connection_models){
     return saved_connection_models
   } else if(global.saved_connection_models){
@@ -41,15 +43,17 @@ async function cachedConnection(){
       saved_connection_models = models
       global.saved_connection_models = models
       watchAllStreams(models)
+      if(cb){
+        cb(models)
+      }
     }
     return models
   }
 }
+// cachedConnection(analytics_playground)
+// cachedConnection(majorToolsAndFixes)
 cachedConnection()
-// console.log("test for watching");
-// connectWithMongoose(copyAll)
-// connectWithMongoose(()=>{})
-// watchAllStreams()
+
 mongoose.pluralize(null)
 // copyAll()
 

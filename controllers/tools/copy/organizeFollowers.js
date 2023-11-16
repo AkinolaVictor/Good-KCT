@@ -1,6 +1,6 @@
 const { default: axios } = require("axios")
-const chats = require("../../models/chats")
-const { baseUrl } = require("../../utils/utilsExport")
+const chats = require("../../../models/chats")
+const { baseUrl } = require("../../../utils/utilsExport")
 
 async function organizeFollowers(){
 
@@ -10,9 +10,6 @@ async function organizeFollowers(){
             for(let i=0; i<allUsers.length; i++){
                 // console.log("got here");
                 const currentUser = {...allUsers[i]}
-                if(currentUser.id === "nHrDLGQXonQE7Uw2B2qKBhHb1rj1"){
-                    console.log("Myself");
-                }
                 await axios.post(baseUrl("user/organizeFollowing"), {userID: currentUser.id}).then(async(response)=>{
                 // await axios.post(baseUrl("user/organizeFollowers"), {userID: "nHrDLGQXonQE7Uw2B2qKBhHb1rj1"}).then(async(response)=>{
                     const num = i+1

@@ -29,41 +29,6 @@ const options = {
     // socketTimeoutMS: 0
 }
 
-async function dbConnectx(server){
-    const saveMongo = doc(database, "saveMongoDB", "mongoConnection")
-    const savedConnection = await getDoc(saveMongo).then(async(doc)=>{
-        if(doc.exists()){
-            const mongoDB = doc.data()
-            if(server){
-                const models = modelPack(mongoDB)
-                server(models)
-            }
-            return modelPack(global.mongooseConne)
-        } else {
-            const thisConnection = await mongoose.connect(connectionUri(), {...options}).then(async (mongo) => {
-                if(server){
-                    const models = modelPack(mongo)
-                    server(models)
-                }
-                await setDoc(saveMongo, {mongo}).then(()=>{
-                    console.log("saved to mongo");
-                }).catch(()=>{
-                    console.log("failed to save to mongo");
-                })
-                console.log('MONGODB CONNECTION SUCESSFUL');
-                return modelPack(mongo)
-            }).catch(async(err)=>{
-                global.mongooseConne = null
-                console.log(err, "MONGODB CONNECTION FAILED");
-                await deleteDoc(saveMongo)
-                return null
-            });
-            return thisConnection
-        }
-    })
-    return savedConnection
-}
-
 async function dbConnect(server){
     if(!global.mongooseConne){
         const thisConnection = await mongoose.connect(connectionUri(), {...options}).then(async (mongo) => {
@@ -340,7 +305,18 @@ function modelPack(db){
             
             const userShares = db.models["usershares"] || db.model("usershares", userSharesSchema)
             return userShares
-        }()
+        }(),
+        waitlist: function(){
+            const waitlistSchema = db.Schema({
+                name: String,
+                email: String,
+                createdAt: {type: Date, default: new Date()},
+                // updatedAt: Date
+            }, { strict: false, minimize: false })
+            
+            const waitlist = db.models["waitlist"] || db.model("waitlist", waitlistSchema)
+            return waitlist
+        }(),
     }
     return {...models}
 }

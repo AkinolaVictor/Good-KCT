@@ -131,6 +131,7 @@ async function createBubble(req, res){
                 onFeed: true, 
                 mountedOnDevice: false,
                 userID: allBubbleAudience[i],
+                myImpressions: 0,
                 seenAndVerified: false,
                 replyPath: [],
                 myActivities: {
@@ -284,7 +285,8 @@ async function createBubble(req, res){
             }
         }).then(()=>{
             res.send({successful: true})
-        }).catch(()=>{
+        }).catch((e)=>{
+            console.log(e);
             res.send({successful: false, message: 'bubble failed to upload to database'})
         })
 

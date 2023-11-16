@@ -127,18 +127,19 @@ async function getMultipleBubbles2(req, res){
             // console.log(value, count, data);
 
             if(userActivities){
-                const userImpression = userActivities.myImpressions
+                const userImpression = userActivities.myImpressions||0
                 if(value === "As many as possible"){
                     return false
                 } else if(value === "Let me specify for everyone"){
-                    if(userImpression < count){
+                    // console.log( userImpression);
+                    if(userImpression < count || thisBubble.user.id===userID){
                         return false
                     } else {
                         return true
                     }
                 } else if(value === "Let me specify for selected few"){
                     if(data[userID]){
-                        if((userImpression < count) || thisBubble.user.id===userID){
+                        if((userImpression < count)){
                             return false
                         } else {
                             return true
@@ -147,10 +148,10 @@ async function getMultipleBubbles2(req, res){
                         return false
                     }
                 } else if(value === "Let me specify a few exceptions"){
-                    if(data[userID] || thisBubble.user.id===userID){
+                    if(data[userID]){
                         return false
                     } else {
-                        if((userImpression < count) || thisBubble.user.id===userID){
+                        if((userImpression < count)){
                             return false
                         } else {
                             return true

@@ -138,14 +138,14 @@ async function getBasicBubble(req, res){
                 if(value === "As many as possible"){
                     return false
                 } else if(value === "Let me specify for everyone"){
-                    if(userImpression < count){
+                    if(userImpression < count || thisBubble.user.id===userID){
                         return false
                     } else {
                         return true
                     }
                 } else if(value === "Let me specify for selected few"){
                     if(data[userID]){
-                        if(userImpression < count){
+                        if((userImpression < count)){
                             return false
                         } else {
                             return true
@@ -157,7 +157,7 @@ async function getBasicBubble(req, res){
                     if(data[userID]){
                         return false
                     } else {
-                        if(userImpression < count){
+                        if((userImpression < count)){
                             return false
                         } else {
                             return true
@@ -167,7 +167,7 @@ async function getBasicBubble(req, res){
                     if(likeCheck || allWhoShare(userActivities) || firstRepliersAll(thisBubble.reply)){
                         return false
                     } else {
-                        if(userImpression < count){
+                        if((userImpression < count) || thisBubble.user.id===userID){
                             return false
                         } else {
                             return true
@@ -177,7 +177,8 @@ async function getBasicBubble(req, res){
                     return true
                 }
             } else {
-                return true
+                // return true
+                return false
             }
         } else {
             return false
