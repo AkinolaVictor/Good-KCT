@@ -311,6 +311,7 @@ function modelPack(db){
                 name: String,
                 email: String,
                 where: String,
+                purpose: String,
                 createdAt: {type: Date, default: new Date()},
                 // updatedAt: Date
             }, { strict: false, minimize: false })

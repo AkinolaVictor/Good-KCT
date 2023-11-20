@@ -8,23 +8,34 @@ async function addNewWaiter(req, res){
     const where = req.body.where
     const subject = req.body.subject
     const html = req.body.html
+    const purpose = req.body.purpose
 
     const waiter = await waitlist.findOne({email})
     if(waiter === null){
-        const newWaiter = new waitlist({name, email, where})
+        const newWaiter = new waitlist({name, email, where, purpose})
         await newWaiter.save().then(async()=>{
             // send email
             const payload = {email, subject, html}
             await emailSender(payload).then(()=>{
                 res.send({successful: "completed"})
             }).catch(()=>{
-                res.send({successful: "incomplete"})
+                res.send({successful: "unsent"})
             })
         }).catch(()=>{
             res.send({successful: "failed"})
         })
     } else {
-        res.send({successful: "user already exists"})
+        if(purpose === "invitation"){
+            // send email
+            const payload = {email, subject, html}
+            await emailSender(payload).then(()=>{
+                res.send({successful: "completed"})
+            }).catch(()=>{
+                res.send({successful: "unsent"})
+            })
+        } else {
+            res.send({successful: "user already exists"})
+        }
     }
 }
 
