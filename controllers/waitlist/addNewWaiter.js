@@ -10,8 +10,7 @@ async function addNewWaiter(req, res){
     const html = req.body.html
 
     const waiter = await waitlist.findOne({email})
-    // if(waiter === null){
-    if(true){
+    if(waiter === null){
         const newWaiter = new waitlist({name, email, where})
         await newWaiter.save().then(async()=>{
             // send email
