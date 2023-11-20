@@ -111,7 +111,7 @@ router.post('/getUserNotification', getUserNotification)
 // pushNotification
 router.post('/getUserBotActivities', getUserBotActivities)
 
-router.post('/addToWaitlist', addNewWaiter)
+router.post('/addNewWaiter', addNewWaiter)
 
 router.post('/checkUserFollowing', checkUserFollowers)
 

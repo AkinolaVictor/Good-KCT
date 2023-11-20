@@ -310,6 +310,7 @@ function modelPack(db){
             const waitlistSchema = db.Schema({
                 name: String,
                 email: String,
+                where: String,
                 createdAt: {type: Date, default: new Date()},
                 // updatedAt: Date
             }, { strict: false, minimize: false })

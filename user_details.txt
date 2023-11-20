@@ -1,43 +1,45 @@
-{"name":"Israel Mitolu","email":"israelmitolu@gmail.com","phoneNo":"12121212"} 
-{"name":"Abraham Odusina","email":"erieledumare@gmail.com","phoneNo":"Eriel@25"} 
-{"name":"Temitope Oti","email":"otitemitope6@gmail.com","phoneNo":"08147486278"} 
-{"name":"Ademiluyi Desire Desire","email":"desireademiluyi18@gmail.com","phoneNo":"2347045287700"} 
-{"name":"Adeogo Jesutofunmi","email":"adeogodeborah3@gmail.com","phoneNo":"23408106032492"} 
-{"name":"Esther Ayodele","email":"moyinoluwaestheronaf@gmail.com","phoneNo":"Concealed24"} 
-{"name":"Ibukun Owolabi","email":"ibukunowolabi124@gmail.com","phoneNo":"2347053531227"} 
-{"name":"Isah Jimoh","email":"babatundeisah0@gmail.com","phoneNo":"08149737805"} 
-{"name":"Olusegun adedeji","email":"lusegundeji@gmail.com","phoneNo":"2348164426550"} 
-{"name":"Gbekeloluwa Oluwapelumi ","email":"drumapostle123567@gmail.com","phoneNo":"2348102063360"} 
-{"name":"Adeosun oluwatosin ","email":"ikui4ku@gmail.com","phoneNo":"2347054651815"} 
-{"name":"Idowu Micheal","email":"idowumicheal946@gmail.com","phoneNo":"12345678"} 
-{"name":"Oluwadare Olalekan ","email":"lakesyd20@gmail.com","phoneNo":"2348065963205"} 
-{"name":"Peter Kazeem","email":"kazeempeter67@gmail.com","phoneNo":"CHV6hHZSHgZiGte"} 
-{"name":"Benjamin Ilesanmi","email":"ilesanmibenjaminay@gmail.com","phoneNo":"08132355452"} 
-{"name":"Akinola Mercy","email":"bigimercy2021@gmail.com","phoneNo":"08168777804"} 
-{"name":"Abigeal Ojo ","email":"ojooreofe1@gmail.com","phoneNo":"2348109423339"} 
-{"name":"Adedeji Iyanuoluwa ","email":"isrealae@gmail.com","phoneNo":"2347016883118"} 
-{"name":"Ayooluwa Daniel ","email":"aonajoko@gmail.com","phoneNo":"2349031710194"} 
-{"name":"Concealed","email":"concealed.bubble@gmail.com","phoneNo":"concealthebubble"} 
-{"name":"Daniel ","email":"Kzmoluwaseun79@gmail.com","phoneNo":"Temitope2"} 
-{"name":"Kemisola Temitope ","email":"kemisolaadamu91@gmail.com","phoneNo":"2348138457127"} 
-{"name":"Alabi Oluwapelumi Blessing","email":"oluwapelumialabi69@gmail.com","phoneNo":"2347017922506"} 
-{"name":"A Victor","email":"akinolavictor26@gmail.com","phoneNo":"AAAaaa111"} 
-{"name":"Emmanuel Okiyefa","email":"emma.unstoppable@gmail.com","phoneNo":"2348067727790"} 
-{"name":"Osuntoye Sunday Damilare ","email":"yungmasta7@gmail.com","phoneNo":"2347061083839"} 
-{"name":"Akinola Victor","email":"akinolavictor50@gmail.com","phoneNo":"AAAaaa111"} 
-{"name":"Esther","email":"estherajongbade@gmail.com","phoneNo":"2348130531178"} 
-{"name":"Oluwadara Daramola","email":"darajoy19@gmail.com","phoneNo":"09167521916"} 
-{"name":"Ayomide Olaniyan","email":"iyanuayomide99@gmail.com","phoneNo":"2349091572126"} 
-{"name":"Oyinbayode ","email":"oyinbayode75@gmail.com","phoneNo":"B@1ya4da2"} 
-{"name":"Afolabi James Temidayo","email":"Afod14@gmail.com","phoneNo":"2349035117757"} 
-{"name":"Emmanuel Adesanya ","email":"tolucrown0001@gmail.com","phoneNo":"2349065057904"} 
-{"name":"Seyi Medupin","email":"Smedupin@gmail.com","phoneNo":"09054790231"} 
-{"name":"Akinola Motunrayo Christianah","email":"akinolamotunrayo2018@gmail.com","phoneNo":"08168777804"} 
-{"name":"Matthew Igbokwe","email":"migbokwe@student.oauife.edu.ng","phoneNo":"2348113818555"} 
-{"name":"Oreoluwa Sobiye ","email":"pelumisobiye@gmail.com","phoneNo":"2348167748913"} 
-{"name":"Favour Emmanuel","email":"favourojetokun1@gmail.com","phoneNo":"2349067503356"} 
-{"name":"Victor","email":"emekadefirst@gmail.com","phoneNo":"2349123086107"} 
-{"name":"Samsudeen","email":"abdullahisamsudeen@gmail.com","phoneNo":"2348166683209"} 
-{"name":"Samuel","email":"samuelayodeji2478@gmail.com","phoneNo":"2348135343600"} 
-{"name":"Ayomide Ikuomola","email":"ikuomolaayomidenobel@gmail.com","phoneNo":"2348139434678"} 
-{"name":"Praise ","email":"tijesuniforchrist@gmail.com","phoneNo":"2348183590790"} 
+{"name":"Israel Mitolu","email":"israelmitolu@gmail.com"} 
+{"name":"Abraham Odusina","email":"erieledumare@gmail.com"} 
+{"name":"Temitope Oti","email":"otitemitope6@gmail.com"} 
+{"name":"Ademiluyi Desire Desire","email":"desireademiluyi18@gmail.com"} 
+{"name":"Adeogo Jesutofunmi","email":"adeogodeborah3@gmail.com"} 
+{"name":"Esther Ayodele","email":"moyinoluwaestheronaf@gmail.com"} 
+{"name":"Ibukun Owolabi","email":"ibukunowolabi124@gmail.com"} 
+{"name":"Isah Jimoh","email":"babatundeisah0@gmail.com"} 
+{"name":"Olusegun adedeji","email":"lusegundeji@gmail.com"} 
+{"name":"Gbekeloluwa Oluwapelumi ","email":"drumapostle123567@gmail.com"} 
+{"name":"Adeosun oluwatosin ","email":"ikui4ku@gmail.com"} 
+{"name":"Idowu Micheal","email":"idowumicheal946@gmail.com"} 
+{"name":"Oluwadare Olalekan ","email":"lakesyd20@gmail.com"} 
+{"name":"Peter Kazeem","email":"kazeempeter67@gmail.com"} 
+{"name":"Benjamin Ilesanmi","email":"ilesanmibenjaminay@gmail.com"} 
+{"name":"Akinola Mercy","email":"bigimercy2021@gmail.com"} 
+{"name":"Abigeal Ojo ","email":"ojooreofe1@gmail.com"} 
+{"name":"Adedeji Iyanuoluwa ","email":"isrealae@gmail.com"} 
+{"name":"Ayooluwa Daniel ","email":"aonajoko@gmail.com"} 
+{"name":"Concealed","email":"concealed.bubble@gmail.com"} 
+{"name":"Daniel ","email":"Kzmoluwaseun79@gmail.com"} 
+{"name":"Kemisola Temitope ","email":"kemisolaadamu91@gmail.com"} 
+{"name":"Alabi Oluwapelumi Blessing","email":"oluwapelumialabi69@gmail.com"} 
+{"name":"A Victor","email":"akinolavictor26@gmail.com"} 
+{"name":"Emmanuel Okiyefa","email":"emma.unstoppable@gmail.com"} 
+{"name":"Osuntoye Sunday Damilare ","email":"yungmasta7@gmail.com"} 
+{"name":"Akinola Victor","email":"akinolavictor50@gmail.com"} 
+{"name":"Esther","email":"estherajongbade@gmail.com"} 
+{"name":"Oluwadara Daramola","email":"darajoy19@gmail.com"} 
+{"name":"Ayomide Olaniyan","email":"iyanuayomide99@gmail.com"} 
+{"name":"Oyinbayode ","email":"oyinbayode75@gmail.com"} 
+{"name":"Afolabi James Temidayo","email":"Afod14@gmail.com"} 
+{"name":"Emmanuel Adesanya ","email":"tolucrown0001@gmail.com"} 
+{"name":"Seyi Medupin","email":"Smedupin@gmail.com"} 
+{"name":"Akinola Motunrayo Christianah","email":"akinolamotunrayo2018@gmail.com"} 
+{"name":"Matthew Igbokwe","email":"migbokwe@student.oauife.edu.ng"} 
+{"name":"Oreoluwa Sobiye ","email":"pelumisobiye@gmail.com"} 
+{"name":"Favour Emmanuel","email":"favourojetokun1@gmail.com"} 
+{"name":"Victor","email":"emekadefirst@gmail.com"} 
+{"name":"Samsudeen","email":"abdullahisamsudeen@gmail.com"} 
+{"name":"Samuel","email":"samuelayodeji2478@gmail.com"} 
+{"name":"Ayomide Ikuomola","email":"ikuomolaayomidenobel@gmail.com"} 
+{"name":"Praise ","email":"tijesuniforchrist@gmail.com"} 
+{"name":"Akinola ","email":"akinolatemmy02@gmail.com"} 
+{"name":"Aluko Iyanuoluwa","email":"alukoiyanuoluwa001@gmail.com"} 
