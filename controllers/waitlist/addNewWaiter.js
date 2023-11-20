@@ -15,7 +15,7 @@ async function addNewWaiter(req, res){
         const newWaiter = new waitlist({name, email, where, purpose})
         await newWaiter.save().then(async()=>{
             // send email
-            const payload = {email, subject, html}
+            const payload = {email, subject, html, purpose}
             await emailSender(payload).then(()=>{
                 res.send({successful: "completed"})
             }).catch(()=>{
@@ -27,7 +27,7 @@ async function addNewWaiter(req, res){
     } else {
         if(purpose === "invitation"){
             // send email
-            const payload = {email, subject, html}
+            const payload = {email, subject, html, purpose}
             await emailSender(payload).then(()=>{
                 res.send({successful: "completed"})
             }).catch(()=>{
