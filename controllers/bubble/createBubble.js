@@ -116,6 +116,7 @@ async function createBubble(req, res){
             type: 'Ref',
             status: 'active',
             sharePath:[userID],
+            // metaData: {}
             data:{
                 // type: chosenBubble.name
                 type: bubbleName
