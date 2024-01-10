@@ -319,6 +319,28 @@ function modelPack(db){
             const waitlist = db.models["waitlist"] || db.model("waitlist", waitlistSchema)
             return waitlist
         }(),
+        eachUserAnalytics: function(){
+            const eachUserAnalyticsSchema = db.Schema({
+                userID: String,
+                date: {},
+                bubbles: {},
+                profile: {},
+                createdAt: {type: Date, default: new Date()},
+            }, { strict: false, minimize: false })
+            
+            const eachUserAnalytics = db.models["eachUserAnalytics"] || db.model("eachUserAnalytics", eachUserAnalyticsSchema)
+            return eachUserAnalytics
+        }(),
+        // userSettings: function(){
+        //     const userSettingsSchema = db.Schema({
+        //         userID: String,
+        //         settings: {},
+        //         createdAt: {type: Date, default: new Date()},
+        //     }, { strict: false, minimize: false })
+            
+        //     const userSettings = db.models["userSettings"] || db.model("userSettings", userSettingsSchema)
+        //     return userSettings
+        // }(),
     }
     return {...models}
 }

@@ -8,7 +8,7 @@ const sendPushNotification = require('../pushNotification/sendPushNotification')
 // const notifications = require('../../models/notifications')
 
 async function follow(req, res){
-    const {notifications, Followers, Following} = req.dbModels
+    const {notifications, Followers, Following, eachUserAnalytics} = req.dbModels
 
     const userID = req.body.userID // user.id
     const userName = req.body.userName // user.userInfo.fullname
@@ -42,7 +42,7 @@ async function follow(req, res){
             const followData = {
                 time: getDate(),
                 // bubbleID: thisBubble.postID,
-                // creatorID: thisBubble.user.id,
+                // creatorID: thisUserID,
                 userID,
                 message: constructMessage(),
                 identityStatus: false,
@@ -57,16 +57,49 @@ async function follow(req, res){
                 await newNotifications.save()
             } else {
                 userNotification.all.push(followData)
-                await notifications.updateOne({userID: newUserID}, {all: [...userNotification.all]}).then(()=>{
+                await notifications.updateOne({userID: newUserID}, {all: [...userNotification.all]}).then(async()=>{
                     // const user = 
                     const thisData = {
                         title: `Concealed`,
                         body: `${userName} is now following you`,
                         icon: false
                     }
-                    sendPushNotification(newUserID, thisData , req)
+                    await sendPushNotification(newUserID, thisData , req)
                 })
             }
+        }
+    }
+
+    async function updateUserAnalytics(userID, thisUserID){
+        const userAnalytics = await eachUserAnalytics.findOne({userID: thisUserID}).lean()
+        if(userAnalytics === null){
+            const data = {
+                userID: thisUserID, 
+                bubbles: {
+                    [userID]: {
+                        impressions: 0, replys: 0, likes: 0, shares: 0,
+                        bubbleIDs: []
+                    }
+                }, 
+                profile: {
+                    [userID]: { follow: 1, views: 0 }
+                },
+                date: {}
+                // date: {...getDate()}
+            }
+            const newUserAnalytics = new eachUserAnalytics({...data})
+            await newUserAnalytics.save()
+        } else {
+            const {profile} = userAnalytics
+            if(!profile[userID]){
+                profile[userID] = {
+                    follow: 1,
+                    views: 0,
+                }
+            } else {
+                profile[userID].follow++
+            }
+            await eachUserAnalytics.updateOne({userID: thisUserID}, {profile})
         }
     }
 
@@ -92,12 +125,14 @@ async function follow(req, res){
             }})
             await followers.save()
             await FollowNotifier("follow")
+            await updateUserAnalytics(userID, newUserID)
         } else {
             if(!userFollowers.followers){userFollowers.followers = {}}
             if(!userFollowers.followers[userID]){
                 userFollowers.followers[userID] = {name: userName, id: userID}
                 await Followers.updateOne({userID: newUserID}, {followers: userFollowers.followers})
                 await FollowNotifier("follow")
+                await updateUserAnalytics(userID, newUserID)
             }
         }
 

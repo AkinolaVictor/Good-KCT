@@ -9,10 +9,11 @@ const { dataType } = require('../../utils/utilsExport')
 // const User = require('../../models/User')
 
 async function getBasicBubble(req, res){
-    const {User, Feeds, bot, Followers, bubble} = req.dbModels
+    const {User, Feeds, bot, Followers, bubble, Following} = req.dbModels
     
     let userID = req.body.userID
     const feedRef = req.body.feedRef
+    // const userDetails = await User.findOne({id: userID}).lean()
     
     function checkForSecrecy(thisBubble){
         const secrecySettings = thisBubble.settings.secrecyData.atmosphere
@@ -185,17 +186,73 @@ async function getBasicBubble(req, res){
         }
     }
 
+
+    // async function checkBubbleSettings(thisBubble){
+    //     const secrecySettings = thisBubble.settings.secrecyData.atmosphere
+    //     let followerDetails = null
+    //     if(userDetails){
+    //         followerDetails = userDetails
+    //     } else {
+    //         followerDetails = await User.findOne({id: userID}).lean()
+    //     }
+    //     // const followerDetails = await User.findOne({userID}).lean()
+        
+    //     if(followerDetails === null){
+    //         return false
+    //     }
+        
+    //     const {settings} = followerDetails
+    //     // console.log(settings);
+    //     if(secrecySettings === "None"){
+    //         return true
+    //     } else {
+    //         if(!settings){
+    //             return true
+    //         } else {
+    //             if(settings.secrecy.value === "Everyone"){
+    //                 return true
+    //             } else if(settings.secrecy.value === "Followings"){
+    //                 const followingDetails = await Following.findOne({userID: followerDetails.id}).lean()
+    //                 if(!followingDetails){
+    //                     return false
+    //                 } else {
+    //                     const allFollowings = followingDetails.following
+    //                     if(allFollowings[userID]){
+    //                         return true
+    //                     } else {
+    //                         return false
+    //                     }
+    //                 }
+    //             } else if(settings.secrecy.value === "Nobody"){
+    //                 return false
+    //             } else {
+    //                 return true
+    //             }
+    //         }
+    //     }
+    // }
+
     function viewEligibity(thisBubble){
         // CHECK IF USER IS ELIGIBLE TO SEE THIS BUBBLE
+        
+        // if(!checkBubbleSettings(thisBubble)){
+        //     console.log("called_2");
+        //     return false
+        // }
+
         if((checkForSecrecy(thisBubble) || ifForAudience(thisBubble)) && feedRef.userID!==userID && feedRef.env==='profile'){
             return false
-        } else if(ifForAudience(thisBubble) && feedRef.userID!==userID){
+        } 
+        
+        if(ifForAudience(thisBubble) && feedRef.userID!==userID){
             return false
-        } else if(check_for_viewCount(thisBubble)){
+        } 
+        
+        if(check_for_viewCount(thisBubble)){
             return false
-        } else {
-            return true
-        }
+        } 
+
+        return true
     }
 
     if(!feedRef){
@@ -294,6 +351,9 @@ async function getBasicBubble(req, res){
             }
             
             // // CHECK IF USER IS ELIGIBLE TO SEE THIS BUBBLE
+            // const testSettings = await checkBubbleSettings(thisBubble)
+
+            // if(!viewEligibity(thisBubble) || !testSettings){
             if(!viewEligibity(thisBubble)){
                 res.send({successful:false, message: 'ineligible to view bubble'})
                 return

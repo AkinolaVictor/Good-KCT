@@ -25,6 +25,7 @@ const watchAllStreams = require('./controllers/watches/watchAllStreams');
 const { connectWithMongoose2 } = require('./database/mongooseConnection2');
 const analytics_playground = require('./controllers/tools/analytics/analytics_playground');
 const majorToolsAndFixes = require('./controllers/tools/majorToolAndFixes');
+const allMessageUser = require('./controllers/tools/messageUser/allMessageUser');
 // const fs = require('fs');
 
 // const pushNotification = require('./api/pushNotificationApi')
@@ -51,6 +52,7 @@ async function cachedConnection(cb){
   }
 }
 // cachedConnection(analytics_playground)
+// cachedConnection(allMessageUser)
 // cachedConnection(majorToolsAndFixes)
 cachedConnection()
 

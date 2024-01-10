@@ -10,7 +10,7 @@ const sendPushNotification = require('../pushNotification/sendPushNotification')
 
 
 async function createReply_Old(req, res){
-    const {userReplies, notifications, bubble} = req.dbModels
+    const {userReplies, notifications, bubble, eachUserAnalytics} = req.dbModels
     
     const path = req.body.path /* props.path */
     const creatorID = req.body.creatorID /* thisBubble.user.id */
@@ -40,38 +40,6 @@ async function createReply_Old(req, res){
 
     const thisDate = getDate()
     
-    function updateLastActivity(thisPost, activity, updateFunc){
-        if(!thisPost.activities.lastActivities){
-            thisPost.activities.lastActivities=[]
-        }
-        const lastActivities = thisPost.activities.lastActivities
-        const activityData = {
-            activity,
-            userID,
-            date: thisDate
-        }
-        if(lastActivities.length>0){
-            const last = lastActivities[lastActivities.length - 1]
-            if(last.activity!==activity){
-                for(let i=0; i<lastActivities.length; i++){
-                    const current = lastActivities[i]
-                    if(current.userID===userID && current.activity===activity){
-                        break
-                    }
-                    if(i===lastActivities.length-1){
-                        thisPost.activities.lastActivities.push(activityData)
-                        if(thisPost.activities.lastActivities.length>10){
-                            thisPost.activities.lastActivities.shift()
-                        }
-                        updateFunc()
-                    }
-                }
-            }
-        } else {
-            thisPost.activities.lastActivities.push(activityData)
-            updateFunc()
-        }
-    }
 
     function decideNotifyIcon(){
         if(discernUserIdentity || userIcon === false){
@@ -190,6 +158,46 @@ async function createReply_Old(req, res){
         }
     }
 
+    async function updateUserAnalytics(thisBubble){
+        const userAnalytics = await eachUserAnalytics.findOne({userID: thisBubble.user.id}).lean()
+        if(userAnalytics === null){
+            const data = {
+                userID: thisBubble.user.id, 
+                bubbles: {
+                    [userID]: {
+                        impressions: 1, replys: 1, likes: 0, shares: 0,
+                        bubbleIDs: [thisBubble.postID]
+                    }
+                }, 
+                profile: {
+                    [userID]: {
+                        follow: 0, 
+                        views: 0
+                    }
+                },
+                date: {}
+                // date: {...getDate()}
+            }
+            const newUserAnalytics = new eachUserAnalytics({...data})
+            await newUserAnalytics.save()
+        } else {
+            const {bubbles} = userAnalytics
+            if(!bubbles[userID]){
+                bubbles[userID] = {
+                    impressions: 1,
+                    replys: 1, likes: 0, shares: 0,
+                    bubbleIDs: [thisBubble.postID]
+                }
+            } else {
+                bubbles[userID].replys++
+                if(!bubbles[userID].bubbleIDs.includes(thisBubble.postID)){
+                    bubbles[userID].bubbleIDs.push(thisBubble.postID)
+                }
+            }
+            await eachUserAnalytics.updateOne({userID: thisBubble.user.id}, {bubbles})
+        }
+    }
+
     
     const thisBubble = await bubble.findOne({postID}).lean()
     if(thisBubble){
@@ -235,6 +243,7 @@ async function createReply_Old(req, res){
             thisBubble.activities.iAmOnTheseFeeds[userID].myActivities.replied=true
             
         }
+        
         if(path.length === 0){
             replys.push(data)
         } else if(path.length === 1) {
@@ -323,6 +332,7 @@ async function createReply_Old(req, res){
                 message: `Reply: ${data.message||''}`
             }
             await ReplyNotifier(notificationData)
+            await updateUserAnalytics(thisBubble)
             if(creatorID!==userID){
                 const thisUserReplies = await userReplies.findOne({userID}).lean()
                 if(thisUserReplies===null){

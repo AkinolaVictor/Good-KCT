@@ -28,19 +28,15 @@ async function sendPushNotification(userID, data, req){
         title: 'Concealed',
         // body: 'This is a push Notification from concealed server',
         // badge: 'https://firebasestorage.googleapis.com/v0/b/concealed-f8f32.appspot.com/o/systemFolder%2Ficons%2FconcealedLogo_64_solid.png?alt=media&token=e7c5f409-335c-4e8e-8258-cdbc154f6d15',
-        // actions: [
-        //     {
-        //         action: 'explore',
-        //         title: 'Expore',
-        //         // icon: '/concealedLogo_192_solid.png',
-        //     },
-        //     {
-        //         action: 'close',
-        //         title: 'Close',
-        //         // icon: '/concealedLogo_192_solid.png',
-        //     }
-        // ],
-        vibrate: [200, 100, 200],
+        serverDefault: {
+            actions: [
+                { action: 'open_concealed', title: 'Open Concealed'},
+                // { action: 'close',title: 'Close', icon: '/concealedLogo_192_solid.png', click_action: "https://concealed.vercel.app"}
+            ],
+            vibrate: [200, 100, 200],
+            click_action: 'https://concealed.vercel.app'
+        },
+        subData: { concealed_url: 'https://concealed.vercel.app' },
         ...data
     })
     const userSub = await savePush.findOne({userID})

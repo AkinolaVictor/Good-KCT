@@ -2,10 +2,12 @@ const date = require('date-and-time')
 const { dataType } = require('../../utils/utilsExport')
 
 async function getMultipleBubbles2(req, res){
-    const {User, Feeds, bot, Followers, bubble} = req.dbModels
+    const {User, Feeds, bot, Followers, Following, bubble} = req.dbModels
 
     const userID = req.body.userID
     const allBubbles =  req.body.bubbles
+
+    // const userDetails = await User.findOne({id: userID}).lean()
     
     function checkForSecrecy(thisBubble){
         const secrecySettings = thisBubble.settings.secrecyData.atmosphere
@@ -20,11 +22,11 @@ async function getMultipleBubbles2(req, res){
         } else if(secrecySettings.atmosphere === 'Normal'){
             return secrecySettings.identity=='No'?false:true
         } else if (secrecySettings.atmosphere === 'Custom'){
-            if(secrecySettings.custom.bubble==="Nobody"){
+            if(secrecySettings.custom.bubble === "Nobody"){
                 return true
-            } else if(secrecySettings.custom.bubble==="Everyone"){
+            } else if(secrecySettings.custom.bubble === "Everyone"){
                 return false
-            } else if(secrecySettings.custom.bubble==="I want to handpick"){
+            } else if(secrecySettings.custom.bubble === "I want to handpick"){
                 const bubbleIDs = secrecySettings.custom.bubbleIDs
                 if(bubbleIDs[userID]){
                     return false
@@ -179,18 +181,73 @@ async function getMultipleBubbles2(req, res){
         }
     }
 
+    // async function checkBubbleSettings(thisBubble){
+    //     const secrecySettings = thisBubble.settings.secrecyData.atmosphere
+    //     let followerDetails = null
+    //     if(userDetails){
+    //         followerDetails = userDetails
+    //     } else {
+    //         followerDetails = await User.findOne({id: userID}).lean()
+    //     }
+    //     // const followerDetails = await User.findOne({userID}).lean()
+        
+    //     if(followerDetails === null){
+    //         return false
+    //     }
+        
+    //     const {settings} = followerDetails
+    //     // console.log(settings);
+    //     if(secrecySettings === "None"){
+    //         return true
+    //     } else {
+    //         if(!settings){
+    //             return true
+    //         } else {
+    //             if(settings.secrecy.value === "Everyone"){
+    //                 return true
+    //             } else if(settings.secrecy.value === "Followings"){
+    //                 const followingDetails = await Following.findOne({userID: followerDetails.id}).lean()
+    //                 if(!followingDetails){
+    //                     return false
+    //                 } else {
+    //                     const allFollowings = followingDetails.following
+    //                     if(allFollowings[thisBubble.user.id] || (thisBubble.user.id===userID)){
+    //                         return true
+    //                     } else {
+    //                         return false
+    //                     }
+    //                 }
+    //             } else if(settings.secrecy.value === "Nobody"){
+    //                 // console.log("Called at nobody ddd");
+    //                 return false
+    //             } else {
+    //                 return true
+    //             }
+    //         }
+    //     }
+    // }
+    
     function viewEligibity(thisBubble){
-        // console.log(check_for_viewCount(thisBubble));
         // CHECK IF USER IS ELIGIBLE TO SEE THIS BUBBLE
+        
+        // if(await checkBubbleSettings(thisBubble) === false){
+        //     console.log("called-xx");
+        //     return false
+        // } 
+
         if((checkForSecrecy(thisBubble) || ifForAudience(thisBubble)) && feedRef.userID!==userID && feedRef.env==='profile'){
             return false
-        } else if(ifForAudience(thisBubble) && feedRef.userID!==userID){
-            return false
-        } else if(check_for_viewCount(thisBubble)){
-            return false
-        } else {
-            return true
         }
+        
+        if(ifForAudience(thisBubble) && feedRef.userID!==userID){
+            return false
+        } 
+        
+        if(check_for_viewCount(thisBubble)){
+            return false
+        }
+
+        return true
     }
 
     async function getEachBubble(feedRef, data){
@@ -210,7 +267,7 @@ async function getMultipleBubbles2(req, res){
                 thisBubble = await bubble.findOne({postID: feedRef.postID}).lean()
             }
 
-            if(thisBubble  === null){
+            if(thisBubble === null){
                 const data = {pass: false}
                 return data
             } else {
@@ -237,7 +294,7 @@ async function getMultipleBubbles2(req, res){
                 }
                 
                 if(!thisBubble.activities.iAmOnTheseFeeds){
-                    console.log(thisBubble.postID);
+                    // console.log(thisBubble.postID);
                     const data = {pass: false}
                     return data
                 }
@@ -309,6 +366,8 @@ async function getMultipleBubbles2(req, res){
                 }
                 
                 // // CHECK IF USER IS ELIGIBLE TO SEE THIS BUBBLE
+                // const testSettings = await checkBubbleSettings(thisBubble)
+                // if(!viewEligibity(thisBubble) || !testSettings){
                 if(!viewEligibity(thisBubble)){
                     // res.send({successful:false, message: 'ineligible to view bubble'})
                     return {pass: false}
@@ -450,6 +509,8 @@ async function getMultipleBubbles2(req, res){
             // console.log(thisBubble);
             if(thisBubble.pass){
                 requsetedBubbles.push(thisBubble.bubble)
+            // } else {
+            //     console.log(i);
             }
         }
         res.send({successful: true, bubbles: requsetedBubbles})

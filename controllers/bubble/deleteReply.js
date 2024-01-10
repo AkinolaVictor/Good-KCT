@@ -57,6 +57,8 @@ async function deleteReply(req, res){
                 const subreplys = parent[path[path.length-1]].reply
                 if(subreplys.length){
                     parent[path[path.length-1]].message = '**The content of this reply has been deleted**'
+                    parent[path[path.length-1]].status = "deleted"
+                    // console.log("de");
                 }else{
                     parent[path[path.length-1]] = 'Deleted...'
                 }

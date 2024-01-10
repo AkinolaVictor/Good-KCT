@@ -10,7 +10,7 @@ const sendPushNotification = require('../pushNotification/sendPushNotification')
 // const LikeModel = require('../../models/LikeModel')
 
 async function likeBubble(req, res){
-    const {LikeModel, notifications, bubble} = req.dbModels
+    const {LikeModel, notifications, bubble, eachUserAnalytics} = req.dbModels
 
     const userID = req.body.userID // user.id
     const userIcon = req.body.userIcon // user.id
@@ -108,6 +108,46 @@ async function likeBubble(req, res){
         }
     }
 
+    async function updateUserAnalytics(thisBubble){
+        const userAnalytics = await eachUserAnalytics.findOne({userID: thisBubble.user.id}).lean()
+        if(userAnalytics === null){
+            const data = {
+                userID: thisBubble.user.id, 
+                bubbles: {
+                    [userID]: {
+                        impressions: 1, replys: 0, likes: 1, shares: 0,
+                        bubbleIDs: [thisBubble.postID]
+                    }
+                }, 
+                profile: {
+                    [userID]: {
+                        follow: 0, 
+                        views: 0
+                    }
+                },
+                date: {}
+                // date: {...getDate()}
+            }
+            const newUserAnalytics = new eachUserAnalytics({...data})
+            await newUserAnalytics.save()
+        } else {
+            const {bubbles} = userAnalytics
+            if(!bubbles[userID]){
+                bubbles[userID] = {
+                    impressions: 1,
+                    likes: 1, replys: 0, shares: 0,
+                    bubbleIDs: [thisBubble.postID]
+                }
+            } else {
+                bubbles[userID].likes++
+                if(!bubbles[userID].bubbleIDs.includes(thisBubble.postID)){
+                    bubbles[userID].bubbleIDs.push(thisBubble.postID)
+                }
+            }
+            await eachUserAnalytics.updateOne({userID: thisBubble.user.id}, {bubbles})
+        }
+    }
+
     const thisBubble = await bubble.findOne({postID: currentBubble.postID}).lean()
     if(thisBubble){
         if(typeof(thisBubble.activities)==="string"){
@@ -170,6 +210,7 @@ async function likeBubble(req, res){
                     message: `Bubble: ${bubbleMessage.message||''}`
                 }
                 await LikeNotifier('like', notificationData)
+                await updateUserAnalytics(thisBubble)
 
                 if(thisBubble.userID!==userID){
                     // const thisUserLikes = await userLikes.findOne({userID})

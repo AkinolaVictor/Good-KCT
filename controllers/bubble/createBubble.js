@@ -13,6 +13,7 @@ async function createBubble(req, res){
     const {bubblesForEveryone, userBubbles, Feeds, bubble, bot} = req.dbModels
 
     const userID = req.body.userID
+    const metaData = req.body.metaData
     const thisBubble = {...req.body.thisBubble}
     const secrecySettings = thisBubble.settings.secrecyData
     const postID = thisBubble.postID
@@ -70,28 +71,12 @@ async function createBubble(req, res){
         }
     }
 
-    function checkForEveryone(){
-        const bubble = [...thisBubble.bubble]
-
-        const audienceNames = []
-        for(let i=0; i<bubble.length; i++){
-            audienceNames.push(bubble[i].name)
-        }
-
-        if(audienceNames.includes('Everyone')){
-            return true
-        } else {
-            return false
-        }
-    }
-
     async function saveData_New(){
         // gather all data to be forwarded as bubble
         // update settings time for self-destructure
 
         const settings = thisBubble.settings
         settings.selfDestructData.currentDate = thisBubble.createdDate
-
 
 
         const botData = [...Object.keys(settings.botData)]
@@ -116,7 +101,7 @@ async function createBubble(req, res){
             type: 'Ref',
             status: 'active',
             sharePath:[userID],
-            // metaData: {}
+            metaData,
             data:{
                 // type: chosenBubble.name
                 type: bubbleName
@@ -180,26 +165,63 @@ async function createBubble(req, res){
                 await userBubbles.updateOne({userID}, {bubbles: [...allUserBubbles.bubbles]}).catch(()=>{ })
             }
 
-            
-            for(let i=0; i<allBubbleAudience.length; i++){
-                const followerFeed = await Feeds.findOne({userID: allBubbleAudience[i]})
-                if(followerFeed === null){
-                    const newUserFeed = new Feeds({userID: allBubbleAudience[i], bubbles: [feedRef]})
-                    await newUserFeed.save().then(async()=>{
-                        await afterFeedingEachFollower(allBubbleAudience[i])
-                    }).catch(()=>{ })
-                } else {
-                    followerFeed.bubbles.push(feedRef)
-
-                    await Feeds.updateOne({userID: allBubbleAudience[i]}, {bubbles: [...followerFeed.bubbles]}).then(async()=>{
-                    // await followerFeed.save().then(async()=>{
-                        await afterFeedingEachFollower(allBubbleAudience[i])
-                    }).catch(()=>{ })
+            async function checkThroughAudienceSettings(ID){
+                const secrecySettings = thisBubble.settings.secrecyData.atmosphere
+                const followerDetails = await User.findOne({userID: ID}).lean()
+                
+                if(followerDetails === null){
+                    return false
                 }
 
+                const {settings} = followerDetails
+                if(secrecySettings === "None"){
+                    return true
+                } else {
+                    if(!settings){
+                        return true
+                    } else {
+                        if(settings.secrecy.value === "Everyone"){
+                            return true
+                        } else if(settings.secrecy.value === "Followings"){
+                            const followingDetails = await Following.findOne({userID: ID}).lean()
+                            if(!followingDetails){
+                                return false
+                            } else {
+                                const allFollowings = followingDetails.following
+                                if(allFollowings[userID]){
+                                    return true
+                                } else {
+                                    return false
+                                }
+                            }
+                        } else if(settings.secrecy.value === "Nobody"){
+                            return false
+                        } else {
+                            return true
+                        }
+                    }
+                }
+            }
+            
+            for(let i=0; i<allBubbleAudience.length; i++){
+                // if(await checkThroughAudienceSettings(allBubbleAudience[i])){
+                    const followerFeed = await Feeds.findOne({userID: allBubbleAudience[i]})
+                    if(followerFeed === null){
+                        const newUserFeed = new Feeds({userID: allBubbleAudience[i], bubbles: [feedRef]})
+                        await newUserFeed.save().then(async()=>{
+                            await afterFeedingEachFollower_Send_notification(allBubbleAudience[i])
+                        }).catch(()=>{ })
+                    } else {
+                        followerFeed.bubbles.push(feedRef)
+    
+                        await Feeds.updateOne({userID: allBubbleAudience[i]}, {bubbles: [...followerFeed.bubbles]}).then(async()=>{
+                            await afterFeedingEachFollower_Send_notification(allBubbleAudience[i])
+                        }).catch(()=>{ })
+                    }
+                // }
             }
 
-            async function afterFeedingEachFollower(currentID){
+            async function afterFeedingEachFollower_Send_notification(currentID){
                 function constructTitle(){
                     if(discernUserIdentity()){
                         return "someone you're following created a bubble"

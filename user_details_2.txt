@@ -43,5 +43,3 @@
 {"name":"Praise ","email":"tijesuniforchrist@gmail.com"} 
 {"name":"Akinola ","email":"akinolatemmy02@gmail.com"} 
 {"name":"Aluko Iyanuoluwa","email":"alukoiyanuoluwa001@gmail.com"} 
-{"name":"Olubayo Titilope Aduragbemi ","email":"olubayotitilope95@gmail.com"} 
-{"name":"Rosey","email":"gin3988ger@gmail.com"} 
