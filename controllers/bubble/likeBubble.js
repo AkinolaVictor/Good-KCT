@@ -16,7 +16,8 @@ async function likeBubble(req, res){
     const userIcon = req.body.userIcon // user.id
     const userFullname = req.body.userFullname // user.userInfo.fullname
     const currentBubble = {...req.body.thisBubble}
-    
+    // console.log(currentBubble.userID);
+    // console.log(userID);
     // thisBubble.userID = thisBubble.user.id
     // settings, userID
     let secrecySettings = currentBubble.settings.secrecyData
@@ -158,6 +159,7 @@ async function likeBubble(req, res){
         if(!thisBubble.like.includes(userID)){
             thisBubble.like.push(userID)
         }
+
         if(thisBubble.activities.iAmOnTheseFeeds[userID]){
             if(!thisBubble.activities.iAmOnTheseFeeds[userID].myActivities.activityIndex){
                 thisBubble.activities.lastActivityIndex++
@@ -212,7 +214,7 @@ async function likeBubble(req, res){
                 await LikeNotifier('like', notificationData)
                 await updateUserAnalytics(thisBubble)
 
-                if(thisBubble.userID!==userID){
+                if(currentBubble.userID!==userID){
                     // const thisUserLikes = await userLikes.findOne({userID})
                     const thisUserLikes = await LikeModel.findOne({userID})
                     if(thisUserLikes === null){
@@ -234,6 +236,8 @@ async function likeBubble(req, res){
                             await LikeModel.updateOne({userID}, {bubbles: [...thisUserLikes.bubbles]})
                         }
                     }
+                } else {
+                    console.log("ready...");
                 }
 
             }).then(()=>{

@@ -127,7 +127,8 @@ async function dislikeBubble(req, res){
         await bubble.updateOne({postID: currentBubble.postID}, {like, activities}).then(async()=>{
             await LikeNotifier('dislikes')
 
-            if(thisBubble.userID!==userID){
+            // if(thisBubble.userID!==userID){
+            if(currentBubble.userID!==userID){
                 // const thisUserLikes = await userLikes.findOne({userID})
                 const thisUserLikes = await LikeModel.findOne({userID})
 
