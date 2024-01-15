@@ -341,6 +341,18 @@ function modelPack(db){
         //     const userSettings = db.models["userSettings"] || db.model("userSettings", userSettingsSchema)
         //     return userSettings
         // }(),
+        hashTags: function(){
+            const hashTagsSchema = db.Schema({
+                title: String,
+                allHashs: {},
+                // lastDate: {},
+                // count: {},
+                createdAt: {type: Date, default: new Date()},
+            }, { strict: false, minimize: false })
+            
+            const hashTags = db.models["hashTags"] || db.model("hashTags", hashTagsSchema)
+            return hashTags
+        }()
     }
     return {...models}
 }

@@ -25,6 +25,7 @@ const checkReplyEligibity = require('../controllers/bubble/checkReplyEligibity')
 const getMultipleBubbles = require('../controllers/bubble/getMultipleBubbles')
 const getMultipleBubbles2 = require('../controllers/bubble/getMultipleBubbles2')
 const getMultipleBubbles3 = require('../controllers/bubble/getMultipleBubbles3')
+const getAllHashs = require('../controllers/bubble/getAllHashs')
 // console.log(router);
 // create a bubble
 router.post('/createBubble', createBubble)
@@ -95,6 +96,9 @@ router.post('/getMultipleBubbles', getMultipleBubbles2)
 
 // opened chart
 router.post('/checkReplyEligibity', checkReplyEligibity)
+
+// opened chart
+router.post('/getAllHashs', getAllHashs)
 
 
 module.exports = router

@@ -1,7 +1,7 @@
 const sendPushNotification = require('../pushNotification/sendPushNotification')
 // const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
 // const {getDownloadURL, ref, uploadBytes} = require('firebase/storage')
-// const date = require('date-and-time')
+const date = require('date-and-time')
 // const {database, storage} = require('../../database/firebase')
 // const bot = require('../../models/bot')
 // const bubble = require('../../models/bubble')
@@ -10,7 +10,7 @@ const sendPushNotification = require('../pushNotification/sendPushNotification')
 // const bubblesForEveryone = require('../../models/bubblesForEveryone')
 
 async function createBubble(req, res){
-    const {bubblesForEveryone, userBubbles, Feeds, bubble, bot} = req.dbModels
+    const {bubblesForEveryone, userBubbles, Feeds, bubble, bot, hashTags} = req.dbModels
 
     const userID = req.body.userID
     const metaData = req.body.metaData
@@ -50,6 +50,18 @@ async function createBubble(req, res){
             return false
         } else {
             return userIcon
+        }
+    }
+
+    function getDate(){
+        const now = new Date()
+        const time = date.format(now, 'h:mm:ssA')
+        const when = date.format(now, 'DD/MM/YYYY')
+        const dateString = date.format(now, 'YYYY,MM,DD,HH,mm,ss')
+        return {
+            time,
+            date: when,
+            dateString
         }
     }
     
@@ -110,6 +122,13 @@ async function createBubble(req, res){
 
         thisBubble.feedRef = feedRef
         
+        // const {metaData} = feedRef
+        // const userHashs = [...Object.keys(metaData.hash)]
+        // console.log(feedRef.metaData);
+
+        // res.send({successful: false, message: 'bubble failed to upload to database'})
+        // return
+
         const allBubbleAudience = [...thisBubble.audience]
         for(let i=0; i<allBubbleAudience.length; i++){
             thisBubble.activities.iAmOnTheseFeeds[allBubbleAudience[i]] = {
@@ -160,7 +179,7 @@ async function createBubble(req, res){
                 const bubbles = new userBubbles({userID, bubbles: [feedRef]})
                 await bubbles.save().catch(()=>{ })
             } else {
-                allUserBubbles.bubbles.push(feedRef)
+                allUserBubbles.bubbles.push(feedRef)    
                 // await allUserBubbles.save().catch(()=>{ })
                 await userBubbles.updateOne({userID}, {bubbles: [...allUserBubbles.bubbles]}).catch(()=>{ })
             }
@@ -306,6 +325,48 @@ async function createBubble(req, res){
                     // await publicBubbles.save().then(()=>{})
                 }
             }
+
+
+            const metaHash = feedRef.metaData.hash||{}
+            const userHashs = [...Object.keys(metaHash)]
+            const userHashTags = await hashTags.findOne({title: "batch_1"}).lean()
+            if(userHashTags === null){
+                const saveHash = {}
+                for(let i=0; i<userHashs.length; i++){
+                    saveHash[userHashs[i]] = {
+                        hash: userHashs[i],
+                        count: {bub: 1},
+                        lastDate: getDate()
+                    }
+                }
+
+                const newHash = new hashTags({
+                    title: "batch_1", 
+                    allHashs: {
+                        ...saveHash
+                    }
+                })
+
+                await newHash.save()
+            } else {
+                const {allHashs} = userHashTags
+                // if(Object.keys(hashTags).length <= 500){
+                for(let i=0; i<userHashs.length; i++){
+                    if(allHashs[userHashs[i]]){
+                        allHashs[userHashs[i]].count.bub++
+                        allHashs[userHashs[i]].lastDate = getDate()
+                    } else {
+                        allHashs[userHashs[i]] = {
+                            hash: userHashs[i],
+                            count: {bub: 1},
+                            lastDate: getDate()
+                        }
+                    }
+                }
+                await hashTags.findOneAndUpdate({title: "batch_1"}, {allHashs})
+                // }
+            }
+
         }).then(()=>{
             res.send({successful: true})
         }).catch((e)=>{

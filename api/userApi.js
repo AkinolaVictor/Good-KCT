@@ -31,6 +31,7 @@ const checkUserFollowers = require('../controllers/user/checkUserFollowers')
 const addNewWaiter = require('../controllers/waitlist/addNewWaiter')
 const openUserProfile_ForAnalytics = require('../controllers/user/openUserProfile')
 const editUserSettings = require('../controllers/user/editUserSettings')
+const getUserList = require('../controllers/user/getUserList')
 
 // create an account
 // router.post('/createAccount', signUp)
@@ -120,6 +121,8 @@ router.post('/checkUserFollowing', checkUserFollowers)
 router.post('/openUserProfile_ForAnalytics', openUserProfile_ForAnalytics)
 
 router.post('/editUserSettings', editUserSettings)
+
+router.post('/getUserList', getUserList)
 
 
 module.exports = router
