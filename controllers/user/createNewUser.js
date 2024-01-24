@@ -21,36 +21,36 @@ async function createNewUser(req, res){
         // feeds
         // const feeds = new Feeds({userID: data.id, bubbles: []})
         // await feeds.save()
-        const thisFeed = await Feeds.findOne({userID: allUsernames[i].id})
+        const thisFeed = await Feeds.findOne({userID: data.id})
         if(thisFeed === null){
-          const feeds = new Feeds({userID: allUsernames[i].id, bubbles: []})
+          const feeds = new Feeds({userID: data.id, bubbles: []})
           await feeds.save()
         }
 
         // bubbles
         // const bubbles = new userBubbles({userID: data.id, bubbles: []})
         // await bubbles.save()
-        const thisBubble = await userBubbles.findOne({userID: allUsernames[i].id})
+        const thisBubble = await userBubbles.findOne({userID: data.id})
         if(thisBubble === null){
-          const bubbles = new userBubbles({userID: allUsernames[i].id, bubbles: []})
+          const bubbles = new userBubbles({userID: data.id, bubbles: []})
           await bubbles.save()
         }
 
         // likes
         // const likes = new LikeModel({userID: data.id, bubbles: []})
         // await likes.save()
-        const thisLike = await LikeModel.findOne({userID: allUsernames[i].id})
+        const thisLike = await LikeModel.findOne({userID: data.id})
         if(thisLike === null){
-          const likes = new LikeModel({userID: allUsernames[i].id, bubbles: []})
+          const likes = new LikeModel({userID: data.id, bubbles: []})
           await likes.save()
         }
 
         // replies
         // const replies = new userReplies({userID: data.id, bubbles: []})
         // await replies.save()
-        const thisReplys = await userReplies.findOne({userID: allUsernames[i].id})
+        const thisReplys = await userReplies.findOne({userID: data.id})
         if(thisReplys === null){
-          const replies = new userReplies({userID: allUsernames[i].id, bubbles: []})
+          const replies = new userReplies({userID: data.id, bubbles: []})
           await replies.save()
         }
 
@@ -58,45 +58,45 @@ async function createNewUser(req, res){
         // shares
         // const shares = new userShares({userID: data.id, bubbles: []})
         // await shares.save()
-        const thisShares = await userShares.findOne({userID: allUsernames[i].id})
+        const thisShares = await userShares.findOne({userID: data.id})
         if(thisShares === null){
-          const shares = new userShares({userID: allUsernames[i].id, bubbles: []})
+          const shares = new userShares({userID: data.id, bubbles: []})
           await shares.save()
         }
 
         // followers 
         // const followers = new Followers({userID: data.id, followers: {}})
         // await followers.save()
-        const thisFollowers = await Followers.findOne({userID: allUsernames[i].id})
+        const thisFollowers = await Followers.findOne({userID: data.id})
         if(thisFollowers === null){
-          const followers = new Followers({userID: allUsernames[i].id, followers: {}})
+          const followers = new Followers({userID: data.id, followers: {}})
           await followers.save()
         }
 
         // following
         // const following = new Following({userID: data.id, following: {}})
         // await following.save()
-        const thisFollowing = await Following.findOne({userID: allUsernames[i].id})
+        const thisFollowing = await Following.findOne({userID: data.id})
         if(thisFollowing === null){
-          const following = new Following({userID: allUsernames[i].id, following: {}})
+          const following = new Following({userID: data.id, following: {}})
           await following.save()
         }
 
         // saved audience
         // const audience = new savedAudience({userID: data.id, audience: {}})
         // await audience.save()
-        const thisAudience = await savedAudience.findOne({userID: allUsernames[i].id})
+        const thisAudience = await savedAudience.findOne({userID: data.id})
         if(thisAudience === null){
-          const audience = new savedAudience({userID: allUsernames[i].id, audience: {}})
+          const audience = new savedAudience({userID: data.id, audience: {}})
           await audience.save()
         }
                 
         // notification
         // const notification = new notifications({userID: data.id, all: []})
         // await notification.save()
-        const thisNotification = await notifications.findOne({userID: allUsernames[i].id})
+        const thisNotification = await notifications.findOne({userID: data.id})
         if(thisNotification === null){
-          const notification = new notifications({userID: allUsernames[i].id, all: []})
+          const notification = new notifications({userID: data.id, all: []})
           await notification.save()
         }
         
@@ -104,10 +104,11 @@ async function createNewUser(req, res){
         // REGISTER USER (USED FOR UPDATES LIKE USERNAME AND THE OTHERS)
         const getAllUsers = await allUser.findOne({name: "concealed"}).lean()
         if(getAllUsers){
+
           getAllUsers.users[data.id] = {
-              userID: data.id,
-              fullname: data.userInfo.fullname,
-              username: data.userInfo.username
+            userID: data.id,
+            fullname: data.userInfo.fullname,
+            username: data.userInfo.username
           }
 
           await allUser.updateOne({name: "concealed"}, { users: getAllUsers.users })
@@ -123,7 +124,7 @@ async function createNewUser(req, res){
               }
             }
           })
-          newUser.save()
+          await newUser.save()
         }
 
         

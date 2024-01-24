@@ -1,3 +1,4 @@
+const { v4: uuidv4 } = require('uuid')
 const sendPushNotification = require('../pushNotification/sendPushNotification')
 // const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
 // const {getDownloadURL, ref, uploadBytes} = require('firebase/storage')
@@ -10,10 +11,11 @@ const date = require('date-and-time')
 // const bubblesForEveryone = require('../../models/bubblesForEveryone')
 
 async function createBubble(req, res){
-    const {bubblesForEveryone, userBubbles, Feeds, bubble, bot, hashTags} = req.dbModels
+    const {bubblesForEveryone, userBubbles, Feeds, bubble, bot, hashTags, allUser, notifications} = req.dbModels
 
     const userID = req.body.userID
     const metaData = req.body.metaData
+    const creatorName = req.body.name
     const thisBubble = {...req.body.thisBubble}
     const secrecySettings = thisBubble.settings.secrecyData
     const postID = thisBubble.postID
@@ -62,6 +64,22 @@ async function createBubble(req, res){
             time,
             date: when,
             dateString
+        }
+    }
+
+    async function sendNotificationToMentioned(data){
+        const userNotification = await notifications.findOne({userID: data.userID}).lean()
+        if(userNotification){
+            userNotification.all.push(data.payload)
+            await notifications.updateOne({userID: data.userID}, {all: userNotification.all})
+
+            const notificationData = {
+                title: `Concealed`,
+                body: data.payload.message,
+                icon: decideNotifyIcon()
+            }
+
+            await sendPushNotification(data.userID, notificationData, req)
         }
     }
     
@@ -326,7 +344,7 @@ async function createBubble(req, res){
                 }
             }
 
-
+            // register/count hashtag
             const metaHash = feedRef.metaData.hash||{}
             const userHashs = [...Object.keys(metaHash)]
             const userHashTags = await hashTags.findOne({title: "batch_1"}).lean()
@@ -363,8 +381,44 @@ async function createBubble(req, res){
                         }
                     }
                 }
-                await hashTags.findOneAndUpdate({title: "batch_1"}, {allHashs})
+                // await hashTags.findOneAndUpdate({title: "batch_1"}, {allHashs})
+                await hashTags.updateOne({title: "batch_1"}, {allHashs})
                 // }
+            }
+
+            // register/count hashtag
+            const metaMentions = feedRef.metaData.mention||{}
+            const userMentioned = [...Object.keys(metaMentions)]
+            if(userMentioned.length){
+                const allConcealedUsers = await allUser.findOne({name: "concealed"}).lean()
+                if(allConcealedUsers){
+                    const {users} = allConcealedUsers
+                    const userArr = Object.values(users)
+                    for(let i=0; i<userMentioned.length; i++){
+                        const curretMentioned = userMentioned[i]
+                        for(let j=0; j<userArr.length; j++){
+                            const currentUser = userArr[j]
+                            if(currentUser.username.toLowerCase() === curretMentioned.toLowerCase()){
+                                const data = {
+                                    userID: currentUser.userID,
+                                    payload: {
+                                        time: getDate(),
+                                        message: `${creatorName} mentioned you in a bubble`,
+                                        userID,
+                                        feed: feedRef,
+                                        type: "mention",
+                                        creatorID: userID,
+                                        bubbleID: thisBubble.postID,
+                                        id: uuidv4(),
+                                        identityStatus: discernUserIdentity()
+                                    }
+                                }
+                                await sendNotificationToMentioned(data)
+                                console.log("doneex");
+                            }
+                        }
+                    }
+                }
             }
 
         }).then(()=>{
