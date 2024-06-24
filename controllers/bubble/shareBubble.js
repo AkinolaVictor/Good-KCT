@@ -533,23 +533,52 @@ async function shareBubble(req, res){
         }
     }
 
+    function checkSharePermission(value){
+        if(shareSettings.sharePermission === value){
+            return true
+        }
+
+        if(shareSettings.sharePermission.value === value){
+            return true
+        }
+        return false
+    }
+
     async function initShare(){
         if(thisBubble.userID===userID){
             await shareBubble()
         } else {
             // if i am not the creator
-            if(shareSettings.sharePermission=='Request permission for all'){
+            // if(shareSettings.sharePermission=='Request permission for all'){
+            if(checkSharePermission('Request permission for all')){
                 await sendShareRequest()
-            } else if(shareSettings.sharePermission=='Request permission only for followers' || shareSettings.sharePermission=='Request permission only for non-followers'){
+            // } else if(shareSettings.sharePermission=='Request permission only for followers' || shareSettings.sharePermission=='Request permission only for non-followers'){
+            } else if(checkSharePermission('Request permission for specific people')){
+                const selected = shareSettings.sharePermission.data
+                if(selected[userID]){
+                    await sendShareRequest()
+                } else {
+                    await shareBubble()
+                }
+            } else if(checkSharePermission('Request permission for all, except')){
+                const selected = shareSettings.sharePermission.data
+                if(selected[userID]){
+                    await shareBubble()
+                } else {
+                    await sendShareRequest()
+                }
+            } else if(checkSharePermission('Request permission only for followers') || checkSharePermission('Request permission only for non-followers')){
                 const creatorFollowers = await Followers.findOne({userID: thisBubble.userID}).lean()
                 if(creatorFollowers){
-                    if(shareSettings.sharePermission=='Request permission only for followers'){
+                    // if(shareSettings.sharePermission=='Request permission only for followers'){
+                    if(checkSharePermission('Request permission only for followers')){
                         if(creatorFollowers.followers[userID]){
                             await sendShareRequest()
                         } else {
                             await shareBubble()
                         }
-                    } else if(shareSettings.sharePermission=='Request permission only for non-followers'){
+                    // } else if(shareSettings.sharePermission=='Request permission only for non-followers'){
+                    } else if(checkSharePermission('Request permission only for non-followers')){
                         if(!creatorFollowers.followers[userID]){
                             await sendShareRequest()
                         } else {

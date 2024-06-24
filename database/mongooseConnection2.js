@@ -271,6 +271,25 @@ function modelPack(db){
             }, { strict: false, minimize: false })
             
             const usageAnalyticsModel = db.models["usageanalytics"] || db.model("usageanalytics", usageAnalyticsSchema)
+            // const usageAnalyticsModel = db.models["newusageanalytics"] || db.model("newusageanalytics", usageAnalyticsSchema)
+            return usageAnalyticsModel
+        }(),
+        usageAnalytics2: function(){
+            const usageAnalyticsSchema = db.Schema({
+                date: String,
+                data: {},
+                mau: {},
+                totalUsers: Number,
+                totalTime: Number,
+                growthRate: String,
+                retention: String,
+                avgTime: String,
+                createdAt: {type: Date, default: new Date()},
+                updatedAt: Date
+            }, { strict: false, minimize: false })
+            
+            // const usageAnalyticsModel = db.models["usageanalytics"] || db.model("usageanalytics", usageAnalyticsSchema)
+            const usageAnalyticsModel = db.models["newusageanalytics"] || db.model("newusageanalytics", usageAnalyticsSchema)
             return usageAnalyticsModel
         }(),
         userBubbles: function(){
@@ -324,6 +343,7 @@ function modelPack(db){
                 userID: String,
                 date: {},
                 bubbles: {},
+                viewedHashs: {},
                 profile: {},
                 createdAt: {type: Date, default: new Date()},
             }, { strict: false, minimize: false })

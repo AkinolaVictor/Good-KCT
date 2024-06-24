@@ -5,7 +5,7 @@ const {database} = require('../../database/firebase')
 // const bubble = require('../../models/bubble')
 
 async function deleteBot(req, res){
-    const {bubble, bot, User} = req.dbModels
+    const {bubble, bot, User, io} = req.dbModels
     
     const userID = req.body.userID
     const id = req.body.id
@@ -59,8 +59,14 @@ async function deleteBot(req, res){
     }
 
     await deleteThisBot().then(async()=>{
-        const fire_ref = doc(database, "bots", id)
-        await setDoc(fire_ref, {botNotFound: true}).catch(()=>{})
+        // const fire_ref = doc(database, "bots", id)
+        // await setDoc(fire_ref, {botNotFound: true}).catch(()=>{})
+        if(io){
+            io.emit(`userBots-${id}`, {
+                type: "bot",
+                data: {botNotFound: true}
+            })
+        }
         res.send({successful:true})
     }).catch(()=>{
         res.send({successful:false})

@@ -6,6 +6,7 @@ const path = require("path")
 const morgan = require("morgan")
 const webPush = require('web-push')
 const cors = require("cors")
+const multer = require("multer")
 // const userAuth = require('./api/createAccount')
 // const pushGen = webPush.generateVAPIDKeys()
 // console.log(pushGen);
@@ -23,16 +24,60 @@ const { default: mongoose } = require('mongoose');
 const watchAllStreams = require('./controllers/watches/watchAllStreams');
 // const copyAll = require('./controllers/copy/copyAll');
 const { connectWithMongoose2 } = require('./database/mongooseConnection2');
-const analytics_playground = require('./controllers/tools/analytics/analytics_playground');
-const majorToolsAndFixes = require('./controllers/tools/majorToolAndFixes');
-const allMessageUser = require('./controllers/tools/messageUser/allMessageUser');
+// const analytics_playground = require('./controllers/tools/analytics/analytics_playground');
+// const majorToolsAndFixes = require('./controllers/tools/majorToolAndFixes');
+// const allMessageUser = require('./controllers/tools/messageUser/allMessageUser');
 // const fs = require('fs');
 
 // const pushNotification = require('./api/pushNotificationApi')
 
 // CONNECT TO DATABASE
 
+// let saved_connection_models = null
+// async function cachedConnection(cb){
+//   if(saved_connection_models){
+//     return saved_connection_models
+//   } else if(global.saved_connection_models){
+//     return global.saved_connection_models
+//   } else {
+//     const models = await connectWithMongoose2()
+//     if(models){
+//       saved_connection_models = models
+//       global.saved_connection_models = models
+//       watchAllStreams(models)
+//       if(cb){
+//         cb(models)
+//       }
+//     }
+//     return models
+//   }
+// }
+// // cachedConnection(analytics_playground)
+// // cachedConnection(allMessageUser)
+// // cachedConnection(majorToolsAndFixes)
+// cachedConnection()
+
+mongoose.pluralize(null)
+// copyAll()
+
+
+const server = http.createServer(app)
+const io = socketio(server, {
+  // transports: ["polling", "websocket", "webtransport"],
+  cors: {
+    origin: '*',
+    // origin: ["https://concealed.vercel.app", "https://concealed-dev.vercel.app", "http://localhost:3000"]
+  },
+  maxHttpBufferSize: 1e8
+})
+
+// io.on("connect", (socket)=>{
+//   console.log("connected", socket.id);
+//   socketApi({}, socket, io)
+// })
+
 let saved_connection_models = null
+// let watching = null
 async function cachedConnection(cb){
   if(saved_connection_models){
     return saved_connection_models
@@ -43,7 +88,16 @@ async function cachedConnection(cb){
     if(models){
       saved_connection_models = models
       global.saved_connection_models = models
+
       watchAllStreams(models)
+      io.on("connect", (socket)=>{
+        console.log("connected", socket.id);
+        if(!global.actively_watching){
+          socketApi(models, socket, io)
+        }
+        global.actively_watching = true
+      })
+
       if(cb){
         cb(models)
       }
@@ -56,23 +110,19 @@ async function cachedConnection(cb){
 // cachedConnection(majorToolsAndFixes)
 cachedConnection()
 
-mongoose.pluralize(null)
-// copyAll()
 
-
-const server = http.createServer(app)
-const io = socketio(server, {
-  // transports: ["polling", "websocket", "webtransport"],
-  cors: {
-    // origin: '*',
-    origin: ["https://concealed.vercel.app", "https://concealed-dev.vercel.app", "http://localhost:3000"]
+const storage = multer.diskStorage({
+  destination: function (req, file, cb){
+    return cb(null, "/public/images")
+  },
+  filename: function (req, file, cb){
+      return cb(null, `${Date.now()}_${file.originalname}`)
   }
 })
+  
 
-io.on("connect", (socket)=>{
-  // console.log(socket.id);
-  socketApi(socket, io)
-})
+const upload2 = multer({dest: "uploads/"})
+const upload = multer({storage})
 
 
 app.use(helmet())
@@ -84,7 +134,7 @@ app.options('*', cors());
 var allowCrossDomain = function(req,res,next) {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, PUT, POST, DELETE');
-//   res.header('Access-Control-Allow-Headers', 'Content-Type');
+  // res.header('Access-Control-Allow-Headers', 'Content-Type');
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   next();  
 }
@@ -100,11 +150,23 @@ app.use(morgan("dev")) //dev, tiny, ...
 // app.use('/api/bot', bot)
 // app.use('/api/bubble', bubble)
 // app.use('/api/chats', chats)
+
+
+app.post("/api/upload", upload.single("image"), (req, res)=>{
+// app.use("/api/upload", upload.single("file"), (req, res)=>{
+  if(res.status === "200"){
+    console.log("done uploading");
+  }
+  console.log(req.body);
+  // console.log(req.file);
+  // console.log("done");
+  res.send({successful: true})
+})
   
 app.use('/api/user', async function(req, res, next){
   const models = await cachedConnection()
   if(models){
-    req.dbModels = models
+    req.dbModels =  {...models, io}
     next()
   } else {
     res.send({successful: false, message: "database failed to connect"})
@@ -114,7 +176,7 @@ app.use('/api/user', async function(req, res, next){
 app.use('/api/bot', async function(req, res, next){
   const models = await cachedConnection()
   if(models){
-    req.dbModels = models
+    req.dbModels =  {...models, io}
     next()
   } else {
     res.send({successful: false, message: "database failed to connect"})
@@ -124,7 +186,7 @@ app.use('/api/bot', async function(req, res, next){
 app.use('/api/bubble', async function(req, res, next){
   const models = await cachedConnection()
   if(models){
-    req.dbModels = models
+    req.dbModels = {...models, io}
     next()
   } else {
     res.send({successful: false, message: "database failed to connect"})
@@ -134,7 +196,7 @@ app.use('/api/bubble', async function(req, res, next){
 app.use('/api/chats', async function(req, res, next){
   const models = await cachedConnection()
   if(models){
-    req.dbModels = models
+    req.dbModels =  {...models, io}
     next()
   } else {
     res.send({successful: false, message: "database failed to connect"})

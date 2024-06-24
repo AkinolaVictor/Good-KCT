@@ -140,7 +140,7 @@ async function confirmShareRequest(req, res){
                 body: 'please check the notification section in the app to see the bubble.',
                 icon: false
             }
-            await sendPushNotification(data.userID, thisData)
+            await sendPushNotification(data.userID, thisData, req)
         }
     }
 
@@ -331,14 +331,15 @@ async function confirmShareRequest(req, res){
                 const activities = JSON.stringify(thisBubble.activities)
                 const savedShareStructure = JSON.stringify(shareStructure)
                 await bubble.updateOne({postID: data.feed.postID}, {activities, shareStructure: savedShareStructure})
-                await notify()
                 await updateUserAnalytics(thisBubble)
+                await notify()
                 
                 res.send({successful: true})
             } else {
                 res.send({successful: false, message: 'bubble not found'})
             }
         } catch(e) {
+            console.log(e);
             res.send({successful: false, message: 'Network error: failed to share bubble'})
         }
     }

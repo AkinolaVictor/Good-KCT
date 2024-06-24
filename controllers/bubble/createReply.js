@@ -253,7 +253,7 @@ async function createReply_Old(req, res){
             const reply = replys
 
             let overallRep = [];
-            let eachReply = [];
+            let eachReply = {};
 
             function buildReply(path){
                 let pathClone = [...path]

@@ -84,7 +84,7 @@ async function createBubble(req, res){
     }
     
     // all file are uploaded on the client side
-    saveData_New()
+    await saveData_New()
 
     function checkForEveryoneAndFollowers(){
         const bubble = [...thisBubble.bubble]
@@ -99,6 +99,17 @@ async function createBubble(req, res){
         } else {
             return false
         }
+    }
+
+    function checkForSpecificAudience(testID){
+        const bubble = [...thisBubble.bubble]
+        for(let i=0; i<bubble.length; i++){
+            const curr = bubble[i]
+            if(curr.audienceData[testID]){
+                return true
+            }
+        }
+        return false
     }
 
     async function saveData_New(){
@@ -131,7 +142,7 @@ async function createBubble(req, res){
             type: 'Ref',
             status: 'active',
             sharePath:[userID],
-            metaData,
+            metaData: {...metaData, aos: secrecySettings.atmosphere},
             data:{
                 // type: chosenBubble.name
                 type: bubbleName
@@ -139,7 +150,7 @@ async function createBubble(req, res){
         }
 
         thisBubble.feedRef = feedRef
-        
+        // console.log(feedRef.metaData);
         // const {metaData} = feedRef
         // const userHashs = [...Object.keys(metaData.hash)]
         // console.log(feedRef.metaData);
@@ -386,7 +397,8 @@ async function createBubble(req, res){
                 // }
             }
 
-            // register/count hashtag
+            // mention
+
             const metaMentions = feedRef.metaData.mention||{}
             const userMentioned = [...Object.keys(metaMentions)]
             if(userMentioned.length){
@@ -413,8 +425,12 @@ async function createBubble(req, res){
                                         identityStatus: discernUserIdentity()
                                     }
                                 }
-                                await sendNotificationToMentioned(data)
-                                console.log("doneex");
+
+                                if(checkForEveryoneAndFollowers() || checkForSpecificAudience(currentUser.userID)){
+                                    if(currentUser.userID !== userID){
+                                        await sendNotificationToMentioned(data)
+                                    }
+                                }
                             }
                         }
                     }

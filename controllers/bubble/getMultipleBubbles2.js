@@ -335,17 +335,25 @@ async function getMultipleBubbles2(req, res){
                 if(followers[feedRef.userID]){
                     creatorFollowers = followers[feedRef.userID]
                 } else {
-                    creatorFollowers = await Followers.findOne({userID: feedRef.userID}).lean()
+                    const fllw = await Followers.findOne({userID: feedRef.userID}).lean()
+                    creatorFollowers = {...fllw.followers}
                 }
 
                 if(creatorFollowers){
-                    thisBubble.followers = {...creatorFollowers.followers}
+                    // if(creatorFollowers[userID]){
+                    //     thisBubble.followers = {[userID]: creatorFollowers[userID]}
+                    // } else {
+                    //     thisBubble.followers = {}
+                    // }
+                    // thisBubble.followersReady=true
+
+                    thisBubble.followers = {...creatorFollowers}
                     thisBubble.followersReady=true
                 } else {
                     thisBubble.followers = {}
                     thisBubble.followersReady=true
                 }
-                
+
                 // GET BOTS IF BUBBLE HAS BOTS
                 const bubbleSetting = thisBubble.settings
                 const bots = [...Object.keys(bubbleSetting.botData)]
@@ -496,7 +504,7 @@ async function getMultipleBubbles2(req, res){
         for(i=0; i<creatorFollowers.length; i++){
             acquiredFollowers[creatorFollowers[i].userID] = {...creatorFollowers[i].followers}
         }
-
+        // console.log(acquiredFollowers);
         const data = {
             bubbles: bubbleObj,
             users: acquiredUsers,
@@ -513,6 +521,7 @@ async function getMultipleBubbles2(req, res){
             //     console.log(i);
             }
         }
+        // console.log(requsetedBubbles[0].followers);
         res.send({successful: true, bubbles: requsetedBubbles})
     } catch(e){
         res.send({successful: false, message: "some error occured"})

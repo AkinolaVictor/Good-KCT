@@ -130,10 +130,13 @@ async function createNewUser(req, res){
         
       }).then(()=>{
         res.send({successful: true})
+        console.log("done");
       }).catch(()=>{
         res.send({successful: false})
+        console.log("falied 1");
       })
     } catch (e){
+      console.log("falied 2");
       res.send({successful: false})
     }
     

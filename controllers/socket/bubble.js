@@ -38,7 +38,6 @@ function bubble(socket, io){
                     subscriptions[bubbleID] = true
                     io.emit(`bubble-${bubbleID}`, {...bubble})
                 } else {
-                    
                     io.emit(`bubble-${bubbleID}`, false)
                 }
             })

@@ -14,24 +14,24 @@ const watchUserRepliesStream = require("./watchUserRepliesStream")
 const watchUserShareStream = require("./watchUserShareStream")
 const watchUserStream = require("./watchUserStream")
 
-function watchAllStreams(models){
+function watchAllStreams(models, socket, io){
     console.log("starting to watch");
-    watchBotActivityStream(models)
-    watchBotStream(models)
-    watchUserFeedsStream(models)
-    watchBubbleStream(models)
-    watchBubblesForEveryoneStream(models)
-    watchNotificationStream(models)
-    watchUserLikesStream(models)
-    watchUserRepliesStream(models)
-    watchUserShareStream(models)
-    watchUserStream(models)
-    watchChatsStream(models)
-    watchUserBubblesStream(models)
+    watchBotActivityStream(models, socket, io)
+    watchBotStream(models, socket, io)
+    watchUserFeedsStream(models, socket, io)
+    watchBubbleStream(models, socket, io)
+    watchBubblesForEveryoneStream(models, socket, io)
+    watchNotificationStream(models, socket, io)
+    watchUserLikesStream(models, socket, io)
+    watchUserRepliesStream(models, socket, io)
+    watchUserShareStream(models, socket, io)
+    watchUserStream(models, socket, io)
+    watchChatsStream(models, socket, io)
+    watchUserBubblesStream(models, socket, io)
     
-    watchSavedAudienceStream(models)
-    watchFollowerStream(models)
-    watchFollowingtream(models)
+    watchSavedAudienceStream(models, socket, io)
+    watchFollowerStream(models, socket, io)
+    watchFollowingtream(models, socket, io)
     console.log("watching...");
 }
 

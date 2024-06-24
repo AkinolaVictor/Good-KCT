@@ -229,6 +229,7 @@ async function getMultipleBubbles(req, res){
                     continue
                 } else {
                     // prepare Data to be finally sent out (dont forget bot in client side)
+                    // be careful to watch if user bubbleref has replys or not attached to it
                     for(let i=0; i<allBubbles.length; i++){
                         if(allBubbles[i].postID === currentBubble.postID){
                             feedRef = allBubbles[i]
@@ -298,7 +299,7 @@ async function getMultipleBubbles(req, res){
                 }
 
                 if(!currentBubble.activities.iAmOnTheseFeeds){
-                    console.log(currentBubble.postID);
+                    // console.log(currentBubble.postID);
                     multipleBubbles.splice(i, 1)
                     continue
                 }
@@ -371,9 +372,10 @@ async function getMultipleBubbles(req, res){
                 const now = new Date()
                 const formattedDate = date.format(now, 'YYYY,MM,DD,HH,mm,ss,SS')
                 currentBubble.formattedDate = formattedDate
+                // console.log(currentBubble.followers);
                 multipleBubbles[i] = currentBubble
             }
-            
+            // console.log(multipleBubbles[0].followers);
             res.send({successful: true, bubbles: multipleBubbles})
         }
     

@@ -1,5 +1,5 @@
 const {database, storage} = require('../../database/firebase')
-const {doc, setDoc} = require('firebase/firestore')
+// const {doc, setDoc} = require('firebase/firestore')
 const { ref, deleteObject} = require('firebase/storage')
 // const date = require('date-and-time')
 // const bubble = require('../../models/bubble')
@@ -12,7 +12,7 @@ const { ref, deleteObject} = require('firebase/storage')
 // const LikeModel = require('../../models/LikeModel')
 
 async function deleteBubble(req, res){
-    const {LikeModel, bubblesForEveryone, userBubbles, Feeds, userShares, userReplies, bot, bubble} = req.dbModels
+    const {LikeModel, bubblesForEveryone, userBubbles, Feeds, userShares, userReplies, bot, bubble, io} = req.dbModels
 
     // const userID = req.body.userID
     // const postID = req.body.postID // thisBubble.postID
@@ -31,16 +31,22 @@ async function deleteBubble(req, res){
         }
     }
 
+    // await delBubble()
     if(allFilePaths.length){
         // first delete all files before deleting post (if there are files to be deleted)
+        // console.log(allFilePaths);
         for(let i=0; i<allFilePaths.length; i++){
+            // continue
             const path=allFilePaths[i].join('/')
             const fileRef = ref(storage, path);
-            
             // delete files now
+            // console.log(path);
+
             await deleteObject(fileRef).then(async()=>{ 
+                // console.log("ranx");
                 if(i===allFilePaths.length-1){
                     // then delete post when all files have been deleted
+                    // console.log("ran");
                     await delBubble()
                 }
             }).catch((err)=>{
@@ -157,8 +163,14 @@ async function deleteBubble(req, res){
                     }
 
                     await bubble.findOneAndDelete({postID: thisBubble.postID}).then(async()=>{
-                        const fire_ref = doc(database, "bubbles", thisBubble.postID)
-                        await setDoc(fire_ref, {bubbleNotFound: true}).catch(()=>{})
+                        // const fire_ref = doc(database, "bubbles", thisBubble.postID)
+                        // await setDoc(fire_ref, {bubbleNotFound: true}).catch(()=>{})
+                        if(io){
+                            io.emit(`bubble-${thisBubble.postID}`, {
+                                type: "bubble",
+                                data: {bubbleNotFound: true}
+                            })
+                        }
                         res.send({successful: true})
                     }).catch(()=>{
                         res.send({successful: false, message: 'failed to delete bubble'})

@@ -196,7 +196,6 @@ function userInfo(socket, io){
                 }
             }
 
-
             // REPLIES
             if(access("replies")){
                 if(!subscriptions.replies[userID]){

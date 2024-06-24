@@ -37,6 +37,7 @@ async function initializeUser(req, res){
             data.bubbles = []
             data.posts = {}
         }
+        // console.log(data);
 
         // GET FOLLOWERS
         const userFollowers = await Followers.findOne({userID}).lean()

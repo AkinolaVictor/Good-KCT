@@ -1,3 +1,4 @@
+const registerViewedHashs = require('../../utils/registerViewedHash')
 const { dataType } = require('../../utils/utilsExport')
 // const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
 // const {getDownloadURL, ref, uploadBytes} = require('firebase/storage')
@@ -8,7 +9,7 @@ const { dataType } = require('../../utils/utilsExport')
 // const Feeds = require('../../models/Feeds')
 
 async function registerAudience(req, res){
-    const {Feeds, bubble} = req.dbModels
+    const {Feeds, bubble, eachUserAnalytics} = req.dbModels
 
     const userID = req.body.userID
     const bubbleID = req.body.bubbleID
@@ -39,11 +40,13 @@ async function registerAudience(req, res){
     
             const activities = JSON.stringify(thisBubble.activities)
             await bubble.updateOne({postID: bubbleID}, {activities})
+            
+            await registerViewedHashs(eachUserAnalytics, thisBubble, userID)
     
             // give feed ref to user---to be on a safe zone, i have to initialize as deleted...
             let feedRef = 'deleted...'
-            if(post.feedRef){
-                feedRef = post.feedRef
+            if(thisBubble.feedRef){
+                feedRef = thisBubble.feedRef
             }else{
                 feedRef = {
                     userID: creatorID,
@@ -52,7 +55,7 @@ async function registerAudience(req, res){
                     status: 'active',
                     sharePath:[creatorID],
                     data:{
-                        type: post.type
+                        type: thisBubble.type
                     }
                 }
             }

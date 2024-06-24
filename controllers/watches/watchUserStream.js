@@ -3,7 +3,7 @@ const { database } = require("../../database/firebase");
 const date = require('date-and-time');
 // const User = require("../../models/User");
 
-function watchUserStream(models){
+function watchUserStream(models, socket, io){
     const {User} = models
     try{
         const userDoc = User.watch([], {fullDocument: "updateLookup"})

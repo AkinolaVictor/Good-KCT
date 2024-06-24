@@ -32,6 +32,7 @@ const addNewWaiter = require('../controllers/waitlist/addNewWaiter')
 const openUserProfile_ForAnalytics = require('../controllers/user/openUserProfile')
 const editUserSettings = require('../controllers/user/editUserSettings')
 const getUserList = require('../controllers/user/getUserList')
+const userDailyAnalytics2 = require('../controllers/user/userDailyAnalytics_2')
 
 // create an account
 // router.post('/createAccount', signUp)
@@ -61,7 +62,8 @@ router.post('/sendUserEmail', sendUserEmail)
 router.post('/getAllUsers', getAllUsers)
 
 // delete Audience
-router.post('/userDailyAnalytics', userDailyAnalytics)
+// router.post('/userDailyAnalytics', userDailyAnalytics)
+router.post('/userDailyAnalytics', userDailyAnalytics2)
 
 // delete Audience
 router.post('/updateUserProfile', updateUserProfile)
