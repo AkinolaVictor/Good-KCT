@@ -141,7 +141,7 @@ async function getMultipleBubbles2(req, res){
                     }
                 } else if(value === "Let me specify for selected few"){
                     if(data[userID]){
-                        if((userImpression < count)){
+                        if((userImpression < count) || thisBubble.user.id===userID){
                             return false
                         } else {
                             return true
@@ -150,10 +150,10 @@ async function getMultipleBubbles2(req, res){
                         return false
                     }
                 } else if(value === "Let me specify a few exceptions"){
-                    if(data[userID]){
+                    if(data[userID] || thisBubble.user.id===userID){
                         return false
                     } else {
-                        if((userImpression < count)){
+                        if((userImpression < count) || thisBubble.user.id===userID){
                             return false
                         } else {
                             return true
