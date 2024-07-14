@@ -117,8 +117,9 @@ async function createBubble(req, res){
         // update settings time for self-destructure
 
         const settings = thisBubble.settings
-        settings.selfDestructData.currentDate = thisBubble.createdDate
+        // settings.selfDestructData.currentDate = new Date().toISOString()
 
+        // thisBubble.settings.selfDestructData.currentDate = new Date().toISOString()
 
         const botData = [...Object.keys(settings.botData)]
         if(botData.length){

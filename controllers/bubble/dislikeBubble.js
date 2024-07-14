@@ -88,73 +88,81 @@ async function dislikeBubble(req, res){
         }
     }
 
-    const thisBubble = await bubble.findOne({postID: currentBubble.postID}).lean()
-    if(thisBubble){
-        if(thisBubble.like.includes(userID)){
-            if(typeof thisBubble.activities === "string"){
-                const activities = JSON.parse(thisBubble.activities)
-                thisBubble.activities = activities
-            }
-
-            if(thisBubble.activities.iAmOnTheseFeeds[userID]){
-                if(thisBubble.activities.iAmOnTheseFeeds[userID].myActivities.liked){
-                    delete thisBubble.activities.iAmOnTheseFeeds[userID].myActivities.liked
+    try{
+        const thisBubble = await bubble.findOne({postID: currentBubble.postID}).lean()
+        if(thisBubble){
+            if(thisBubble.like.includes(userID)){
+                if(typeof thisBubble.activities === "string"){
+                    const activities = JSON.parse(thisBubble.activities)
+                    thisBubble.activities = activities
                 }
-            }
-
-            for(let i=0; i<thisBubble.like.length; i++){
-                if(thisBubble.like[i]===userID){
-                    thisBubble.like.splice(i, 1)
-                    break
+    
+                if(thisBubble.activities.iAmOnTheseFeeds[userID]){
+                    if(thisBubble.activities.iAmOnTheseFeeds[userID].myActivities.liked){
+                        delete thisBubble.activities.iAmOnTheseFeeds[userID].myActivities.liked
+                    }
                 }
+    
+                for(let i=0; i<thisBubble.like.length; i++){
+                    if(thisBubble.like[i]===userID){
+                        thisBubble.like.splice(i, 1)
+                        break
+                    }
+                }
+                
+            //    thisBubble.activities.iAmOnTheseFeeds[userID].myActivities.liked=true
+                    
+                if(!thisBubble.totalLikes){
+                    thisBubble.totalLikes = 0
+                } else {
+                    thisBubble.totalLikes--
+                }
+    
+            }  else {
+                res.send({successful: false, message: 'bubble not liked'})
+                return
             }
             
-        //    thisBubble.activities.iAmOnTheseFeeds[userID].myActivities.liked=true
-                
-            if(!thisBubble.totalLikes){
-                thisBubble.totalLikes = 0
-            } else {
-                thisBubble.totalLikes--
-            }
-
-        }  else {
-            res.send({successful: false, message: 'bubble not liked'})
-        }
-        
-        const like = thisBubble.like
-        // const totalLikes = thisBubble.totalLikes
-        const activities = JSON.stringify(thisBubble.activities)
-        await bubble.updateOne({postID: currentBubble.postID}, {like, activities}).then(async()=>{
-            await LikeNotifier('dislikes')
-
-            // if(thisBubble.userID!==userID){
-            if(currentBubble.userID!==userID){
-                // const thisUserLikes = await userLikes.findOne({userID})
-                const thisUserLikes = await LikeModel.findOne({userID})
-
-                if(thisUserLikes){
-                    for(let i=0; i<thisUserLikes.bubbles.length; i++){
-                        if(dataType(thisUserLikes.bubbles[i])==='object'){
-                            if(thisUserLikes.bubbles[i].postID === thisBubble.postID){
-                                thisUserLikes.bubbles.splice(i, 1)
+            const like = thisBubble.like
+            // const totalLikes = thisBubble.totalLikes
+            const activities = JSON.stringify(thisBubble.activities)
+            await bubble.updateOne({postID: currentBubble.postID}, {like, activities}).then(async()=>{
+                await LikeNotifier('dislikes')
+    
+                // if(thisBubble.userID!==userID){
+                if(currentBubble.userID!==userID){
+                    // const thisUserLikes = await userLikes.findOne({userID})
+                    const thisUserLikes = await LikeModel.findOne({userID})
+    
+                    if(thisUserLikes){
+                        for(let i=0; i<thisUserLikes.bubbles.length; i++){
+                            if(dataType(thisUserLikes.bubbles[i])==='object'){
+                                if(thisUserLikes.bubbles[i].postID === thisBubble.postID){
+                                    thisUserLikes.bubbles.splice(i, 1)
+                                }
+                            }
+    
+                            if(i===thisUserLikes.length-1){
+                                await LikeModel.updateOne({userID}, {bubbles: [...thisUserLikes.bubbles]})
                             }
                         }
-
-                        if(i===thisUserLikes.length-1){
-                            // await thisUserLikes.save()
-                            await LikeModel.updateOne({userID}, {bubbles: [...thisUserLikes.bubbles]})
-                        }
+                    //     console.log("fe2");
+                    //     res.send({successful: true})
+                    // } else {
+                    //     res.send({successful: false, message: 'userLikes not present'})
                     }
-                    res.send({successful: true})
-                } else {
-                    res.send({successful: false, message: 'userLikes not present'})
                 }
-            }
-        }).catch(()=>{
-            res.send({successful: false, message: 'unable to update bubble, or something went wrong in the aftermath'})
-        })
-    } else {
-        res.send({successful: false, message: 'bubble not found'})
+                res.send({successful: true})
+            }).catch(()=>{
+                res.send({successful: false, message: 'unable to update bubble, or something went wrong in the aftermath'})
+            })
+        } else {
+            res.send({successful: false, message: 'bubble not found'})
+        }
+    }catch(e){
+        console.log("failed to dislike");
+        console.log(e);
+        res.send({successful: false, message: 'unknown error'})
     }
 }
 

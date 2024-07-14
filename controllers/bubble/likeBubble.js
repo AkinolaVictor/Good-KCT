@@ -236,8 +236,8 @@ async function likeBubble(req, res){
                             await LikeModel.updateOne({userID}, {bubbles: [...thisUserLikes.bubbles]})
                         }
                     }
-                } else {
-                    console.log("ready...");
+                // } else {
+                //     console.log("ready...");
                 }
 
             }).then(()=>{

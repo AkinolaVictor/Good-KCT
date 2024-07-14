@@ -265,7 +265,6 @@ async function shareBubble(req, res){
                     }
                 },
                 date: {}
-                // date: {...getDate()}
             }
             const newUserAnalytics = new eachUserAnalytics({...data})
             await newUserAnalytics.save()

@@ -13,26 +13,6 @@ async function updateImpression(req, res){
 
     const monthMap = {Jan: "00", Feb: "01", Mar: "02", Apr: "03", May: "04", Jun: "05", Jul: "06", Aug: "07", Sep: "08", Oct: "09", Nov: "10", Dec: "11"}
 
-    function getDate(){
-        const now = new Date()
-        const time = date.format(now, 'h:mm:ssA')
-        const when = date.format(now, 'DD/MM/YYYY')
-        const dateString = date.format(now, 'YYYY,MM,DD,HH,mm,ss')
-
-        return {
-            time,
-            date: when,
-            dateString
-        }
-    }
-
-    function getDateGap(previous){
-        const prev = [...previous.split(',')]
-        prev[1]--
-        const previousDay = new Date(...prev)
-        let now = new Date()
-        return date.subtract(now, previousDay).toDays()
-    }
 
     async function updateUserAnalytics(thisBubble){
         // update bubble creator analytics

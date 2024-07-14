@@ -24,40 +24,6 @@ async function openedReply(req, res){
             dateString
         }
     }
-    function updateLastActivity(thisPost, activity, updateFunc){
-
-        if(!thisPost.activities.lastActivities){
-            thisPost.activities.lastActivities=[]
-        }
-
-        const lastActivities = thisPost.activities.lastActivities
-        const activityData = {
-            activity,
-            userID: userID,
-            date: getDate()
-        }
-        if(lastActivities.length>0){
-            const last = lastActivities[lastActivities.length - 1]
-            if(last.activity!==activity){
-                for(let i=0; i<lastActivities.length; i++){
-                    const current = lastActivities[i]
-                    if(current.userID===userID && current.activity===activity){
-                        break
-                    }
-                    if(i===lastActivities.length-1){
-                        thisPost.activities.lastActivities.push(activityData)
-                        if(thisPost.activities.lastActivities.length>10){
-                            thisPost.activities.lastActivities.shift()
-                        }
-                        updateFunc()
-                    }
-                }
-            }
-        } else {
-            thisPost.activities.lastActivities.push(activityData)
-            updateFunc()
-        }
-    }
 
     // const docz = doc(database, 'bubbles', thisBubble.postID)
     // const docz = doc(database, 'users', thisBubble.user.id)
@@ -117,10 +83,13 @@ async function openedReply(req, res){
 
             const activities = JSON.stringify(currentBubble.activities)
             const openedReplyCount = currentBubble.openedReplyCount + 1
-            await updateOne({postID: thisBubble.postID}, {activities, openedReplyCount})
+            await bubble.updateOne({postID: thisBubble.postID}, {activities, openedReplyCount})
+            
             res.send({successful: true})
         }
     } catch(e){
+        console.log("failed");
+        console.log(e);
         res.send({successful: false, message: 'Error from the server'})
     }
 }

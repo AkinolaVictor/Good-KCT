@@ -6,41 +6,43 @@ const date = require('date-and-time')
 // const bubble = require('../../models/bubble')
 
 async function openedChart(req, res){
-    const {bubble} = req.dbModels
+    try{
+        const {bubble} = req.dbModels
+        const userID = req.body.userID // user.id
+        const currentBubble = {...req.body.thisBubble}
+        // thisBubble.userID = thisBubble.user.id
+        // settings, userID
+        // console.log(currentBubble.postID);
 
-    const userID = req.body.userID // user.id
-    const currentBubble = {...req.body.thisBubble}
-    // thisBubble.userID = thisBubble.user.id
-    // settings, userID
-
-    function getDate(){
-        const now = new Date()
-        const time = date.format(now, 'h:mm:ssA')
-        const when = date.format(now, 'DD/MM/YYYY')
-        const dateString = date.format(now, 'YYYY,MM,DD,HH,mm,ss')
-        return {
-            time,
-            date: when,
-            dateString
-        }
-    }
-    
-    const thisBubble = await bubble.findOne({postID: currentBubble.postID}).lean()
-    if(thisBubble){
-        if(typeof(thisBubble.activities) === "string"){
-            const activities = JSON.parse(thisBubble.activities)
-            thisBubble.activities = activities
-        }
-
-        if(!thisBubble.activities.iAmOnTheseFeeds[userID].myActivities.openedChart){
-            if(thisBubble.activities.iAmOnTheseFeeds[userID].myActivities.activityIndex){
-
-            } else {
-                thisBubble.activities.lastActivityIndex++
-                thisBubble.activities.iAmOnTheseFeeds[userID].myActivities.activityIndex = thisBubble.activities.lastActivityIndex
+        function getDate(){
+            const now = new Date()
+            const time = date.format(now, 'h:mm:ssA')
+            const when = date.format(now, 'DD/MM/YYYY')
+            const dateString = date.format(now, 'YYYY,MM,DD,HH,mm,ss')
+            return {
+                time,
+                date: when,
+                dateString
             }
-            thisBubble.activities.iAmOnTheseFeeds[userID].seenAndVerified=true
-            thisBubble.activities.iAmOnTheseFeeds[userID].myActivities.openedChart=true
+        }
+
+        const thisBubble = await bubble.findOne({postID: currentBubble.postID}).lean()
+        if(thisBubble){
+            if(typeof(thisBubble.activities) === "string"){
+                const activities = JSON.parse(thisBubble.activities)
+                thisBubble.activities = activities
+            }
+            
+            if(!thisBubble.activities.iAmOnTheseFeeds[userID].myActivities.openedChart){
+                if(thisBubble.activities.iAmOnTheseFeeds[userID].myActivities.activityIndex){
+                    
+                } else {
+                    thisBubble.activities.lastActivityIndex++
+                    thisBubble.activities.iAmOnTheseFeeds[userID].myActivities.activityIndex = thisBubble.activities.lastActivityIndex
+                }
+                thisBubble.activities.iAmOnTheseFeeds[userID].seenAndVerified=true
+                thisBubble.activities.iAmOnTheseFeeds[userID].myActivities.openedChart=true
+            } 
 
             // Start update last activity
             if(!thisBubble.activities.lastActivities){
@@ -53,7 +55,7 @@ async function openedChart(req, res){
                 userID: userID,
                 date: getDate()
             }
-
+            
             if(lastActivities.length>0){
                 const last = lastActivities[lastActivities.length - 1]
                 if(last.activity!==activity){
@@ -73,18 +75,25 @@ async function openedChart(req, res){
             } else {
                 thisBubble.activities.lastActivities.push(activityData)
             }
-
+    
             const activities = JSON.stringify(thisBubble.activities)
             const openedChartCount = thisBubble.openedChartCount + 1
             await bubble.updateOne({postID: currentBubble.postID}, {openedChartCount, activities}).then(()=>{
                 res.send({successful: true})
-            }).catch(()=>{
+            }).catch((e)=>{
+                console.log("null")
+                console.log(e)
                 res.send({successful: false, message: 'unable to update activities'})
             })
+        } else {
+            console.log("null")
+            res.send({successful: false, message: 'bubble not found or server error'})
         }
-
-    } else {
-        res.send({successful: false, message: 'bubble not found or server error'})
+        
+    } catch (e){
+        console.log("failed");
+        console.log(e);
+        res.send({successful: false, message: 'failed to update'})
     }
 }
 
