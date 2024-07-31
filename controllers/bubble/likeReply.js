@@ -114,6 +114,7 @@ async function likeReply(req, res){
                 message: constructCreatorMessage(),
                 identityStatus: discernUserIdentity(),
                 feed: refDoc,
+                replyPath: [...path],
                 type: 'like'
             }
             creatorData.feed.env='feed'
@@ -228,6 +229,7 @@ async function likeReply(req, res){
             if(typeof(thisBubble.reply) === "string"){
                 replys = JSON.parse(thisBubble.reply)
             }
+            // const newReplyPath = [...path]
             buildReply(path, replys)
             // destructured replies
             let dR = [...overallRep]

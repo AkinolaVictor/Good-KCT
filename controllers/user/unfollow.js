@@ -1,4 +1,5 @@
 const date = require('date-and-time')
+const { v4: uuidv4 } = require('uuid')
 const sendPushNotification = require('../pushNotification/sendPushNotification')
 // const {doc, getDoc, updateDoc, setDoc, deleteField} = require('firebase/firestore')
 // const {database} = require('../../database/firebase')
@@ -45,7 +46,8 @@ async function unFollow(req, res){
                 message: constructMessage(),
                 identityStatus: false,
                 // feed: thisBubble.refDoc,
-                type: 'follow'
+                type: 'follow',
+                id: uuidv4()
             }
             // followData.feed.env='feed'
     

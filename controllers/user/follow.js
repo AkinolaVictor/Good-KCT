@@ -1,4 +1,5 @@
 const date = require('date-and-time')
+const { v4: uuidv4 } = require('uuid')
 const sendPushNotification = require('../pushNotification/sendPushNotification')
 // const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
 // const {getDownloadURL, ref, uploadBytes} = require('firebase/storage')
@@ -47,7 +48,8 @@ async function follow(req, res){
                 message: constructMessage(),
                 identityStatus: false,
                 // feed: thisBubble.refDoc,
-                type: 'follow'
+                type: 'follow',
+                id: uuidv4(),
             }
     
             // check if

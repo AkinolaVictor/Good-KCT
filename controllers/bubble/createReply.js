@@ -49,7 +49,7 @@ async function createReply_Old(req, res){
         }
     }
 
-    async function ReplyNotifier(notificationData){
+    async function ReplyNotifier(notificationData, newPath){
         if(userID!==creatorID){
             // console.log('notify 1');
             function constructCreatorMessage(){
@@ -73,7 +73,7 @@ async function createReply_Old(req, res){
                 time: getDate(),
                 bubbleID: postID,
                 creatorID: creatorID,
-                replyPath: path,
+                replyPath: [...newPath],
                 userID: userID,
                 id: uuidv4(),
                 message: constructCreatorMessage(),
@@ -243,10 +243,12 @@ async function createReply_Old(req, res){
             thisBubble.activities.iAmOnTheseFeeds[userID].myActivities.replied=true
             
         }
-        
+        const newReplyPath = [...path]
         if(path.length === 0){
+            newReplyPath.push(replys.length)
             replys.push(data)
         } else if(path.length === 1) {
+            newReplyPath.push(replys[path[0]].reply.length)
             replys[path[0]].reply.push(data)
         }else if(path.length>1){
 
@@ -277,6 +279,7 @@ async function createReply_Old(req, res){
             buildReply(path)
             
             let dR = [...overallRep]
+            newReplyPath.push(dR[path.length-1].reply.length)
             dR[path.length-1].reply.push(data)
             // Compile Reversal
             let final
@@ -331,7 +334,7 @@ async function createReply_Old(req, res){
             const notificationData = {
                 message: `Reply: ${data.message||''}`
             }
-            await ReplyNotifier(notificationData)
+            await ReplyNotifier(notificationData, newReplyPath)
             await updateUserAnalytics(thisBubble)
             if(creatorID!==userID){
                 const thisUserReplies = await userReplies.findOne({userID}).lean()
