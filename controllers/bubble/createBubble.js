@@ -415,7 +415,8 @@ async function createBubble(req, res){
                                 const data = {
                                     userID: currentUser.userID,
                                     payload: {
-                                        time: getDate(),
+                                        // time: getDate(),
+                                        when: new Date().toISOString(),
                                         message: `${creatorName} mentioned you in a bubble`,
                                         userID,
                                         feed: feedRef,

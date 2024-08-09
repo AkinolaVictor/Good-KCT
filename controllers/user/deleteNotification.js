@@ -25,13 +25,13 @@ async function deleteNotification(req, res){
 
                 const ifDate = thisDate===notDate
                 const ifTime = thisTime===notTime
-                
+
                 const timeChecker = ifDate && ifTime
                 const idChecker = userNotif.all[i].id === notificationID
 
                 if(idChecker || timeChecker){
                     userNotif.all.splice(i, 1)
-                    console.log("found");
+                    // console.log("found");
                     await notifications.updateOne({userID}, {all: [...userNotif.all]}).then(()=>{
                     // await userNotif.save().then(()=>{
                         res.send({successful: true})

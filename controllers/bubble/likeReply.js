@@ -95,7 +95,7 @@ async function likeReply(req, res){
 
     async function LikeReplyNotifier(notificationData){
         
-        if(userID!==bubbleCreator){
+        if(userID!==bubbleCreator && userID!==replyCreatorID){
             function constructCreatorMessage(){
                 if(discernUserIdentity()){
                     return `someone likes a reply`
@@ -106,7 +106,8 @@ async function likeReply(req, res){
 
             // data
             const creatorData = {
-                time: getDate(),
+                // time: getDate(),
+                when: new Date().toISOString(),
                 bubbleID,
                 creatorID: bubbleCreator,
                 userID,
@@ -150,7 +151,8 @@ async function likeReply(req, res){
             }
 
             const mainReplyData = {
-                time: getDate(),
+                // time: getDate(),
+                when: new Date().toISOString(),
                 bubbleID: bubbleID,
                 mainReplier: replyDataID,
                 creatorID: bubbleCreator,

@@ -15,41 +15,78 @@ async function follow(req, res){
     const userName = req.body.userName // user.userInfo.fullname
     const newUserID = req.body.newUserID // props.data.id
     const newUserName = req.body.newUserName // props.data.userInfo.fullname
+    const dontNotify = req.body.dontNotify
+    // const data = req.body.data||{con: "none", condate: new Date().toISOString()} // props.data.userInfo.fullname
+    const data = req.body.data// props.data.userInfo.fullname
+    const followPath = req.body.followPath// props.data.userInfo.fullname
+    const {con} = data||{}
+    // console.log(data);
+    // res.send({successful: true})
+    // return
+
+    function ifCon(){
+        if(data){
+            const {con} = data
+            if(con === "none"){
+                return false
+            } else {
+                return true
+            }
+        } else {
+            return false
+        }
+    }
 
     async function FollowNotifier(which){
         if(userID !== newUserID){
-            // data
-            function getDate(){
-                const now = new Date()
-                const time = date.format(now, 'h:mmA')
-                const when = date.format(now, 'DD/MM/YYYY')
-                const dateString = date.format(now, 'YYYY,MM,DD,HH,mm,ss')
-                
-                return {
-                    time,
-                    date: when,
-                    dateString
+
+            function additionalMessage(){
+                if(followPath){
+                    const {type, path, bubbleRef} = followPath||{}
+                    const {userID} = bubbleRef||{}
+                    if(type === "bubble"){
+                        return `, after seeing ${newUserID===userID?"your":"this"} bubble.`
+                    } else if (type==="reply"){
+                        return `, after seeing your reply.`
+                    } else {
+                        return "."
+                    }
                 }
+                return "."
             }
 
-            function constructMessage(){
-                if(which==='follow'){
-                    return `${userName} is now following you`
+            function newMessage(){
+                if(data){
+                    const {con} = data
+                    if(con === "none"){
+                        return `${userName} is now following you${additionalMessage()}`
+                    } else if(con === "follow on promise"){
+                        // return `${userName} will follow you if you decide`
+                        return `${userName} promised to follow you, but based on your choice${additionalMessage()}`
+                    } else {
+                        return `${userName} follows you conditionally${additionalMessage()}`
+                    }
                 } else {
-                    return `${userName} unfollowed you`
+                    return `${userName} is now following you${additionalMessage()}`
                 }
             }
 
             const followData = {
-                time: getDate(),
-                // bubbleID: thisBubble.postID,
-                // creatorID: thisUserID,
+                // time: getDate(),
+                when: new Date().toISOString(),
                 userID,
-                message: constructMessage(),
+                message: newMessage(),
                 identityStatus: false,
-                // feed: thisBubble.refDoc,
-                type: 'follow',
+                condition: data,
+                type: ifCon()?"con_follow":'follow',
                 id: uuidv4(),
+            }
+
+            if(followPath){
+                followData.followPath = followPath.type
+
+                if(followPath.bubbleRef) followData.feed = followPath.bubbleRef
+                if(followPath.path) followData.replyPath = followPath.path
             }
     
             // check if
@@ -63,7 +100,8 @@ async function follow(req, res){
                     // const user = 
                     const thisData = {
                         title: `Concealed`,
-                        body: `${userName} is now following you`,
+                        // body: `${userName} is now following you`,
+                        body: newMessage(),
                         icon: false
                     }
                     await sendPushNotification(newUserID, thisData , req)
@@ -107,14 +145,20 @@ async function follow(req, res){
 
     const Follow = async () => {
         // add user id to my following
+        if(con === "follow on promise"){
+            await FollowNotifier("follow")
+            res.send({successful: true})
+            return
+        }
+
         const userFollowing = await Following.findOne({userID}).lean()
         if(userFollowing===null){
-            const following = new Following({userID, following: { [newUserID]: {name: newUserName, id: newUserID}}})
+            const following = new Following({userID, following: { [newUserID]: {name: newUserName, id: newUserID, data}}})
             await following.save()
         } else {
             if(!userFollowing.following){userFollowing.following = {}}
             if(!userFollowing.following[newUserID]){
-                userFollowing.following[newUserID] = {name: newUserName, id: newUserID}
+                userFollowing.following[newUserID] = {name: newUserName, id: newUserID, data}
                 await Following.updateOne({userID}, {following: userFollowing.following})
             }
         }
@@ -123,17 +167,21 @@ async function follow(req, res){
         const userFollowers = await Followers.findOne({userID: newUserID}).lean()
         if(userFollowers===null){
             const followers = new Followers({userID: newUserID, followers: {
-                [userID]: {name: userName, id: userID}
+                [userID]: {name: userName, id: userID, data}
             }})
             await followers.save()
-            await FollowNotifier("follow")
+            if(!dontNotify){
+                await FollowNotifier("follow")
+            }
             await updateUserAnalytics(userID, newUserID)
         } else {
             if(!userFollowers.followers){userFollowers.followers = {}}
             if(!userFollowers.followers[userID]){
-                userFollowers.followers[userID] = {name: userName, id: userID}
+                userFollowers.followers[userID] = {name: userName, id: userID, data}
                 await Followers.updateOne({userID: newUserID}, {followers: userFollowers.followers})
-                await FollowNotifier("follow")
+                if(!dontNotify){
+                    await FollowNotifier("follow")
+                }
                 await updateUserAnalytics(userID, newUserID)
             }
         }

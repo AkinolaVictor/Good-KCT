@@ -41,7 +41,8 @@ async function unFollow(req, res){
             }
 
             const followData = {
-                time: getDate(),
+                // time: getDate(),
+                when: new Date().toISOString(),
                 userID,
                 message: constructMessage(),
                 identityStatus: false,
@@ -52,6 +53,7 @@ async function unFollow(req, res){
             // followData.feed.env='feed'
     
             // check if
+            
             const userNotification = await notifications.findOne({userID: newUserID})
             if(userNotification === null){
                 const newNotifications = new notifications({userID: newUserID, all: [followData]})
@@ -108,6 +110,7 @@ async function unFollow(req, res){
                     }
                 }
             }
+            
             // update audience
             await savedAudience.updateOne({userID: newUserID}, {
                 audience: userSavedAudience.audience

@@ -33,6 +33,9 @@ const openUserProfile_ForAnalytics = require('../controllers/user/openUserProfil
 const editUserSettings = require('../controllers/user/editUserSettings')
 const getUserList = require('../controllers/user/getUserList')
 const userDailyAnalytics2 = require('../controllers/user/userDailyAnalytics_2')
+const interFollow = require('../controllers/user/interFollow')
+const watchMyFollowing = require('../controllers/user/watchMyFollowing')
+const watchMyFollowers = require('../controllers/user/watchMyFollowers')
 
 // create an account
 // router.post('/createAccount', signUp)
@@ -42,6 +45,15 @@ const userDailyAnalytics2 = require('../controllers/user/userDailyAnalytics_2')
 
 // follow
 router.post('/follow', follow)
+
+// interFollow
+router.post('/interFollow', interFollow)
+
+// watchMyFollowing
+router.post('/watchMyFollowing', watchMyFollowing)
+
+// watchMyFollowing
+router.post('/watchMyFollowing', watchMyFollowers)
 
 // unfollow
 router.post('/unFollow', unFollow)
