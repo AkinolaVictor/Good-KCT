@@ -262,6 +262,17 @@ function modelPack(db){
             const savePush = db.models["savepushsubscribes"] || db.model("savepushsubscribes", savePushSchema)
             return savePush
         }(),
+        savePush2: function(){
+            const savePushSchema2 = db.Schema({
+                userID: String,
+                subscription: String,
+                createdAt: {type: Date, default: new Date()},
+                updatedAt: Date
+            }, { strict: false, minimize: false})
+            
+            const savePush2 = db.models["savepushsubscribes2"] || db.model("savepushsubscribes2", savePushSchema2)
+            return savePush2
+        }(),
         usageAnalytics: function(){
             const usageAnalyticsSchema = db.Schema({
                 userID: String,

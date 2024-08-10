@@ -36,6 +36,7 @@ const userDailyAnalytics2 = require('../controllers/user/userDailyAnalytics_2')
 const interFollow = require('../controllers/user/interFollow')
 const watchMyFollowing = require('../controllers/user/watchMyFollowing')
 const watchMyFollowers = require('../controllers/user/watchMyFollowers')
+const savePushSubscribe_2 = require('../controllers/pushNotification/savePushSubscribe_2')
 
 // create an account
 // router.post('/createAccount', signUp)
@@ -82,6 +83,9 @@ router.post('/updateUserProfile', updateUserProfile)
 
 // pushNotification
 router.post('/savePushSubscribe', savePushSubscribe)
+
+// pushNotification
+router.post('/savePushSubscribe_2', savePushSubscribe_2)
 
 // pushNotification
 router.post('/getUsers', getUsers)
