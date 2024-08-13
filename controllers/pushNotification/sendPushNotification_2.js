@@ -1,9 +1,10 @@
-const webPush = require('web-push')
+const webPush = require('web-push');
+const expoSDK = require('./expoSDK');
 
-async function sendPushNotification_2(userID, data, req){
+async function sendPushNotification_2({userIDs, data, req}){
     const {savePush2} = req.dbModels
 
-    if(!userID){
+    if(!userIDs){
         return
     }
     
@@ -20,29 +21,48 @@ async function sendPushNotification_2(userID, data, req){
     //     ...data
     // })
 
-    const expoPushToken = await savePush2.findOne({userID})
-    if(expoPushToken){
+    // const expoPushToken = await savePush2.findOne({userIDs})
+    // console.log({userIDs});
+    const somePushTokens = []
+    const acquiredPushTokens = await savePush2.find({userID: {$in: [...userIDs]}}).lean()
+    for(let i=0; i<acquiredPushTokens.length; i++){
+        const token = acquiredPushTokens[i]?.subscription
+        token && somePushTokens.push(token)
+    }
+    // if(expoPushToken){
         const payload = {
-            to: expoPushToken,
-            sound: 'default',
+            // to: expoPushToken,
+            // sound: 'default',
             title: 'Original Title',
-    
-            body: 'And here is the body!',
+            body: 'some notifications!',
             data: { someData: 'goes here' },
             ...data
         };
+        // console.log(payload.image);
+        console.log(data);
         
+        // if(payload.image){
+        //     payload.attachments = [
+        //         {
+        //             identifier: 'image',
+        //             url: payload.image,
+        //             type: 'image/png'
+        //         }
+        //     ]
+        // }
+
         
-        await fetch('https://exp.host/--/api/v2/push/send', {
-            method: 'POST',
-            headers: {
-            Accept: 'application/json',
-            'Accept-encoding': 'gzip, deflate',
-            'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload),
-        });
-    }
+        // await fetch('https://exp.host/--/api/v2/push/send', {
+        //     method: 'POST',
+        //     headers: {
+        //     Accept: 'application/json',
+        //     'Accept-encoding': 'gzip, deflate',
+        //     'Content-Type': 'application/json',
+        //     },
+        //     body: JSON.stringify(payload),
+        // });
+        await expoSDK({somePushTokens, payload})
+    // }
             
 }
         

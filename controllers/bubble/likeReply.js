@@ -1,6 +1,7 @@
 const { v4: uuidv4 } = require('uuid')
 const date = require('date-and-time')
 const sendPushNotification = require('../pushNotification/sendPushNotification')
+const sendPushNotification_2 = require('../pushNotification/sendPushNotification_2')
 // const {doc, getDoc, updateDoc, setDoc, increment} = require('firebase/firestore')
 // const {database} = require('../../database/firebase')
 // const notifications = require('../../models/notifications')
@@ -134,9 +135,15 @@ async function likeReply(req, res){
             const data = {
                 title: `${creatorData.message}`,
                 body: notificationData.message,
-                icon: decideNotifyIcon()
+                // icon: decideNotifyIcon()
             }
+            
             await sendPushNotification(bubbleCreator, data, req)
+
+            await sendPushNotification_2({
+                data, req,
+                userIDs: [bubbleCreator]
+            })
         }
 
 
@@ -177,9 +184,14 @@ async function likeReply(req, res){
             const data = {
                 title: `${mainReplyData.message}`,
                 body: notificationData.message,
-                icon: decideNotifyIcon()
+                // icon: decideNotifyIcon()
             }
             await sendPushNotification(replyCreatorID, data, req)
+
+            await sendPushNotification_2({
+                data, req,
+                userIDs: [replyCreatorID]
+            })
         }
     }
 

@@ -1,6 +1,7 @@
 const date = require('date-and-time')
 const { v4: uuidv4 } = require('uuid')
 const sendPushNotification = require('../pushNotification/sendPushNotification')
+const sendPushNotification_2 = require('../pushNotification/sendPushNotification_2')
 // const {doc, getDoc, updateDoc, setDoc, deleteField} = require('firebase/firestore')
 // const {database} = require('../../database/firebase')
 // const notifications = require('../../models/notifications')
@@ -61,14 +62,19 @@ async function unFollow(req, res){
             } else {
                 userNotification.all.push(followData)
                 // await userNotification.save()
-                await notifications.updateOne({userID: newUserID}, {all: [...userNotification.all]}).then(()=>{
+                await notifications.updateOne({userID: newUserID}, {all: [...userNotification.all]}).then(async()=>{
                     // const user = 
                     const thisData = {
                         title: `Concealed`,
                         body: `${userName} has unfollowed you`,
-                        icon: false
+                        // icon: false
                     }
-                    sendPushNotification(newUserID, thisData , req)
+                    await sendPushNotification(newUserID, thisData , req)
+
+                    await sendPushNotification_2({
+                        req, data: thisData,
+                        userIDs: [newUserID]
+                    })
                 })
             }
         }

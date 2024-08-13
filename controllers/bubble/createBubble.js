@@ -3,6 +3,7 @@ const sendPushNotification = require('../pushNotification/sendPushNotification')
 // const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
 // const {getDownloadURL, ref, uploadBytes} = require('firebase/storage')
 const date = require('date-and-time')
+const sendPushNotification_2 = require('../pushNotification/sendPushNotification_2')
 // const {database, storage} = require('../../database/firebase')
 // const bot = require('../../models/bot')
 // const bubble = require('../../models/bubble')
@@ -67,20 +68,67 @@ async function createBubble(req, res){
         }
     }
 
-    async function sendNotificationToMentioned(data){
-        const userNotification = await notifications.findOne({userID: data.userID}).lean()
-        if(userNotification){
-            userNotification.all.push(data.payload)
-            await notifications.updateOne({userID: data.userID}, {all: userNotification.all})
+    // async function sendNotificationToMentioned(data){
+    //     const userNotification = await notifications.findOne({userID: data.userID}).lean()
+    //     if(userNotification){
+    //         userNotification.all.push(data.payload)
+    //         await notifications.updateOne({userID: data.userID}, {all: userNotification.all})
 
-            const notificationData = {
-                title: `Concealed`,
-                body: data.payload.message,
-                icon: decideNotifyIcon()
-            }
+    //         const notificationData = {
+    //             title: `Concealed`,
+    //             body: data.payload.message,
+    //             icon: decideNotifyIcon()
+    //         }
 
-            await sendPushNotification(data.userID, notificationData, req)
+    //         await sendPushNotification(data.userID, notificationData, req)
+    //         // await sendPushNotification_2({
+    //         //     userIDs: [data.userID],
+    //         //     data: notificationData,
+    //         //     req
+    //         // })
+    //     }
+    // }
+
+    async function sendNotificationToMentioned({dataArr, feedRef}){
+        const allIds = []
+
+        const payload = {
+            // time: getDate(),
+            when: new Date().toISOString(),
+            message: `${creatorName} mentioned you in a bubble`,
+            userID,
+            feed: feedRef,
+            type: "mention",
+            creatorID: userID,
+            bubbleID: thisBubble.postID,
+            id: uuidv4(),
+            identityStatus: discernUserIdentity()
         }
+
+        const notificationData = {
+            title: `Concealed`,
+            body: payload.message,
+            // icon: decideNotifyIcon()
+        }
+
+        for(let i=0; i<dataArr.length; i++){
+            const data = dataArr[i]
+
+            if(!allIds.includes(data.userID)) allIds.push(data.userID)
+
+            const userNotification = await notifications.findOne({userID: data.userID}).lean()
+            if(userNotification){
+                userNotification.all.push(data.payload)
+                await notifications.updateOne({userID: data.userID}, {all: userNotification.all})
+                await sendPushNotification(data.userID, notificationData, req)
+            }
+        }
+
+        await sendPushNotification_2({
+            userIDs: [...dataArr],
+            data: notificationData,
+            req
+        })
     }
     
     // all file are uploaded on the client side
@@ -251,26 +299,36 @@ async function createBubble(req, res){
                     }
                 }
             }
-            
+            const savedIDs = []
             for(let i=0; i<allBubbleAudience.length; i++){
                 // if(await checkThroughAudienceSettings(allBubbleAudience[i])){
                     const followerFeed = await Feeds.findOne({userID: allBubbleAudience[i]})
                     if(followerFeed === null){
                         const newUserFeed = new Feeds({userID: allBubbleAudience[i], bubbles: [feedRef]})
                         await newUserFeed.save().then(async()=>{
-                            await afterFeedingEachFollower_Send_notification(allBubbleAudience[i])
+                            await afterFeedingEachFollower_Send_notification({
+                                currentID: allBubbleAudience[i]
+                            })
                         }).catch(()=>{ })
                     } else {
                         followerFeed.bubbles.push(feedRef)
     
                         await Feeds.updateOne({userID: allBubbleAudience[i]}, {bubbles: [...followerFeed.bubbles]}).then(async()=>{
-                            await afterFeedingEachFollower_Send_notification(allBubbleAudience[i])
+                            await afterFeedingEachFollower_Send_notification({
+                                currentID: allBubbleAudience[i]
+                            })
                         }).catch(()=>{ })
                     }
                 // }
+                    
+                if(!savedIDs.includes(allBubbleAudience[i])) savedIDs.push(allBubbleAudience[i])
             }
-
-            async function afterFeedingEachFollower_Send_notification(currentID){
+                
+            await afterFeedingEachFollower_Send_notification({
+                currentID: savedIDs,
+                multiple: true
+            })
+            async function afterFeedingEachFollower_Send_notification({currentID, multiple}){
                 function constructTitle(){
                     if(discernUserIdentity()){
                         return "someone you're following created a bubble"
@@ -304,44 +362,52 @@ async function createBubble(req, res){
                                     }
                                 }
                             }
+
                             return message.length?message:`You're selected among those who can view the content of this bubble.`
                         } else {
-                            if(bubble[i].audience.includes(currentID)){
-                                let message = ''
+                            // if(bubble[i].audience.includes(currentID)){
+                            //     let message = ''
 
-                                // building message
-                                const config = bubble[i].config
-                                for(let j=0; j<config.length; j++){
-                                    const tweak = config[j].tweak
-                                    const word = config[j].word
-                                    if(tweak.name === 'none'){
-                                        message = message + `${word} `
-                                    } else if (tweak.name ==='description'){
-                                        message = message + `${word} `
-                                    } else if (tweak.name ==='hide'){
-                                        // message = message + `${word} `
-                                    } else{
-                                        message = message + `*** `
-                                    }
-                                }
-
-
-                                return message.length?message:`You're selected among those who can view the content of this bubble.`
-                            } else {
-                                return `You're selected among those who can view the content of this bubble.`
-                            }
+                            //     // building message
+                            //     const config = bubble[i].config
+                            //     for(let j=0; j<config.length; j++){
+                            //         const tweak = config[j].tweak
+                            //         const word = config[j].word
+                            //         if(tweak.name === 'none'){
+                            //             message = message + `${word} `
+                            //         } else if (tweak.name ==='description'){
+                            //             message = message + `${word} `
+                            //         } else if (tweak.name ==='hide'){
+                            //             // message = message + `${word} `
+                            //         } else{
+                            //             message = message + `*** `
+                            //         }
+                            //     }
+                            //     return message.length?message:`You're selected among those who can view the content of this bubble.`
+                            // } else {
+                            //     return `You're selected among those who can view the content of this bubble.`
+                            // }
+                            return `You're selected among those who can view the content of this bubble.`
                         }
                     }
+
                     return `You're selected among those who can view the content of this bubble.`
                 }
 
                 const data = {
                     title: `${constructTitle()}`,
                     body: discernMessage(),
-                    icon: decideNotifyIcon()
+                    // icon: decideNotifyIcon()
                 }
 
-                await sendPushNotification(currentID, data, req)
+                if(multiple){
+                    await sendPushNotification_2({
+                        userIDs: [...currentID],
+                        data, req
+                    })
+                } else {
+                    await sendPushNotification(currentID, data, req)
+                }
             }
 
             if(checkForEveryoneAndFollowers()){
@@ -407,6 +473,7 @@ async function createBubble(req, res){
                 if(allConcealedUsers){
                     const {users} = allConcealedUsers
                     const userArr = Object.values(users)
+                    const storeMentioned = []
                     for(let i=0; i<userMentioned.length; i++){
                         const curretMentioned = userMentioned[i]
                         for(let j=0; j<userArr.length; j++){
@@ -414,28 +481,31 @@ async function createBubble(req, res){
                             if(currentUser.username.toLowerCase() === curretMentioned.toLowerCase()){
                                 const data = {
                                     userID: currentUser.userID,
-                                    payload: {
-                                        // time: getDate(),
-                                        when: new Date().toISOString(),
-                                        message: `${creatorName} mentioned you in a bubble`,
-                                        userID,
-                                        feed: feedRef,
-                                        type: "mention",
-                                        creatorID: userID,
-                                        bubbleID: thisBubble.postID,
-                                        id: uuidv4(),
-                                        identityStatus: discernUserIdentity()
-                                    }
+                                    // payload: {
+                                    //     // time: getDate(),
+                                    //     when: new Date().toISOString(),
+                                    //     message: `${creatorName} mentioned you in a bubble`,
+                                    //     userID,
+                                    //     feed: feedRef,
+                                    //     type: "mention",
+                                    //     creatorID: userID,
+                                    //     bubbleID: thisBubble.postID,
+                                    //     id: uuidv4(),
+                                    //     identityStatus: discernUserIdentity()
+                                    // }
                                 }
 
                                 if(checkForEveryoneAndFollowers() || checkForSpecificAudience(currentUser.userID)){
                                     if(currentUser.userID !== userID){
-                                        await sendNotificationToMentioned(data)
+                                        // await sendNotificationToMentioned(data)
+                                        storeMentioned.push(currentUser.userID)
                                     }
                                 }
                             }
                         }
                     }
+
+                    if(storeMentioned.length) await sendNotificationToMentioned({dataArr: storeMentioned, feedRef})
                 }
             }
 

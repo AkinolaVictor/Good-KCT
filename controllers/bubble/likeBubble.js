@@ -2,6 +2,7 @@ const date = require('date-and-time')
 const { v4: uuidv4 } = require('uuid')
 const { dataType } = require('../../utils/utilsExport')
 const sendPushNotification = require('../pushNotification/sendPushNotification')
+const sendPushNotification_2 = require('../pushNotification/sendPushNotification_2')
 // const {doc, getDoc, updateDoc, setDoc, increment} = require('firebase/firestore')
 // const {getDownloadURL, ref, uploadBytes, deleteObject} = require('firebase/storage')
 // const {database} = require('../../database/firebase')
@@ -72,9 +73,9 @@ async function likeBubble(req, res){
 
     async function LikeNotifier(which, notificationData){
         if(userID!==currentBubble.userID){
-
             const likeData = {
-                time: currentDate,
+                // time: currentDate,
+                when: new Date().toISOString(),
                 bubbleID: currentBubble.postID,
                 creatorID: currentBubble.userID,
                 userID,
@@ -84,28 +85,46 @@ async function likeBubble(req, res){
                 feed: currentBubble.refDoc,
                 type: 'like'
             }
+
             likeData.feed.env='feed'
     
             // check if user has notification
             const userNotification = await notifications.findOne({userID: currentBubble.userID})
             let access = true
             if(userNotification === null){
+                console.log("dd");
                 const newNotification = new notifications({userID: currentBubble.userID, all: [likeData]})
-                await newNotification.save().catch(()=>{access = false})
+                await newNotification.save().catch((e)=>{
+                    // console.log(e);
+                    console.log("also failed");
+                    // access = false
+                })
             } else {
                 userNotification.all.push(likeData)
                 // await userNotification.save().catch(()=>{access = false})
-                await notifications.updateOne({userID: currentBubble}, {all: [...userNotification.all]}).catch(()=>{access = false})
+                await notifications.updateOne({userID: currentBubble}, {all: [...userNotification.all]}).catch((e)=>{
+                    // console.log(e);
+                    console.log("also failed2");
+                    // access = false
+                })
             }
             
-            if(access){
+            // if(access){
                 const data = {
                     title: `${likeData.message}`,
                     body: notificationData.message,
-                    icon: decideNotifyIcon()
+                    // icon: decideNotifyIcon()
                 }
+                // console.log(userIcon);
+                // if(decideNotifyIcon()) data.icon = decideNotifyIcon()
+
                 await sendPushNotification(currentBubble.userID, data, req)
-            }
+
+                await sendPushNotification_2({
+                    userIDs: [currentBubble.userID],
+                    data, req
+                })
+            // }
         }
     }
 
@@ -148,110 +167,115 @@ async function likeBubble(req, res){
             await eachUserAnalytics.updateOne({userID: thisBubble.user.id}, {bubbles})
         }
     }
-
-    const thisBubble = await bubble.findOne({postID: currentBubble.postID}).lean()
-    if(thisBubble){
-        if(typeof(thisBubble.activities)==="string"){
-            const activities = JSON.parse(thisBubble.activities)
-            thisBubble.activities = activities
-        }
-
-        if(!thisBubble.like.includes(userID)){
-            thisBubble.like.push(userID)
-        }
-
-        if(thisBubble.activities.iAmOnTheseFeeds[userID]){
-            if(!thisBubble.activities.iAmOnTheseFeeds[userID].myActivities.activityIndex){
-                thisBubble.activities.lastActivityIndex++
-                thisBubble.activities.iAmOnTheseFeeds[userID].myActivities.activityIndex = thisBubble.activities.lastActivityIndex
-            }
-
-           thisBubble.activities.iAmOnTheseFeeds[userID].myActivities.liked=true
-           thisBubble.activities.iAmOnTheseFeeds[userID].seenAndVerified=true
-
-            // Update last activities
-            const activity = 'liked'
-
-            if(!thisBubble.activities.lastActivities){
-                thisBubble.activities.lastActivities=[]
+    try{
+        const thisBubble = await bubble.findOne({postID: currentBubble.postID}).lean()
+        if(thisBubble){
+            if(typeof(thisBubble.activities)==="string"){
+                const activities = JSON.parse(thisBubble.activities)
+                thisBubble.activities = activities
             }
     
-            const lastActivities = thisBubble.activities.lastActivities
-            const activityData = {
-                activity,
-                userID,
-                date: currentDate
+            if(!thisBubble.like.includes(userID)){
+                thisBubble.like.push(userID)
             }
-
-            if(lastActivities.length>0){
-                const last = lastActivities[lastActivities.length - 1]
-                if(last.activity!==activity){
-                    for(let i=0; i<lastActivities.length; i++){
-                        const current = lastActivities[i]
-                        if(current.userID===userID && current.activity===activity){
-                            break
-                        }
-                        if(i===lastActivities.length-1){
-                            thisBubble.activities.lastActivities.push(activityData)
-                            if(thisBubble.activities.lastActivities.length>10){
-                                thisBubble.activities.lastActivities.shift()
-                            }
-                        }
-                    }
+    
+            if(thisBubble.activities.iAmOnTheseFeeds[userID]){
+                if(!thisBubble.activities.iAmOnTheseFeeds[userID].myActivities.activityIndex){
+                    thisBubble.activities.lastActivityIndex++
+                    thisBubble.activities.iAmOnTheseFeeds[userID].myActivities.activityIndex = thisBubble.activities.lastActivityIndex
                 }
-            } else {
-                thisBubble.activities.lastActivities.push(activityData)
-            }
-
-            const activities = JSON.stringify(thisBubble.activities)
-            const like = thisBubble.like
-            // const totalLikes = thisBubble.totalLikes + 1
-            await bubble.updateOne({postID: currentBubble.postID}, {activities, like}).then(async()=>{
-                const bubbleMessage = thisBubble.bubble[0]
-                const notificationData = {
-                    message: `Bubble: ${bubbleMessage.message||''}`
+    
+               thisBubble.activities.iAmOnTheseFeeds[userID].myActivities.liked=true
+               thisBubble.activities.iAmOnTheseFeeds[userID].seenAndVerified=true
+    
+                // Update last activities
+                const activity = 'liked'
+    
+                if(!thisBubble.activities.lastActivities){
+                    thisBubble.activities.lastActivities=[]
                 }
-                await LikeNotifier('like', notificationData)
-                await updateUserAnalytics(thisBubble)
-
-                if(currentBubble.userID!==userID){
-                    // const thisUserLikes = await userLikes.findOne({userID})
-                    const thisUserLikes = await LikeModel.findOne({userID})
-                    if(thisUserLikes === null){
-                        const newUserLike = new LikeModel({userID, bubbles: [currentBubble.refDoc]})
-                        // const newUserLike = new userLikes.findOne({userID, bubbles: [currentBubble.refDoc]})
-                        await newUserLike.save()
-                    } else {
-                        const allLikesID = []
-
-                        for(let i=0; i<thisUserLikes.bubbles.length; i++){
-                            if(dataType(thisUserLikes.bubbles[i])==='object'){
-                                allLikesID.push(thisUserLikes.bubbles[i].postID)
-                            }
-                        }
-
-                        if(!allLikesID.includes(thisBubble.postID)){
-                            thisUserLikes.bubbles.push(currentBubble.refDoc)
-                            // await thisUserLikes.save()
-                            await LikeModel.updateOne({userID}, {bubbles: [...thisUserLikes.bubbles]})
-                        }
-                    }
-                // } else {
-                //     console.log("ready...");
-                }
-
-            }).then(()=>{
-                res.send({successful: true})
-            }).catch((e)=>{
-                console.log(e, "failed here 1");
-                res.send({successful: false, message: 'Error from the server'})
-            })
-        } else {
-            res.send({successful: false, message: 'user not recognized'})
-        }
         
-    } else {
-        res.send({successful: false, message: 'bubble not found'})
+                const lastActivities = thisBubble.activities.lastActivities
+                const activityData = {
+                    activity,
+                    userID,
+                    date: currentDate
+                }
+    
+                if(lastActivities.length>0){
+                    const last = lastActivities[lastActivities.length - 1]
+                    if(last.activity!==activity){
+                        for(let i=0; i<lastActivities.length; i++){
+                            const current = lastActivities[i]
+                            if(current.userID===userID && current.activity===activity){
+                                break
+                            }
+                            if(i===lastActivities.length-1){
+                                thisBubble.activities.lastActivities.push(activityData)
+                                if(thisBubble.activities.lastActivities.length>10){
+                                    thisBubble.activities.lastActivities.shift()
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    thisBubble.activities.lastActivities.push(activityData)
+                }
+    
+                const activities = JSON.stringify(thisBubble.activities)
+                const like = thisBubble.like
+                // const totalLikes = thisBubble.totalLikes + 1
+                await bubble.updateOne({postID: currentBubble.postID}, {activities, like}).then(async()=>{
+                    const bubbleMessage = thisBubble.bubble[0]
+                    const notificationData = {
+                        message: `Bubble: ${bubbleMessage.message||''}`
+                    }
+                    await LikeNotifier('like', notificationData)
+                    await updateUserAnalytics(thisBubble)
+    
+                    if(currentBubble.userID!==userID){
+                        // const thisUserLikes = await userLikes.findOne({userID})
+                        const thisUserLikes = await LikeModel.findOne({userID})
+                        if(thisUserLikes === null){
+                            const newUserLike = new LikeModel({userID, bubbles: [currentBubble.refDoc]})
+                            // const newUserLike = new userLikes.findOne({userID, bubbles: [currentBubble.refDoc]})
+                            await newUserLike.save()
+                        } else {
+                            const allLikesID = []
+    
+                            for(let i=0; i<thisUserLikes.bubbles.length; i++){
+                                if(dataType(thisUserLikes.bubbles[i])==='object'){
+                                    allLikesID.push(thisUserLikes.bubbles[i].postID)
+                                }
+                            }
+    
+                            if(!allLikesID.includes(thisBubble.postID)){
+                                thisUserLikes.bubbles.push(currentBubble.refDoc)
+                                // await thisUserLikes.save()
+                                await LikeModel.updateOne({userID}, {bubbles: [...thisUserLikes.bubbles]})
+                            }
+                        }
+                    // } else {
+                    //     console.log("ready...");
+                    }
+    
+                }).then(()=>{
+                    res.send({successful: true})
+                }).catch((e)=>{
+                    console.log(e, "failed here 1");
+                    res.send({successful: false, message: 'Error from the server'})
+                })
+            } else {
+                res.send({successful: false, message: 'user not recognized'})
+            }
+            
+        } else {
+            res.send({successful: false, message: 'bubble not found'})
+        }
+    } catch(e){
+        console.log(e);
+        console.log("faileddd");
+        res.send({successful: false, message: 'caught after a failure'})
     }
 }
 

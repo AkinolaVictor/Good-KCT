@@ -1,6 +1,7 @@
 const date = require('date-and-time')
 const { v4: uuidv4 } = require('uuid')
 const sendPushNotification = require('../pushNotification/sendPushNotification')
+const sendPushNotification_2 = require('../pushNotification/sendPushNotification_2')
 // const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
 // const {database} = require('../../database/firebase')
 // const { dataType } = require('../../utils/utilsExport')
@@ -118,7 +119,8 @@ async function shareBubble(req, res){
             }
 
             const shareRequestData = {
-                time: getDate(),
+                // time: getDate(),
+                when: new Date().toISOString(),
                 bubbleID: thisBubble.postID,
                 creatorID: thisBubble.userID,
                 userID: userID,
@@ -146,9 +148,15 @@ async function shareBubble(req, res){
                 const data = {
                     title: `${shareRequestData.message}`,
                     body: `Bubble: ${notificationMessage}`,
-                    icon: decideNotifyIcon()
+                    // icon: decideNotifyIcon()
                 }
+
                 await sendPushNotification(thisBubble.userID, data, req)
+
+                await sendPushNotification_2({
+                    data, req,
+                    userIDs: [thisBubble.userID]
+                })
             } catch(e){
                 // DO NOTHING
             }
@@ -173,7 +181,8 @@ async function shareBubble(req, res){
             }
 
             const shareData = {
-                time: getDate(),
+                // time: getDate(),
+                when: new Date().toISOString(),
                 bubbleID: thisBubble.postID,
                 creatorID: thisBubble.userID,
                 userID,
@@ -199,9 +208,13 @@ async function shareBubble(req, res){
                 const data = {
                     title: `${shareData.message}`,
                     body: notificationData.message,
-                    icon: decideNotifyIcon()
+                    // icon: decideNotifyIcon()
                 }
                 await sendPushNotification(thisBubble.userID, data, req)
+                await sendPushNotification_2({
+                    data, req,
+                    userIDs: [thisBubble.userID]
+                })
             } catch (e){
                 // DO NOTHING
             }

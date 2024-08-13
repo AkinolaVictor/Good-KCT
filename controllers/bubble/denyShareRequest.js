@@ -1,5 +1,6 @@
 const date = require('date-and-time')
 const sendPushNotification = require('../pushNotification/sendPushNotification')
+const sendPushNotification_2 = require('../pushNotification/sendPushNotification_2')
 // const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
 // const { v4: uuidv4 } = require('uuid')
 // const {database} = require('../../database/firebase')
@@ -66,9 +67,15 @@ async function denyShareRequest(req, res){
         const thisData = {
             title: `${newData.message}`,
             body: 'please check the notification section in the concealed app to see the bubble, you can also make another share request to the bubble creator.',
-            icon: false
+            // icon: false
         }
         await sendPushNotification(data.userID, thisData, req)
+
+        await sendPushNotification_2({
+            req,
+            data: thisData,
+            userIDs: [data.userID]
+        })
     }
     await notifyAudience()
 
@@ -87,8 +94,8 @@ async function denyShareRequest(req, res){
             }
         }
     }
-    await decreaseCount()
 
+    await decreaseCount()
     res.send({successful: true})
 }
 

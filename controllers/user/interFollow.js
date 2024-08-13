@@ -1,6 +1,7 @@
 const date = require('date-and-time')
 const { v4: uuidv4 } = require('uuid')
 const sendPushNotification = require('../pushNotification/sendPushNotification')
+const sendPushNotification_2 = require('../pushNotification/sendPushNotification_2')
 // const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
 // const {getDownloadURL, ref, uploadBytes} = require('firebase/storage')
 // const {database} = require('../../database/firebase')
@@ -95,9 +96,15 @@ async function interFollow(req, res){
                     const thisData = {
                         title: `Concealed`,
                         body: `${reverse?newUserName:userName} is now following you`,
-                        icon: false
+                        // icon: false
                     }
-                    await sendPushNotification(reverse?userID:newUserID, thisData , req)
+                    const thisID = reverse?userID:newUserID
+                    await sendPushNotification(thisID, thisData , req)
+                    
+                    await sendPushNotification_2({
+                        req, data: thisData,
+                        userIDs: [thisID]
+                    })
                 })
             }
         }

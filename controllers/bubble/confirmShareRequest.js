@@ -1,5 +1,6 @@
 const date = require('date-and-time')
 const sendPushNotification = require('../pushNotification/sendPushNotification')
+const sendPushNotification_2 = require('../pushNotification/sendPushNotification_2')
 // const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
 // const { v4: uuidv4 } = require('uuid')
 // const {database} = require('../../database/firebase')
@@ -123,7 +124,8 @@ async function confirmShareRequest(req, res){
             const newData = {...data}
             newData.message = 'Your request to share this bubble was granted, it has been automatically pushed to your followers'
             newData.status = 'granted'
-            newData.time = getDate()
+            newData.when = new Date().toISOString()
+            // newData.time = getDate()
 
             const dataUserNotification = await notifications.findOne({userID: data.userID})
             if(dataUserNotification === null){
@@ -138,9 +140,14 @@ async function confirmShareRequest(req, res){
             const thisData = {
                 title: `${newData.message}`,
                 body: 'please check the notification section in the app to see the bubble.',
-                icon: false
+                // icon: false
             }
             await sendPushNotification(data.userID, thisData, req)
+            await sendPushNotification_2({
+                userIDs: [data.userID],
+                data: thisData,
+                req
+            })
         }
     }
 

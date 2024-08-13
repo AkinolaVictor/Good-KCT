@@ -1,6 +1,7 @@
 const date = require('date-and-time')
 const { v4: uuidv4 } = require('uuid')
 const sendPushNotification = require('../pushNotification/sendPushNotification')
+const sendPushNotification_2 = require('../pushNotification/sendPushNotification_2')
 
 async function watchMyFollowers(req, res){
     const {notifications, Followers, Following, eachUserAnalytics, savedAudience} = req.dbModels
@@ -47,13 +48,19 @@ async function watchMyFollowers(req, res){
                 await newNotifications.save()
             } else {
                 userNotification.all.push(followData)
-                await notifications.updateOne({userID}, {all: [...userNotification.all]}).then(()=>{
+                await notifications.updateOne({userID}, {all: [...userNotification.all]}).then(async()=>{
                     const thisData = {
                         title: `Concealed`,
                         body: `${name} automatically unfollowed you`,
-                        icon: false
+                        // icon: false
                     }
-                    sendPushNotification(userID, thisData , req)
+
+                    await sendPushNotification(userID, thisData , req)
+
+                    await sendPushNotification_2({
+                        req, data: thisData,
+                        userIDs: [userID]
+                    })
                 })
             }
         }

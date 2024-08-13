@@ -2,6 +2,7 @@ const date = require('date-and-time')
 const { v4: uuidv4 } = require('uuid')
 const { dataType } = require('../../utils/utilsExport')
 const sendPushNotification = require('../pushNotification/sendPushNotification')
+const sendPushNotification_2 = require('../pushNotification/sendPushNotification_2')
 // const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
 // const {database} = require('../../database/firebase')
 // const bubble = require('../../models/bubble')
@@ -70,7 +71,8 @@ async function createReply_Old(req, res){
 
             // data
             const creatorData = {
-                time: getDate(),
+                // time: getDate(),
+                when: new Date().toISOString(),
                 bubbleID: postID,
                 creatorID: creatorID,
                 replyPath: [...newPath],
@@ -94,14 +96,19 @@ async function createReply_Old(req, res){
                 await notifications.updateOne({userID: creatorID}, {all: [...userNotification.all]}).catch(()=>{access = false})
             }
 
+            const data = {
+                title: `${creatorData.message}`,
+                body: notificationData.message,
+                // icon: decideNotifyIcon()
+            }
             if(access){
-                const data = {
-                    title: `${creatorData.message}`,
-                    body: notificationData.message,
-                    icon: decideNotifyIcon()
-                }
                 await sendPushNotification(creatorID, data, req)
             }
+
+            await sendPushNotification_2({
+                data, req,
+                userIDs: [creatorID]
+            })
         }
 
         // update user

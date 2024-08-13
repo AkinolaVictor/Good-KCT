@@ -1,6 +1,7 @@
 const date = require('date-and-time')
 const { v4: uuidv4 } = require('uuid')
 const sendPushNotification = require('../pushNotification/sendPushNotification')
+const sendPushNotification_2 = require('../pushNotification/sendPushNotification_2')
 // const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
 // const {getDownloadURL, ref, uploadBytes} = require('firebase/storage')
 // const {database} = require('../../database/firebase')
@@ -102,9 +103,15 @@ async function follow(req, res){
                         title: `Concealed`,
                         // body: `${userName} is now following you`,
                         body: newMessage(),
-                        icon: false
+                        // icon: false
                     }
+
                     await sendPushNotification(newUserID, thisData , req)
+
+                    await sendPushNotification_2({
+                        data: thisData, req,
+                        userIDs: [newUserID]
+                    })
                 })
             }
         }
