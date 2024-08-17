@@ -81,19 +81,6 @@ async function likeReply(req, res){
         }
     }
 
-    function getDate(){
-        const now = new Date()
-        const time = date.format(now, 'h:mmA')
-        const when = date.format(now, 'DD/MM/YYYY')
-        const dateString = date.format(now, 'YYYY,MM,DD,HH,mm,ss')
-        
-        return {
-            time,
-            date: when,
-            dateString
-        }
-    }
-
     async function LikeReplyNotifier(notificationData){
         
         if(userID!==bubbleCreator && userID!==replyCreatorID){
@@ -117,8 +104,9 @@ async function likeReply(req, res){
                 identityStatus: discernUserIdentity(),
                 feed: refDoc,
                 replyPath: [...path],
-                type: 'like'
+                type: 'reply'
             }
+            
             creatorData.feed.env='feed'
 
             // update creator
@@ -135,9 +123,14 @@ async function likeReply(req, res){
             const data = {
                 title: `${creatorData.message}`,
                 body: notificationData.message,
-                // icon: decideNotifyIcon()
+                data: {
+                    type: "reply",
+                    feed: refDoc,
+                    replyPath: [...path]
+                }
+
             }
-            
+
             await sendPushNotification(bubbleCreator, data, req)
 
             await sendPushNotification_2({
@@ -148,7 +141,7 @@ async function likeReply(req, res){
 
 
         // update user
-        if(path.length>0 && replyCreatorID!==bubbleCreator){
+        if(path.length>1 && replyCreatorID!==bubbleCreator){
             function constructMainUserMessage(){
                 if(discernUserIdentity()){
                     return `someone likes your reply`
@@ -168,7 +161,9 @@ async function likeReply(req, res){
                 replyCreatorID,
                 message: constructMainUserMessage(),
                 identityStatus: discernUserIdentity(),
-                feed: refDoc
+                feed: refDoc,
+                replyPath: [...path],
+                type: "reply"
             }
             mainReplyData.feed.env='feed'
 
@@ -184,8 +179,13 @@ async function likeReply(req, res){
             const data = {
                 title: `${mainReplyData.message}`,
                 body: notificationData.message,
-                // icon: decideNotifyIcon()
+                data: {
+                    type: "reply",
+                    feed: refDoc,
+                    replyPath: [...path]
+                }
             }
+            
             await sendPushNotification(replyCreatorID, data, req)
 
             await sendPushNotification_2({

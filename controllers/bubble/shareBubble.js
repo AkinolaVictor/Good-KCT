@@ -148,7 +148,10 @@ async function shareBubble(req, res){
                 const data = {
                     title: `${shareRequestData.message}`,
                     body: `Bubble: ${notificationMessage}`,
-                    // icon: decideNotifyIcon()
+                    data: {
+                        type: "bubble",
+                        feed: shareFeed
+                    }
                 }
 
                 await sendPushNotification(thisBubble.userID, data, req)
@@ -208,7 +211,10 @@ async function shareBubble(req, res){
                 const data = {
                     title: `${shareData.message}`,
                     body: notificationData.message,
-                    // icon: decideNotifyIcon()
+                    data: {
+                        type: "bubble",
+                        feed: thisBubble.refDoc
+                    }
                 }
                 await sendPushNotification(thisBubble.userID, data, req)
                 await sendPushNotification_2({

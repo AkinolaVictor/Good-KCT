@@ -103,7 +103,10 @@ async function follow(req, res){
                         title: `Concealed`,
                         // body: `${userName} is now following you`,
                         body: newMessage(),
-                        // icon: false
+                        data: {
+                            type: "notification",
+                            userID: newUserID
+                        }
                     }
 
                     await sendPushNotification(newUserID, thisData , req)

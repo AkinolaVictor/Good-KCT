@@ -15,6 +15,7 @@ const multer = require("multer")
 const bot = require('./api/botApi')
 const bubble = require('./api/bubbleApi')
 const user = require('./api/userApi')
+const uploadData = require('./controllers/uploads/uploadData')
 const chats = require('./api/chatApi')
 const http = require('http')
 const socketio = require('socket.io');
@@ -114,15 +115,29 @@ cachedConnection()
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb){
-    return cb(null, "/public/images")
+    // return cb(null, "public/images/")
+    return cb(null, "uploads/")
   },
   filename: function (req, file, cb){
-      return cb(null, `${Date.now()}_${file.originalname}`)
+      const {fieldname, mimetype} = file
+
+      function ext(){
+        const mim = mimetype.split("/")
+        if(mim[1]){
+          return `.${mim[1]}`
+        }
+
+        return ""
+      }
+
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+    // cb(null, file.fieldname + '-' + uniqueSuffix)
+    cb(null, `${fieldname}-${uniqueSuffix}${ext()}`)
   }
 })
   
 
-const upload2 = multer({dest: "uploads/"})
+// const upload = multer({dest: "uploads/"})
 const upload = multer({storage})
 
 
@@ -152,17 +167,7 @@ app.use(morgan("dev")) //dev, tiny, ...
 // app.use('/api/bubble', bubble)
 // app.use('/api/chats', chats)
 
-
-app.post("/api/upload", upload.single("image"), (req, res)=>{
-// app.use("/api/upload", upload.single("file"), (req, res)=>{
-  if(res.status === "200"){
-    console.log("done uploading");
-  }
-  console.log(req.body);
-  // console.log(req.file);
-  // console.log("done");
-  res.send({successful: true})
-})
+app.post("/api/upload", upload.single("over_server"), uploadData)
   
 app.use('/api/user', async function(req, res, next){
   const models = await cachedConnection()
@@ -211,6 +216,7 @@ app.use('/api/test', (req, res)=>{
 app.use('/check', (req, res)=>{
     res.status(200).send('Server is working fine')
 })
+
 // const data = [1, 3, 4]
 // console.log(typeof(data));
 // console.log(typeof(JSON.stringify(data)));

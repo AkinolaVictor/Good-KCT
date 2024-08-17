@@ -93,14 +93,17 @@ async function interFollow(req, res){
                 userNotification.all.push(followData)
                 await notifications.updateOne({userID: reverse?userID:newUserID}, {all: [...userNotification.all]}).then(async()=>{
                     // const user = 
+                    const thisID = reverse?userID:newUserID
                     const thisData = {
                         title: `Concealed`,
                         body: `${reverse?newUserName:userName} is now following you`,
-                        // icon: false
+                        data: {
+                            type: "notification",
+                            userID: thisID
+                        }
                     }
-                    const thisID = reverse?userID:newUserID
                     await sendPushNotification(thisID, thisData , req)
-                    
+
                     await sendPushNotification_2({
                         req, data: thisData,
                         userIDs: [thisID]

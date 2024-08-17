@@ -67,7 +67,10 @@ async function denyShareRequest(req, res){
         const thisData = {
             title: `${newData.message}`,
             body: 'please check the notification section in the concealed app to see the bubble, you can also make another share request to the bubble creator.',
-            // icon: false
+            data: {
+                feed: data.feed,
+                type: "bubble",
+            }
         }
         await sendPushNotification(data.userID, thisData, req)
 

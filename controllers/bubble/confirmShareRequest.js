@@ -138,8 +138,15 @@ async function confirmShareRequest(req, res){
             }
 
             const thisData = {
-                title: `${newData.message}`,
-                body: 'please check the notification section in the app to see the bubble.',
+                title: `Share request granted`,
+                body: `${newData.message}`,
+                // body: 'please check the notification section in the app to see the bubble.',
+                data: {
+                    feed: data.feed,
+                    // url: "/main/bubbles/subReply",
+                    type: "bubble",
+                    // replyPath: [...newPath],
+                }
                 // icon: false
             }
             await sendPushNotification(data.userID, thisData, req)

@@ -67,7 +67,10 @@ async function unFollow(req, res){
                     const thisData = {
                         title: `Concealed`,
                         body: `${userName} has unfollowed you`,
-                        // icon: false
+                        data: {
+                            type: "notification",
+                            userID: newUserID
+                        }
                     }
                     await sendPushNotification(newUserID, thisData , req)
 

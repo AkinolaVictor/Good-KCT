@@ -52,7 +52,10 @@ async function watchMyFollowers(req, res){
                     const thisData = {
                         title: `Concealed`,
                         body: `${name} automatically unfollowed you`,
-                        // icon: false
+                        data: {
+                            type: "notification",
+                            userID
+                        }
                     }
 
                     await sendPushNotification(userID, thisData , req)

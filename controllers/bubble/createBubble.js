@@ -108,6 +108,11 @@ async function createBubble(req, res){
         const notificationData = {
             title: `Concealed`,
             body: payload.message,
+            data: {
+                type: "bubble",
+                // userID,
+                feed: feedRef
+            }
             // icon: decideNotifyIcon()
         }
 
@@ -398,6 +403,11 @@ async function createBubble(req, res){
                     title: `${constructTitle()}`,
                     body: discernMessage(),
                     // icon: decideNotifyIcon()
+                    data: {
+                        type: "bubble",
+                        // userID,
+                        feed: feedRef   
+                    }
                 }
 
                 if(multiple){

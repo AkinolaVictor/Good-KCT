@@ -100,6 +100,12 @@ async function createReply_Old(req, res){
                 title: `${creatorData.message}`,
                 body: notificationData.message,
                 // icon: decideNotifyIcon()
+                data: {
+                    feed: refDoc,
+                    url: "/main/bubbles/subReply",
+                    type: "reply",
+                    replyPath: [...newPath],
+                }
             }
             if(access){
                 await sendPushNotification(creatorID, data, req)

@@ -114,6 +114,11 @@ async function likeBubble(req, res){
                     title: `${likeData.message}`,
                     body: notificationData.message,
                     // icon: decideNotifyIcon()
+                    data: {
+                        feed: currentBubble.refDoc,
+                        // url: "viewbubble/something/others",
+                        type: "bubble"
+                    }
                 }
                 // console.log(userIcon);
                 // if(decideNotifyIcon()) data.icon = decideNotifyIcon()
@@ -122,7 +127,7 @@ async function likeBubble(req, res){
 
                 await sendPushNotification_2({
                     userIDs: [currentBubble.userID],
-                    data, req
+                    data, req,
                 })
             // }
         }
