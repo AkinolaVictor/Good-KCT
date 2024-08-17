@@ -7,7 +7,7 @@ async function watchMyFollowing(req, res){
     const {notifications, Followers, Following, eachUserAnalytics, savedAudience} = req.dbModels
 
     const userID = req.body.userID // user.id
-    // const userID2 = req.body.userID // user.id
+    const userID3 = req.body.userID // user.id
     const userName = req.body.userName // user.id
     const data = req.body.data // props.data.userInfo.fullname
     const { awhile, tobefollowed} = data||{}
