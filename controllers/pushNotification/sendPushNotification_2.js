@@ -35,11 +35,12 @@ async function sendPushNotification_2({userIDs, data, req}){
             // sound: 'default',
             title: 'Original Title',
             body: 'some notifications!',
-            data: { someData: 'goes here' },
+            // data: { someData: 'goes here' },
             ...data
         };
-        // console.log(payload.image);
-        console.log(data);
+        console.log({payload2:payload});
+        console.log({data});
+        console.log({payload});
         
         // if(payload.image){
         //     payload.attachments = [
