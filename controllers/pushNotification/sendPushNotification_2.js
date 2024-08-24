@@ -38,9 +38,9 @@ async function sendPushNotification_2({userIDs, data, req}){
             // data: { someData: 'goes here' },
             ...data
         };
-        console.log({payload2:payload});
-        console.log({data});
-        console.log({payload});
+        // console.log({payload2:payload});
+        // console.log({data});
+        // console.log({payload});
         
         // if(payload.image){
         //     payload.attachments = [
