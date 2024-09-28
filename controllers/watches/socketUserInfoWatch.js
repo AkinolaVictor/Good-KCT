@@ -3,7 +3,7 @@
 function socketUserInfoWatch(models, socket, io){
     const userLikes = models.LikeModel
     const userFeeds = models.Feeds
-    const {User, userShares, userReplies, Followers, userBubbles, Following, savedAudience} = models
+    const {User, userShares, userReplies, Followers, userBubbles, Following, savedAudience, cinemaFeeds, userCinema} = models
     try{
         // USER
         const userDoc = User.watch([], {fullDocument: "updateLookup"})
@@ -41,15 +41,11 @@ function socketUserInfoWatch(models, socket, io){
             if(data.fullDocument){
                 const userID = data.fullDocument.userID                                              
                 const likes = [...data.fullDocument.bubbles]
+                const cinemalikes = data.fullDocument?.cinema||[]
                 io.emit(`userInfo-${userID}`, {
                     type: "likes",
-                    data: {likes}
-                })
-
-                // io.emit(`userLikes-${userID}`, {
-                //     type: "likes",
-                //     data: [...likes.bubbles]
-                // })                
+                    data: {likes, cinemalikes}
+                })                
             }
         })
 
@@ -60,20 +56,24 @@ function socketUserInfoWatch(models, socket, io){
                 const userID = data.fullDocument.userID                                              
                 const feed = [...data.fullDocument.bubbles]
 
-                // let posts = {}
-                // for(let j=0; j<feed.length; j++){
-                //     posts[feed[j].postID] = true
-                // }
-
                 io.emit(`userInfo-${userID}`, {
                     type: "feed",
                     data: {feed}
                 })
+            }
+        })
 
-                // io.emit(`userFeed-${userID}`, {
-                //     type: "lfeed",
-                //     data: feed
-                // }) 
+        // CINEMAFEED
+        const userCinemaFeedsDoc = cinemaFeeds.watch([], {fullDocument: "updateLookup"})
+        userCinemaFeedsDoc.on("change", async(data)=>{
+            if(data.fullDocument){
+                const userID = data.fullDocument.userID                                              
+                const cinemafeed = [...data.fullDocument.cinema]
+
+                io.emit(`userInfo-${userID}`, {
+                    type: "cinemafeed",
+                    data: {cinemafeed}
+                })
             }
         })
         
@@ -100,6 +100,30 @@ function socketUserInfoWatch(models, socket, io){
                 // })
             }
         })
+        
+        // CINEMA
+        const cinemaDoc = userCinema.watch([], {fullDocument: "updateLookup"})
+        cinemaDoc.on("change", async(data)=>{
+            if(data.fullDocument){
+                const userID = data.fullDocument.userID                                              
+                const cinema = [...data.fullDocument.cinema]
+
+                let cinemaposts = {}
+                for(let j=0; j<cinema.length; j++){
+                    cinemaposts[cinema[j].postID] = true
+                }
+
+                io.emit(`userInfo-${userID}`, {
+                    type: "userCinema",
+                    data: {cinema, cinemaposts}
+                })
+
+                // io.emit(`userBubbles-${userID}`, {
+                //     type: "userBubbles",
+                //     data: bubbles
+                // })
+            }
+        })
 
         // SHARE
         const userSharesDoc = userShares.watch([], {fullDocument: "updateLookup"})
@@ -107,10 +131,11 @@ function socketUserInfoWatch(models, socket, io){
             if(data.fullDocument){
                 const userID = data.fullDocument.userID                                              
                 const shares = [...data.fullDocument.bubbles]
+                const cinemashares = data.fullDocument?.cinema||[]
 
                 io.emit(`userInfo-${userID}`, {
                     type: "shares",
-                    data: {shares}
+                    data: {shares, cinemashares}
                 })
 
                 // io.emit(`userShares-${userID}`, {
@@ -124,12 +149,13 @@ function socketUserInfoWatch(models, socket, io){
         const userRepliesDoc = userReplies.watch([], {fullDocument: "updateLookup"})
         userRepliesDoc.on("change", async(data)=>{
             if(data.fullDocument){
-                const replies = [...data.fullDocument.bubbles]
                 const userID = data.fullDocument.userID                                              
+                const replies = [...data.fullDocument.bubbles]
+                const cinemareplies = data.fullDocument?.cinema?[...data.fullDocument.cinema]:[]
 
                 io.emit(`userInfo-${userID}`, {
                     type: "replies",
-                    data: {replies}
+                    data: {replies, cinemareplies}
                 })
 
                 // io.emit(`userReplies-${userID}`, {

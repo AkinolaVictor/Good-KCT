@@ -10,7 +10,9 @@ const socketBotWatch = require("../controllers/watches/socketBotWatch")
 const socketBubbleForEveryone = require("../controllers/watches/socketBubbleForEveryone")
 const socketBubbleWatch = require("../controllers/watches/socketBubbleWatch")
 const socketChatWatch = require("../controllers/watches/socketChatWatch")
+const socketCinemaForEveryone = require("../controllers/watches/socketCinemaForEveryone")
 const socketNotificationWatch = require("../controllers/watches/socketNotificationWatch")
+const socketSubscribedClips = require("../controllers/watches/socketSubscribedClips")
 const socketUserInfoWatch = require("../controllers/watches/socketUserInfoWatch")
 // const socketUpload = require("../controllers/watches/socketUpload")
 
@@ -27,6 +29,8 @@ function socketApi(models, socket, io){
 
     socketUserInfoWatch(models, socket, io)
     socketBubbleForEveryone(models, socket, io)
+    socketCinemaForEveryone(models, socket, io)
+    socketSubscribedClips(models, socket, io)
     socketBotWatch(models, socket, io)
     socketChatWatch(models, socket, io)
     socketNotificationWatch(models, socket, io)

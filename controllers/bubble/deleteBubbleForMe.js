@@ -10,7 +10,6 @@ async function deleteBubbleForMe(req, res){
     const {LikeModel, userBubbles, userShares, userReplies, Feeds} = req.dbModels
 
     const userID = req.body.userID
-    // const postID = req.body.postID // thisBubble.postID
     const thisBubble = {...req.body.thisBubble}
     // console.log(thisBubble.);
     try {

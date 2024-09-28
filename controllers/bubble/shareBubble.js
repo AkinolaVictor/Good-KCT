@@ -147,14 +147,14 @@ async function shareBubble(req, res){
                 }
                 const data = {
                     title: `${shareRequestData.message}`,
-                    body: `Bubble: ${notificationMessage}`,
+                    body: `${notificationMessage}`,
                     data: {
                         type: "bubble",
                         feed: shareFeed
                     }
                 }
 
-                await sendPushNotification(thisBubble.userID, data, req)
+                // await sendPushNotification(thisBubble.userID, data, req)
 
                 await sendPushNotification_2({
                     data, req,
@@ -169,19 +169,6 @@ async function shareBubble(req, res){
     async function ShareNotifier(notificationData){
         if(userID!==thisBubble.userID){
             
-            // data
-            function getDate(){
-                const now = new Date()
-                const time = date.format(now, 'h:mmA')
-                const when = date.format(now, 'DD/MM/YYYY')
-                const dateString = date.format(now, 'YYYY,MM,DD,HH,mm,ss')
-                
-                return {
-                    time,
-                    date: when,
-                    dateString
-                }
-            }
 
             const shareData = {
                 // time: getDate(),
@@ -205,9 +192,9 @@ async function shareBubble(req, res){
                     await newNotif.save()
                 } else {
                     creatorNotifications.all.push(shareData)
-                    // await creatorNotifications.save()
                     await notifications.updateOne({userID: thisBubble.userID}, {all: [...creatorNotifications.all]})
                 }
+
                 const data = {
                     title: `${shareData.message}`,
                     body: notificationData.message,
@@ -567,7 +554,7 @@ async function shareBubble(req, res){
             await shareBubble()
         } else {
             // if i am not the creator
-            // if(shareSettings.sharePermission=='Request permission for all'){
+            // if(shareSettings.sharePermission==='Request permission for all'){
             if(checkSharePermission('Request permission for all')){
                 await sendShareRequest()
             // } else if(shareSettings.sharePermission=='Request permission only for followers' || shareSettings.sharePermission=='Request permission only for non-followers'){

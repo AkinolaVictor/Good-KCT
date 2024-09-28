@@ -111,17 +111,16 @@ async function likeBubble(req, res){
             
             // if(access){
                 const data = {
-                    title: `${likeData.message}`,
-                    body: notificationData.message,
-                    // icon: decideNotifyIcon()
+                    // title: `${likeData.message}`,
+                    // body: notificationData.message,
+                    title: notificationData?.message?.length?`${likeData.message}`:"Concealed",
+                    body: notificationData?.message?.length?notificationData.message:`${likeData.message}`,
                     data: {
                         feed: currentBubble.refDoc,
                         // url: "viewbubble/something/others",
                         type: "bubble"
                     }
                 }
-                // console.log(userIcon);
-                // if(decideNotifyIcon()) data.icon = decideNotifyIcon()
 
                 await sendPushNotification(currentBubble.userID, data, req)
 
@@ -233,7 +232,7 @@ async function likeBubble(req, res){
                 await bubble.updateOne({postID: currentBubble.postID}, {activities, like}).then(async()=>{
                     const bubbleMessage = thisBubble.bubble[0]
                     const notificationData = {
-                        message: `Bubble: ${bubbleMessage.message||''}`
+                        message: `${bubbleMessage.message||''}`
                     }
                     await LikeNotifier('like', notificationData)
                     await updateUserAnalytics(thisBubble)

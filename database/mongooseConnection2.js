@@ -163,6 +163,97 @@ function modelPack(db){
             const bubble = db.models.bubbles || db.model("bubbles", bubbleSchema)
             return bubble
         }(),
+        cinema: function(){
+            const cinemaSchema = db.Schema({
+                data: [],
+                settings: {},
+                postID: String,
+                version: Number,
+                reply: {},
+                likes: {},
+                shares: {},
+                allShares: [],
+                sharePermission: Number,
+                feedRef:{},
+                aosID: String,
+                createdDate: String,
+                userID: String,
+                photo: String,
+                fullname: String,
+                username: String,
+                createdAt: {type: Date, default: new Date()},
+                updatedAt: {
+                    type: Date,
+                    default: () => Date.now()
+                }
+            }, {strict: false, minimize: false})
+              
+            const cinema = db.models.cinema || db.model("cinema", cinemaSchema)
+            return cinema
+        }(),
+        cinemaPair: function(){
+            const cinemaPairSchema = db.Schema({
+                likes: {},
+                initRep: {},
+                postID: String,
+                feedRef:{},
+                allReplys: {},
+                analytics: {},
+                // lastActivityIndex: 0,
+                createdAt: {type: Date, default: new Date()},
+                updatedAt: {
+                    type: Date,
+                    default: () => Date.now()
+                }
+            }, {strict: false, minimize: false})
+              
+            const cinemaPair = db.models.cinemaPair || db.model("cinemaPair", cinemaPairSchema)
+            return cinemaPair
+        }(),
+        userCinema: function(){
+            const userCinemaSchema = db.Schema({
+                cinema: [],
+                userID: String,
+                createdAt: {type: Date, default: new Date()},
+                updatedAt: Date
+            }, { strict: false, minimize: false })
+            
+            const userCinema = db.models["usercinema"] || db.model("usercinema", userCinemaSchema)
+            return userCinema
+        }(),
+        cinemaFeeds: function(){
+            const cinemaFeedsSchema = db.Schema({
+                cinema: [],
+                userID: String,
+                createdAt: {type: Date, default: new Date()},
+                updatedAt: Date
+            }, { strict: false, minimize: false })
+            
+            const cinemaFeed = db.models["cinemafeeds"] || db.model("cinemafeeds", cinemaFeedsSchema)
+            return cinemaFeed
+        }(),
+        cinemaForEveryone: function(){
+            const cinemaForEveryoneSchema = db.Schema({
+                cinemaRefs: [],
+                name: String,
+                createdAt: {type: Date, default: new Date()},
+                updatedAt: Date
+            }, { strict: false, minimize: false})
+            
+            const cinemaForEveryone = db.models.cinemaforeveryones || db.model("cinemaforeveryones", cinemaForEveryoneSchema)
+            return cinemaForEveryone
+        }(),
+        Feeds: function(){
+            const feedsSchema = db.Schema({
+                bubbles: [],
+                userID: String,
+                createdAt: {type: Date, default: new Date()},
+                updatedAt: Date
+            }, { strict: false, minimize: false })
+            
+            const Feeds = db.models["feeds"] || db.model("feeds", feedsSchema)
+            return Feeds
+        }(),
         bubblesForEveryone: function(){
             const bubblesForEveryoneSchema = db.Schema({
                 bubbleRefs: [],
@@ -184,17 +275,6 @@ function modelPack(db){
             // mongoose.models = {}
             const chats = db.models.chats || db.model("chats", chatsSchema)
             return chats
-        }(),
-        Feeds: function(){
-            const feedsSchema = db.Schema({
-                bubbles: [],
-                userID: String,
-                createdAt: {type: Date, default: new Date()},
-                updatedAt: Date
-            }, { strict: false, minimize: false })
-            
-            const Feeds = db.models["feeds"] || db.model("feeds", feedsSchema)
-            return Feeds
         }(),
         Followers: function(){
             const followersSchema = db.Schema({
@@ -221,6 +301,7 @@ function modelPack(db){
         LikeModel: function(){
             const userLikesSchema = db.Schema({
                 bubbles: [],
+                cinema: [],
                 userID: String,
                 createdAt: {type: Date, default: new Date()},
                 updatedAt: Date
@@ -317,6 +398,7 @@ function modelPack(db){
         userReplies: function(){
             const userRepliesSchema = db.Schema({
                 bubbles: [],
+                cinema: [],
                 userID: String,
                 createdAt: {type: Date, default: new Date()},
                 updatedAt: Date
@@ -328,6 +410,7 @@ function modelPack(db){
         userShares: function(){
             const userSharesSchema = db.Schema({
                 bubbles: [],
+                cinema: [],
                 userID: String,
                 createdAt: {type: Date, default: new Date()},
                 updatedAt: Date

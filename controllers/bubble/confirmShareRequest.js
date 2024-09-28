@@ -358,8 +358,15 @@ async function confirmShareRequest(req, res){
         }
     }
     
-    confirmRequest()
-    // console.log('completed');
+    // await confirmRequest()
+
+    try {
+        await confirmRequest()
+    } catch(e) {
+        console.log(e);
+        console.log("something went wrong along the line");
+        res.send({successful: false, message: "something went wrong along the line"})
+    }
 
 }
 

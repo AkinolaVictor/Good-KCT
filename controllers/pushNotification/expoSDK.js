@@ -7,7 +7,8 @@ module.exports = async function expoSDK({somePushTokens, payload}){
         // optionally providing an access token if you have enabled push security
         let expo = new Expo({
             // accessToken: process.env.EXPO_ACCESS_TOKEN,
-            useFcmV1: false // this can be set to true in order to use the FCM v1 API
+            // useFcmV1: false, // this can be set to true in order to use the FCM v1 API
+            useFcmV1: true // this can be set to true in order to use the FCM v1 API
         });
     
         // Create the messages that you want to send to clients
@@ -46,7 +47,7 @@ module.exports = async function expoSDK({somePushTokens, payload}){
             for (let chunk of chunks) {
                 try {
                     let ticketChunk = await expo.sendPushNotificationsAsync(chunk);
-                    console.log(ticketChunk);
+                    // console.log(ticketChunk);
                     tickets.push(...ticketChunk);
                     // NOTE: If a ticket contains an error code in ticket.details.error, you
                     // must handle it appropriately. The error codes are listed in the Expo

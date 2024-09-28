@@ -251,8 +251,8 @@ async function createBubble(req, res){
                 await feeds.save().catch(()=>{ })
             } else {
                 userFeed.bubbles.push(feedRef)
-                // await userFeed.save().catch(()=>{ })
                 await Feeds.updateOne({userID}, {bubbles: [...userFeed.bubbles]}).catch(()=>{ })
+                // await userFeed.save().catch(()=>{ })
             }
 
             
@@ -402,7 +402,6 @@ async function createBubble(req, res){
                 const data = {
                     title: `${constructTitle()}`,
                     body: discernMessage(),
-                    // icon: decideNotifyIcon()
                     data: {
                         type: "bubble",
                         // userID,
@@ -428,7 +427,6 @@ async function createBubble(req, res){
                 } else {
                     publicBubbles.bubbleRefs.push(feedRef)
                     await bubblesForEveryone.updateOne({name: "Everyone"}, {bubbleRefs: [...publicBubbles.bubbleRefs]}).catch(()=>{})
-                    // await publicBubbles.save().then(()=>{})
                 }
             }
 
@@ -456,7 +454,6 @@ async function createBubble(req, res){
                 await newHash.save()
             } else {
                 const {allHashs} = userHashTags
-                // if(Object.keys(hashTags).length <= 500){
                 for(let i=0; i<userHashs.length; i++){
                     if(allHashs[userHashs[i]]){
                         allHashs[userHashs[i]].count.bub++
@@ -469,9 +466,7 @@ async function createBubble(req, res){
                         }
                     }
                 }
-                // await hashTags.findOneAndUpdate({title: "batch_1"}, {allHashs})
                 await hashTags.updateOne({title: "batch_1"}, {allHashs})
-                // }
             }
 
             // mention

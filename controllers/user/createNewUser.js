@@ -11,7 +11,7 @@
 // const notifications = require('../../models/notifications')
 
 async function createNewUser(req, res){
-  const {User, allUser, notifications, userBubbles, Followers, Following, userReplies, Feeds, userShares, savedAudience, LikeModel} = req.dbModels
+  const {User, allUser, notifications, userBubbles, userCinema, cinemaFeeds, Followers, Following, userReplies, Feeds, userShares, savedAudience, LikeModel} = req.dbModels
   
     const data = req.body.data
 
@@ -34,6 +34,20 @@ async function createNewUser(req, res){
         if(thisBubble === null){
           const bubbles = new userBubbles({userID: data.id, bubbles: []})
           await bubbles.save()
+        }
+
+        // user created cinema
+        const thisUserCinema = await userCinema.findOne({userID: data.id})
+        if(thisUserCinema === null){
+          const cinema = new thisUserCinema({userID: data.id, cinema: []})
+          await cinema.save()
+        }
+
+        // user received cinema
+        const thisCinemaFeed = await cinemaFeeds.findOne({userID: data.id})
+        if(thisCinemaFeed === null){
+          const cinemaFeed = new thisCinemaFeed({userID: data.id, cinema: []})
+          await cinemaFeed.save()
         }
 
         // likes

@@ -15,6 +15,7 @@ const multer = require("multer")
 const bot = require('./api/botApi')
 const bubble = require('./api/bubbleApi')
 const user = require('./api/userApi')
+const cinema = require('./api/cinemaApi')
 const uploadData = require('./controllers/uploads/uploadData')
 const chats = require('./api/chatApi')
 const http = require('http')
@@ -178,6 +179,16 @@ app.use('/api/user', async function(req, res, next){
     res.send({successful: false, message: "database failed to connect"})
   }
 }, user)
+  
+app.use('/api/cinema', async function(req, res, next){
+  const models = await cachedConnection()
+  if(models){
+    req.dbModels =  {...models, io}
+    next()
+  } else {
+    res.send({successful: false, message: "database failed to connect"})
+  }
+}, cinema)
 
 app.use('/api/bot', async function(req, res, next){
   const models = await cachedConnection()
@@ -236,13 +247,7 @@ app.use('/check', (req, res)=>{
 
 
 // console.log(global)
-
 const port = process.env.PORT || process.env.CONCEALED_MANUAL_PORT || 7836
 server.listen(port, ()=>{ /* Do Nothing */})
 // app.listen(port, ()=>{ /* Do Nothing */})
 module.exports = app
-
-
-// for vercel.json
-
-// "outputDirectory": "frontend/build",

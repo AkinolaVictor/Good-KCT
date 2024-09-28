@@ -9,7 +9,7 @@
 // const LikeModel = require('../../models/LikeModel')
 
 async function initializeUser(req, res){
-    const {User, userBubbles, Followers, Following, userReplies, Feeds, userShares, savedAudience, LikeModel} = req.dbModels
+    const {User, userBubbles, Followers, Following, userReplies, Feeds, cinemaFeeds, userShares, userCinema, savedAudience, LikeModel} = req.dbModels
     
     let userID = req.body.userID
     const startUp = req.body.startUp
@@ -31,6 +31,7 @@ async function initializeUser(req, res){
                     }
                 }
             }
+
             data.bubbles = bubbles
             data.posts = postsData
         } else {
@@ -62,27 +63,48 @@ async function initializeUser(req, res){
         const allUserLikes = await LikeModel.findOne({userID}).lean()
         if(allUserLikes){
             const likes = [...allUserLikes.bubbles]
+            const cins = allUserLikes.cinema||[]
+            const cinemalikes = [...cins]
             data.likes = likes
+            data.cinemalikes = cinemalikes
         } else {
             data.likes = []
+            data.cinemalikes = []
         }
 
         // GET REPLIES
         const allUserReplies = await userReplies.findOne({userID}).lean()
         if(allUserReplies){
-            const replies = [...allUserReplies.bubbles]
-            data.replies = replies
+            const bubblereplies = [...allUserReplies.bubbles]
+            const cins = allUserReplies.cinema||[]
+            const cinemareplies = [...cins]
+            data.replies = bubblereplies
+            data.cinemareplies = cinemareplies
         } else {
             data.replies = []
+            data.cinemareplies = []
         }
 
         // GET SHARES
         const allUserShares = await userShares.findOne({userID}).lean()
         if(allUserShares){
-            const shares = [...allUserShares.bubbles]
-            data.shares = shares
+            const bubbleshares = [...allUserShares.bubbles]
+            const cins = allUserShares.cinema||[]
+            const cinemashares = [...cins]
+            data.shares = bubbleshares
+            data.cinemashares = cinemashares
         } else {
             data.shares = []
+            data.cinemashares = []
+        }
+
+        // GET CINEMA
+        const allUserCinema = await userCinema.findOne({userID}).lean()
+        if(allUserCinema){
+            const cinema = [...allUserCinema.cinema]
+            data.cinema = cinema
+        } else {
+            data.cinema = []
         }
         
         // GET SAVED AUDIENCE
@@ -101,6 +123,15 @@ async function initializeUser(req, res){
                 data.feed = feed
             } else {
                 data.feed = []
+            }
+
+            const userCinFeeds = await cinemaFeeds.findOne({userID}).lean()
+            if(userCinFeeds){
+                const cins = userCinFeeds.cinema||[]
+                const cinfeed = [...cins]
+                data.cinemafeed = cinfeed
+            } else {
+                data.cinemafeed = []
             }
         }
         res.send({successful: true, data})

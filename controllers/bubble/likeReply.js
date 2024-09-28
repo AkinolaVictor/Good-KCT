@@ -86,9 +86,9 @@ async function likeReply(req, res){
         if(userID!==bubbleCreator && userID!==replyCreatorID){
             function constructCreatorMessage(){
                 if(discernUserIdentity()){
-                    return `someone likes a reply`
+                    return `someone likes a reply in your bubble`
                 } else {
-                    return `${fullname} likes ${replyCreatorName} reply`
+                    return `${fullname} likes ${replyCreatorName}'s reply in your bubble`
                 }
             }
 
@@ -176,6 +176,7 @@ async function likeReply(req, res){
                 // await mainUserNotification.save()
                 await notifications.updateOne({userID: replyCreatorID}, {all: [...mainUserNotification.all]})
             }
+            
             const data = {
                 title: `${mainReplyData.message}`,
                 body: notificationData.message,
@@ -186,7 +187,7 @@ async function likeReply(req, res){
                 }
             }
             
-            await sendPushNotification(replyCreatorID, data, req)
+            // await sendPushNotification(replyCreatorID, data, req)
 
             await sendPushNotification_2({
                 data, req,
@@ -264,7 +265,7 @@ async function likeReply(req, res){
             // const totalLikes = thisBubble.totalLikes + 1
             await bubble.updateOne({postID: bubbleID}, {reply}).then(async()=>{
                 const notificationData = {
-                    message: `Reply: ${message}`
+                    message: `${message}`
                 }
                 await LikeReplyNotifier(notificationData)
                 await updateUserAnalytics(thisBubble)

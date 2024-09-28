@@ -52,7 +52,8 @@ async function denyShareRequest(req, res){
     const newData = {...data}
     newData.message = 'Your request to share this bubble was denied'
     newData.status = 'denied'
-    newData.time = getDate()
+    newData.when = new Date().toISOString()
+    // newData.time = getDate()
 
     async function notifyAudience(){
         const audienceNotification = await notifications.findOne({userID: data.userID}).lean()
@@ -65,14 +66,15 @@ async function denyShareRequest(req, res){
             // await audienceNotification.save()
         }
         const thisData = {
-            title: `${newData.message}`,
-            body: 'please check the notification section in the concealed app to see the bubble, you can also make another share request to the bubble creator.',
+            title: `Concealed`,
+            body: `${newData.message}`,
+            // body: 'please check the notification section in the concealed app to see the bubble, you can also make another share request to the bubble creator.',
             data: {
                 feed: data.feed,
                 type: "bubble",
             }
         }
-        await sendPushNotification(data.userID, thisData, req)
+        // await sendPushNotification(data.userID, thisData, req)
 
         await sendPushNotification_2({
             req,

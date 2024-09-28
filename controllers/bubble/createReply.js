@@ -107,9 +107,6 @@ async function createReply_Old(req, res){
                     replyPath: [...newPath],
                 }
             }
-            if(access){
-                await sendPushNotification(creatorID, data, req)
-            }
 
             await sendPushNotification_2({
                 data, req,
@@ -135,7 +132,8 @@ async function createReply_Old(req, res){
             }
 
             const mainReplyData = {
-                time: getDate(),
+                // time: getDate(),
+                when: new Date().toISOString(),
                 bubbleID: postID,
                 mainReplier: parentID,
                 creatorID: creatorID,
@@ -160,14 +158,19 @@ async function createReply_Old(req, res){
                 await notifications.updateOne({userID: parentID}, {all: [...parentNotification.all]}).catch(()=>{access = false})
                 // await parentNotification.save().catch(()=>{access = false})
             }
-            if(access){
+            // if(access){
                 const data = {
                     title: `${mainReplyData.message}`,
                     body: notificationData.message,
-                    icon: decideNotifyIcon()
+                    // icon: decideNotifyIcon()
                 }
-                await sendPushNotification(parentID, data, req)
-            }
+
+                await sendPushNotification_2({
+                    data, req,
+                    userIDs: [parentID]
+                })
+                // await sendPushNotification(parentID, data, req)
+            // }
         }
     }
 
