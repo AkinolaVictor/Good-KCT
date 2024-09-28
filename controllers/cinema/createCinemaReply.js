@@ -19,8 +19,11 @@ async function createCinemaReply(req, res){
         fullname, 
         parentName, 
         feedRef,
-        replyPath
+        replyPath,
+        // dataIndex
     } = req.body
+    
+    // const dataIndex = req.body.dataIndex
 
     const {cinema, cinemaPair, notifications} = req.dbModels
 

@@ -18,10 +18,15 @@ async function likeClip(req, res){
     const userID = req.body.userID
     const postID = req.body.postID
     const dataID = req.body.dataID
+    // const dataIndex = req.body.dataIndex
     const feedRef = req.body.feedRef
     const fullname = req.body.fullname
     const discernUserIdentity = req.body.discernUserIdentity
-
+    const modifiedFeed = {
+        ...feedRef,
+        dataID,
+        // dataIndex
+    }
 
     async function notifyCreator(){
         if(userID!==feedRef.userID){
@@ -44,7 +49,7 @@ async function likeClip(req, res){
                 id: uuidv4(),
                 message: constructCreatorMessage(),
                 identityStatus: discernUserIdentity,
-                feed: feedRef,
+                feed: modifiedFeed,
                 type: 'clipLike'
             }
     
@@ -64,7 +69,7 @@ async function likeClip(req, res){
                 // body: notificationData.message,
                 // icon: decideNotifyIcon()
                 data: {
-                    feed: feedRef,
+                    feed: modifiedFeed,
                     type: "clipLike",
                     // url: "/main/bubbles/subReply",
                     // replyPath,
