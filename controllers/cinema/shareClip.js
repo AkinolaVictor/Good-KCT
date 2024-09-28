@@ -37,7 +37,7 @@ async function shareClip(req, res){
                     message: `${discernUserIdentity?'someone':fullname} shared your bubble`,
                     identityStatus: discernUserIdentity,
                     feed: feedRef,
-                    type: 'cinemaShare'
+                    type: 'clipShare'
                 }
                 
                 const creatorNotifications = await notifications.findOne({userID: feedRef.userID})
@@ -53,7 +53,7 @@ async function shareClip(req, res){
                     title: `${`${discernUserIdentity?'someone':fullname} shared your clip`}`,
                     // body: notificationData.message,
                     data: {
-                        type: "cinema",
+                        type: "clipShare",
                         feed: feedRef
                     }
                 }
@@ -142,7 +142,7 @@ async function shareClip(req, res){
                     title: `${shareRequestData.message}`,
                     // body: `${notificationMessage}`,
                     data: {
-                        type: "cinema",
+                        type: "clipShare",
                         feed: feedRef
                     }
                 }

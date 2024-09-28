@@ -221,10 +221,10 @@ async function createCinema(req, res){
 
         const userNotificationData = {
             when: new Date().toISOString(),
-            message: `${cinemaData.fullname} mentioned you in a cinema content`,
+            message: `${cinemaData.fullname} mentioned you in a clip`,
             userID,
             feed: feedRef,
-            type: "mention",
+            type: "clipMention",
             creatorID: userID,
             bubbleID: cinemaData.postID,
             id: uuidv4(),

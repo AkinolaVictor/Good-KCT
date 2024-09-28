@@ -9,7 +9,7 @@ const { ref, deleteObject } = require('firebase/storage')
 const { storage } = require('../../database/firebase')
 
 async function cinemaServer(req, res){
-    const {cinema, userCinema, cinemaFeeds, hashTags, allUser, notifications, Followers, io, cinemaForEveryone} = req.dbModels
+    const {cinemaForEveryone} = req.dbModels
 
     const userID = req.body.userID
     const seen = req.body.seen||[]

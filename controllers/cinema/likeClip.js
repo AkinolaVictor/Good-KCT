@@ -3,6 +3,8 @@
 // const {database} = require('../../database/firebase')
 // const User = require('../../models/User')
 
+const sendPushNotification_2 = require("../pushNotification/sendPushNotification_2")
+
 // const sendPushNotification_2 = require("../pushNotification/sendPushNotification_2")
 // const sendPushNotification = require('../pushNotification/sendPushNotification')
 // const { ref, deleteObject } = require('firebase/storage')
@@ -63,8 +65,8 @@ async function likeClip(req, res){
                 // icon: decideNotifyIcon()
                 data: {
                     feed: feedRef,
-                    url: "/main/bubbles/subReply",
-                    type: "clipReply",
+                    type: "clipLike",
+                    // url: "/main/bubbles/subReply",
                     // replyPath,
                 }
             }

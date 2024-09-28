@@ -86,8 +86,6 @@ async function createCinemaReply(req, res){
                 await notifications.updateOne({userID: feedRef.userID}, {all: [...userNotification.all]}).catch(()=>{})
             }
 
-            
-
             const data = {
                 title: `${creatorData.message}`,
                 body: notificationData.message,

@@ -35,7 +35,7 @@ async function likeClipReply(req, res){
                 message: constructCreatorMessage(),
                 identityStatus: discernUserIdentity,
                 feed: feedRef,
-                type: 'clipReply'
+                type: 'clipReplyLike'
             }
     
             const userNotification = await notifications.findOne({userID: feedRef.userID})
@@ -55,9 +55,9 @@ async function likeClipReply(req, res){
                 // icon: decideNotifyIcon()
                 data: {
                     feed: feedRef,
-                    url: "/main/bubbles/subReply",
-                    type: "clipReply",
+                    type: "clipReplyLike",
                     replyPath,
+                    // url: "/main/bubbles/subReply",
                 }
             }
 

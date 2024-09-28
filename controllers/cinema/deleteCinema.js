@@ -12,9 +12,9 @@ async function deleteCinema(req, res){
     const userID = req.body.userID
     // const userName = req.body.userName
     const cinemaData = req.body.cinema
-    const {cinema, userCinema, cinemaFeeds, hashTags, allUser, notifications, Followers, io, cinemaForEveryone} = req.dbModels
-    const settings = cinemaData.settings
-    const secrecySettings = settings.secrecyData
+    const {cinema, userCinema, io, cinemaForEveryone} = req.dbModels
+    // const settings = cinemaData.settings
+    // const secrecySettings = settings.secrecyData
 
 
     try {
