@@ -30,7 +30,7 @@ async function deleteCinema(req, res){
             const fileRef = ref(storage, path);
             await deleteObject(fileRef).then(async()=>{ 
                 if(i===allPaths.length-1){
-                    await deleteCiema()
+                    await deleteThisCinema()
                 }
             }).catch((err)=>{
                 res.send({successful: false, message: 'unable to delete files'})
@@ -38,7 +38,7 @@ async function deleteCinema(req, res){
             })
         }
 
-        async function deleteCiema(){
+        async function deleteThisCinema(){
 
             await cinema.findOneAndDelete({postID: cinemaData.postID}).then(async()=>{
                 if(io){
