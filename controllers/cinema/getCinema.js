@@ -8,8 +8,8 @@ async function getCinema(req, res){
 
     try {
         const {postID, metaData} = ref||{}
-        const {audience} = metaData
-        const basicViewEligibity = audience["Everyone"] || audience[userID]
+        const {audience} = metaData||{}
+        const basicViewEligibity = audience?.["Everyone"] || audience?.[userID]
         if(basicViewEligibity){
             let thisCinema = await cinema.findOne({postID}).lean()
             const thisCinemaPair = await cinemaPair.findOne({postID}).lean()
@@ -28,6 +28,7 @@ async function getCinema(req, res){
                         thisCinema.isFollower = true
                     }
                 }
+                
                 thisCinema.feedRef = ref
                 thisCinema = {...thisCinema, ...thisCinemaPair}
                 res.send({successful: true, cinema: {...thisCinema}})

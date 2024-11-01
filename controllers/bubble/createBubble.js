@@ -22,6 +22,7 @@ async function createBubble(req, res){
     const postID = thisBubble.postID
     const bubbleName = thisBubble.type
     
+    // share "AOS" Bubbles with bubblesForEveryone
     
     function discernUserIdentity(){
         if(secrecySettings.atmosphere === 'Night'){
@@ -147,7 +148,7 @@ async function createBubble(req, res){
             audienceNames.push(bubble[i].name)
         }
 
-        if(audienceNames.includes('Everyone') || audienceNames.includes('My Followers')){
+        if(audienceNames.includes('Everyone') || audienceNames.includes('My Followers') || audienceNames.includes('Ai Audience')){
             return true
         } else {
             return false
@@ -202,7 +203,7 @@ async function createBubble(req, res){
                 type: bubbleName
             }
         }
-
+        // console.log(feedRef.metaData);
         thisBubble.feedRef = feedRef
         // console.log(feedRef.metaData);
         // const {metaData} = feedRef
@@ -427,6 +428,17 @@ async function createBubble(req, res){
                 } else {
                     publicBubbles.bubbleRefs.push(feedRef)
                     await bubblesForEveryone.updateOne({name: "Everyone"}, {bubbleRefs: [...publicBubbles.bubbleRefs]}).catch(()=>{})
+                }
+
+                if(feedRef.metaData.aos!=="None"){
+                    const aosBubbles = await bubblesForEveryone.findOne({name: "AosBubbles"})
+                    if(aosBubbles === null){
+                        const newaosBubbles = new bubblesForEveryone({name: "AosBubbles", bubbleRefs: [feedRef]})
+                        await newaosBubbles.save().then(()=>{})
+                    } else {
+                        aosBubbles.bubbleRefs.push(feedRef)
+                        await bubblesForEveryone.updateOne({name: "AosBubbles"}, {bubbleRefs: [...aosBubbles.bubbleRefs]}).catch(()=>{})
+                    }
                 }
             }
 

@@ -3,7 +3,7 @@ const sendPushNotification_2 = require("../pushNotification/sendPushNotification
 
 
 async function confirmClipShare(req, res){
-    const {cinema, cinemaFeeds, notifications, Followers} = req.dbModels
+    const {cinema, cinemaFeeds, notifications, Followers, userShares} = req.dbModels
     
     const userID = req.body.userID // user.id
     let data = req.body.data
@@ -62,6 +62,19 @@ async function confirmClipShare(req, res){
         }
     }
 
+    async function updateUserShares(){
+        const userReps = await userShares.findOne({userID: data.userID}).lean()
+        if(userReps){
+            const cinema = userReps?.cinema?[...userReps?.cinema]:[]
+            for(let i=0; i<cinema.length; i++){
+                const each = cinema[i]
+                if(each.postID === data.clipID) return
+            }
+            cinema.push(feedRef)
+            await userShares.updateOne({userID: data.userID}, {cinema})
+        }
+    }
+
     async function directlyShareClip({Notifier}){
         try {
             let thisClip = await cinema.findOne({postID: data.clipID}).lean()
@@ -84,6 +97,7 @@ async function confirmClipShare(req, res){
                         }
                     }
 
+                    await updateUserShares()
                     await Notifier()
                 }
 

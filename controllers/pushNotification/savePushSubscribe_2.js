@@ -17,7 +17,7 @@ async function savePushSubscribe_2(req, res){
         await newPush.save().then(()=>{console.log("done1");}).catch((e)=>{console.log("failed", e);})
       } else {
         userSubscription2.subscription = subscription
-        await savePush2.updateOne({userID}, {subscription}).then(()=>{console.log("done2");}).catch((e)=>{console.log("failed2", e);})
+        await savePush2.updateOne({userID}, {subscription}).then(()=>{}).catch((e)=>{console.log("failed2", e);})
       }
       res.send({successful: true})
   }

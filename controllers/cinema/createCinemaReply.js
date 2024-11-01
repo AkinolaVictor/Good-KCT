@@ -4,6 +4,8 @@
 const { v4: uuidv4 } = require('uuid')
 
 const sendPushNotification_2 = require("../pushNotification/sendPushNotification_2")
+const clipReplyCounter = require('../../utils/clipReplyCounter')
+const knowledgeBuilder = require('../../utils/knowledgeBuilder')
 // const sendPushNotification = require('../pushNotification/sendPushNotification')
 
 async function createCinemaReply(req, res){
@@ -25,28 +27,42 @@ async function createCinemaReply(req, res){
     
     // const dataIndex = req.body.dataIndex
 
-    const {cinema, cinemaPair, notifications} = req.dbModels
+    const {cinema, cinemaPair, notifications, userReplies} = req.dbModels
 
-    function replyCounter({allReplys, initialReplys}){
-        const initRep = [...initialReplys]
-        let replyCount = initRep.length
-        function counter(parents){
-            if(!parents.length) return
-            const parentClone = [...parents]
-            for(let i=0; i<parentClone.length; i++){
-              if(allReplys[parentClone[i]]){
-                const each = allReplys[parentClone[i]].childReplys
-                replyCount+=each.length
-                if(each.length){
-                    counter(each)
-                }
-              }
+    async function updateUserReplies(){
+        const userReps = await userReplies.findOne({userID}).lean()
+        if(userReps){
+            const cinema = userReps?.cinema?[...userReps?.cinema]:[]
+            for(let i=0; i<cinema.length; i++){
+                const each = cinema[i]
+                if(each.postID === postID) return
             }
+            cinema.push(feedRef)
+            await userReplies.updateOne({userID}, {cinema})
         }
-        
-        counter(initRep)
-        return replyCount
     }
+    
+    const replyCounter = clipReplyCounter
+    // function replyCounter({allReplys, initialReplys}){
+    //     const initRep = [...initialReplys]
+    //     let replyCount = initRep.length
+    //     function counter(parents){
+    //         if(!parents.length) return
+    //         const parentClone = [...parents]
+    //         for(let i=0; i<parentClone.length; i++){
+    //           if(allReplys[parentClone[i]]){
+    //             const each = allReplys[parentClone[i]].childReplys
+    //             replyCount+=each.length
+    //             if(each.length){
+    //                 counter(each)
+    //             }
+    //           }
+    //         }
+    //     }
+        
+    //     counter(initRep)
+    //     return replyCount
+    // }
 
     async function doNotification(notificationData){
         if(userID!==feedRef.userID){
@@ -107,7 +123,7 @@ async function createCinemaReply(req, res){
             })
         }
 
-        if(ifParent  && (parentID!==userID)){
+        if(ifParent  && (parentID!==userID) && (userID!==feedRef.userID)){
             
             function constructMainUserMessage(){
                 if(discernUserIdentity){
@@ -194,12 +210,10 @@ async function createCinemaReply(req, res){
             cinemaDataPair.allReplys[replyData.id] = replyData
             if(index!==null){
                 cinemaData.data[index].replyCount = replyCounter({
-                    allReplys: cinemaDataPair.allReplys, 
+                    allReplys: cinemaDataPair.allReplys,
                     initialReplys: cinemaDataPair.initRep[dataID]
                 })
             }
-
-
             
             const updates = {
                 allReplys: cinemaDataPair.allReplys, 
@@ -215,7 +229,11 @@ async function createCinemaReply(req, res){
             await cinemaPair.updateOne({postID}, {...updates})
             // analytics
             const notificationData = { message: replyData.message }
+            await updateUserReplies()
             await doNotification(notificationData)
+
+            const {hash} = feedRef?.metaData || {hash: {}}
+            await knowledgeBuilder({userID, models: req.dbModels, which: "replys", intent: "hashtags", hash: [...Object.keys(hash)]})
             
             res.send({successful: true})
         }

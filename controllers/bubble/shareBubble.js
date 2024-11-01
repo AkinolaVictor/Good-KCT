@@ -2,6 +2,7 @@ const date = require('date-and-time')
 const { v4: uuidv4 } = require('uuid')
 const sendPushNotification = require('../pushNotification/sendPushNotification')
 const sendPushNotification_2 = require('../pushNotification/sendPushNotification_2')
+const knowledgeBuilder = require('../../utils/knowledgeBuilder')
 // const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
 // const {database} = require('../../database/firebase')
 // const { dataType } = require('../../utils/utilsExport')
@@ -24,6 +25,7 @@ async function shareBubble(req, res){
     const path = req.body.path
     let secrecySettings = thisBubble.settings.secrecyData
     let shareSettings = thisBubble.settings.shareData    
+    const feedRef = thisBubble.refDoc
     
     let overallShare = []
     let eachShare = {}
@@ -217,6 +219,7 @@ async function shareBubble(req, res){
     async function sendShareRequest(){
         // shareRequest(feedRef)
         const feedRequestRef = {
+            ...thisBubble.refDoc,
             userID:  thisBubble.userID,
             postID:thisBubble.postID,
             type: 'ShareRef',
@@ -339,6 +342,7 @@ async function shareBubble(req, res){
                 }
 
                 const feedRef = {
+                    ...thisBubble.refDoc,
                     userID: thisBubble.userID,
                     postID: thisBubble.postID,
                     type: 'ShareRef',
@@ -532,7 +536,6 @@ async function shareBubble(req, res){
 
                 res.send({successful: true})
             }
-
         } catch(e){
             res.send({successful: false, message: "server error: failed to share bubble"})
         }
@@ -550,6 +553,9 @@ async function shareBubble(req, res){
     }
 
     async function initShare(){
+        const {hash} = feedRef?.metaData || {hash: {}}
+        await knowledgeBuilder({userID, models: req.dbModels, which: "shares", intent: "hashtags", hash: [...Object.keys(hash)]})
+
         if(thisBubble.userID===userID){
             await shareBubble()
         } else {

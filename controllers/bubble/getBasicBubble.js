@@ -1,5 +1,6 @@
 const date = require('date-and-time')
 const { dataType } = require('../../utils/utilsExport')
+const Ai_Audience = require('../../utils/AIAudience')
 // const {doc, getDoc, updateDoc} = require('firebase/firestore')
 // const {database} = require('../../database/firebase')
 // const bubble = require('../../models/bubble')
@@ -56,9 +57,10 @@ async function getBasicBubble(req, res){
         }
     }
 
-    function ifForAudience(thisBubble){
+    async function ifForAudience(thisBubble){
         const bubble = thisBubble.bubble
         let allAudience = []
+        let checkAIAudience = false
         for(let i=0; i<bubble.length; i++){
             const audienceData = {...bubble[i].audienceData}
             const aud = [...Object.keys(audienceData)]
@@ -75,19 +77,48 @@ async function getBasicBubble(req, res){
             audienceNames.push(bubble[i].name)
         }
 
+        if(audienceNames.includes('Ai Audience')){
+            checkAIAudience = true
+        }
+        
+        // if(checkAIAudience){
+        // }
+
         if(audienceNames.includes('Everyone')){
-            return false
+            // return false
+            return {
+                audienceCheck: false,
+                checkAIAudience
+            }
+        // } else if(audienceNames.includes('Ai Audience')){
+        //     checkAIAudience = true
         } else if(audienceNames.includes('My Followers')){
             if(thisBubble.followers[userID]){
-                return false
+                // return false
+                return {
+                    audienceCheck: false,
+                    checkAIAudience
+                }
             } else {
-                return true
+                // return true
+                return {
+                    audienceCheck: true,
+                    checkAIAudience
+                }
             }
         } else {
             if(allAudience.includes(userID)){
-                return false
+                // return false
+                return {
+                    audienceCheck: false,
+                    checkAIAudience
+                }
             } else {
-                return true
+                // return true
+                return {
+                    audienceCheck: true,
+                    checkAIAudience
+                }
             }
         }
     }
@@ -232,27 +263,43 @@ async function getBasicBubble(req, res){
     //     }
     // }
 
-    function viewEligibity(thisBubble){
+    async function viewEligibity(thisBubble){
         // CHECK IF USER IS ELIGIBLE TO SEE THIS BUBBLE
         
-        // if(!checkBubbleSettings(thisBubble)){
-        //     console.log("called_2");
-        //     return false
-        // }
+        const {audienceCheck, checkAIAudience} = await ifForAudience(thisBubble)
+        const secrecyCheck = checkForSecrecy(thisBubble)
+        const countChecker = check_for_viewCount(thisBubble)
 
-        if((checkForSecrecy(thisBubble) || ifForAudience(thisBubble)) && feedRef.userID!==userID && feedRef.env==='profile'){
-            return false
+        // if((checkForSecrecy(thisBubble) || ifForAudience(thisBubble)) && feedRef.userID!==userID && feedRef.env==='profile'){
+        if((secrecyCheck || audienceCheck) && feedRef.userID!==userID && feedRef.env==='profile'){
+            // return false
+            return {
+                checkAIAudience,
+                eligibity: false
+            }
         } 
         
-        if(ifForAudience(thisBubble) && feedRef.userID!==userID){
-            return false
+        if(audienceCheck && feedRef.userID!==userID){
+            // return false
+            return {
+                eligibity: false,
+                checkAIAudience
+            }
         } 
         
-        if(check_for_viewCount(thisBubble)){
-            return false
+        if(countChecker){
+            // return false
+            return {
+                eligibity: false,
+                checkAIAudience
+            }
         } 
-
-        return true
+        
+        // return true
+        return {
+            eligibity: true,
+            checkAIAudience
+        }
     }
 
     if(!feedRef){
@@ -296,7 +343,7 @@ async function getBasicBubble(req, res){
             }
     
             // IF THIS USER HAS NOT SEEN THIS BUBBLE BEFORE, UPDATE BUBBLE
-            if(thisBubble.activities.iAmOnTheseFeeds[userID]){
+            if(thisBubble?.activities?.iAmOnTheseFeeds[userID]){
                 // if user hasn't mounted on a screen
                 const activities = thisBubble.activities
                 if(!(activities.iAmOnTheseFeeds[userID].mountedOnDevice)){
@@ -354,7 +401,53 @@ async function getBasicBubble(req, res){
             // const testSettings = await checkBubbleSettings(thisBubble)
 
             // if(!viewEligibity(thisBubble) || !testSettings){
-            if(!viewEligibity(thisBubble)){
+            const {eligibity, checkAIAudience} = await viewEligibity(thisBubble)
+            let eligibityPass = eligibity
+            if(checkAIAudience){
+                console.log("found an AI Audience");
+                const bubble = thisBubble.bubble
+
+                const audNames = {}
+                for(let i=0; i<bubble.length; i++){
+                    const curr = bubble[i]
+                    audNames[curr.name] = true
+                }
+
+                const audNum = Object.keys(audNames).length
+                if(audNum===1){
+                    for(let i=0; i<bubble.length; i++){
+                        const curr = bubble[i]
+                        if(curr.name==="Ai Audience"){
+                            const {approved} = await Ai_Audience({
+                                userID,
+                                models: req.dbModels,
+                                audienceData: curr.audienceData,
+                                content: "bubble"
+                            })
+                            eligibity = approved
+                        }
+                    }
+                } else if(audNum>1){
+                    for(let i=0; i<bubble.length; i++){
+                        const curr = bubble[i]
+                        if(curr.name==="Ai Audience"){
+                            const {approved} = await Ai_Audience({
+                                userID,
+                                models: req.dbModels,
+                                audienceData: curr.audienceData,
+                                content: "bubble"
+                            })
+                            
+                            if(approved){
+                                thisBubble.bubble[i].approved = true
+                            }
+                        }
+                    }
+                }
+            }
+
+            if(!eligibityPass){
+            // if(!viewEligibity(thisBubble)){
                 res.send({successful:false, message: 'ineligible to view bubble'})
                 return
             } else {
@@ -406,10 +499,10 @@ async function getBasicBubble(req, res){
                             // give feedRef to user---to be on a safe zone, i have to initialize as deleted...
                             const userFeed = await Feeds.findOne({userID})
                             if(userFeed){
-                            // if(!userFeed){
-                            //     const newUserFeed = new Feeds({userID, bubbles: [feedRef]})
-                            //     await newUserFeed.save()
-                            // } else {
+                                // if(!userFeed){
+                                //     const newUserFeed = new Feeds({userID, bubbles: [feedRef]})
+                                //     await newUserFeed.save()
+                                // } else {
                                 let access = true
                                 if(userFeed.bubbles){
                                     for(let i=0; i<userFeed.bubbles.length; i++){

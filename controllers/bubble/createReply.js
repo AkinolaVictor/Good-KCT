@@ -3,6 +3,7 @@ const { v4: uuidv4 } = require('uuid')
 const { dataType } = require('../../utils/utilsExport')
 const sendPushNotification = require('../pushNotification/sendPushNotification')
 const sendPushNotification_2 = require('../pushNotification/sendPushNotification_2')
+const knowledgeBuilder = require('../../utils/knowledgeBuilder')
 // const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
 // const {database} = require('../../database/firebase')
 // const bubble = require('../../models/bubble')
@@ -352,6 +353,9 @@ async function createReply_Old(req, res){
             }
             await ReplyNotifier(notificationData, newReplyPath)
             await updateUserAnalytics(thisBubble)
+            const {hash} = refDoc?.metaData || {hash: {}}
+            await knowledgeBuilder({userID, models: req.dbModels, which: "replys", intent: "hashtags", hash: [...Object.keys(hash)]})
+
             if(creatorID!==userID){
                 const thisUserReplies = await userReplies.findOne({userID}).lean()
                 if(thisUserReplies===null){

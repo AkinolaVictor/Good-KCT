@@ -466,8 +466,36 @@ function modelPack(db){
             
             const hashTags = db.models["hashTags"] || db.model("hashTags", hashTagsSchema)
             return hashTags
-        }()
+        }(),
+        ispace: function(){
+            const userIspace = db.Schema({
+                audience: [],
+                algorithm: [],
+                bot: [],
+                userID: String,
+                createdAt: {type: Date, default: new Date()},
+                updatedAt: Date
+            }, { strict: false, minimize: false })
+            
+            const i_space = db.models["ispace"] || db.model("ispace", userIspace)
+            return i_space
+        }(),
+        userKnowledgebase: function(){
+            const user_knowledgebase = db.Schema({
+                userID: String,
+                kpi: {}, //Monthly-usage, weekly-usage //avg-time-spent-per-mo/wk, //
+                // consumptionsummary: {}, 
+                hashTags: {}, // { like: 1, share: 1, reply: 6, openedRep: 1, openedAnal: 1, lastdate, }
+
+                createdAt: {type: Date, default: new Date()},
+                updatedAt: Date
+            }, { strict: false, minimize: false })
+            
+            const i_space = db.models["userknowledgebase"] || db.model("userknowledgebase", user_knowledgebase)
+            return i_space
+        }(),
     }
+    
     return {...models}
 }
 

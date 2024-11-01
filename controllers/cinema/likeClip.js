@@ -3,6 +3,7 @@
 // const {database} = require('../../database/firebase')
 // const User = require('../../models/User')
 
+const knowledgeBuilder = require("../../utils/knowledgeBuilder")
 const sendPushNotification_2 = require("../pushNotification/sendPushNotification_2")
 
 // const sendPushNotification_2 = require("../pushNotification/sendPushNotification_2")
@@ -13,7 +14,7 @@ const sendPushNotification_2 = require("../pushNotification/sendPushNotification
 
 
 async function likeClip(req, res){
-    const {cinema, cinemaPair, userCinema, cinemaFeeds, hashTags, allUser, notifications, Followers, io, cinemaForEveryone} = req.dbModels
+    const {cinema, LikeModel, notifications, Followers, io, cinemaForEveryone} = req.dbModels
 
     const userID = req.body.userID
     const postID = req.body.postID
@@ -83,6 +84,19 @@ async function likeClip(req, res){
         }
     }
 
+    async function addToLikes(){
+        const userLikes = await LikeModel.findOne({userID}).lean()
+        if(userLikes){
+            const cinema = userLikes?.cinema?[...userLikes?.cinema]:[]
+            for(let i=0; i<cinema.length; i++){
+                const each = cinema[i]
+                if(each.postID === postID) return
+            }
+            cinema.push(feedRef)
+            await LikeModel.updateOne({userID}, {cinema})
+        }
+
+    }
 
     try {
         let thisClip = await cinema.findOne({postID}).lean()
@@ -108,7 +122,10 @@ async function likeClip(req, res){
                     }
                     // await cinema.findOneAndUpdate({postID}, {data: thisClip.data})
                     await cinema.updateOne({postID}, {data: thisClip.data})
+                    await addToLikes()
                     await notifyCreator()
+                    const {hash} = feedRef?.metaData || {hash: {}}
+                    await knowledgeBuilder({userID, models: req.dbModels, which: "likes", intent: "hashtags", hash: [...Object.keys(hash)]})
                 }
             }
             res.send({successful: true})

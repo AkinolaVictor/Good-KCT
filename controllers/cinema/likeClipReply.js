@@ -4,6 +4,7 @@
 const { v4: uuidv4 } = require('uuid')
 
 const sendPushNotification_2 = require("../pushNotification/sendPushNotification_2")
+const knowledgeBuilder = require('../../utils/knowledgeBuilder')
 // const sendPushNotification = require('../pushNotification/sendPushNotification')
 
 async function likeClipReply(req, res){
@@ -12,7 +13,34 @@ async function likeClipReply(req, res){
     // const replyData = req.body.data
     const {replyID, userID, postID, dataID, feedRef, discernUserIdentity, fullname, replyCreatorName, replyPath, parentID} = req.body
 
-    const {cinema, cinemaPair, notifications} = req.dbModels
+    const {cinema, LikeModel, cinemaPair, notifications} = req.dbModels
+
+    async function removeFromLikes(){
+        const userLikes = await LikeModel.findOne({userID}).lean()
+        if(userLikes){
+            const cinema = [...userLikes?.cinema]
+            for(let i=0; i<cinema.length; i++){
+                const each = cinema[i]
+                if(each.postID === postID){
+                    cinema.splice(i, 1)
+                }
+            }
+            await LikeModel.updateOne({userID}, {cinema})
+        }
+    }
+
+    async function addToLikes(){
+        const userLikes = await LikeModel.findOne({userID}).lean()
+        if(userLikes){
+            const cinema = userLikes?.cinema?[...userLikes?.cinema]:[]
+            for(let i=0; i<cinema.length; i++){
+                const each = cinema[i]
+                if(each.postID === postID) return
+            }
+            cinema.push(feedRef)
+            await LikeModel.updateOne({userID}, {cinema})
+        }
+    }
 
     async function doNotification(notificationData){
         if(userID!==feedRef.userID){
@@ -130,6 +158,7 @@ async function likeClipReply(req, res){
                     cinemaDataPair.allReplys[replyID].likes.push(userID)
                     await cinemaPair.updateOne({postID}, {allReplys: cinemaDataPair.allReplys})
                     const notificationData = { message: thisRep.message }
+                    await addToLikes()
                     await doNotification(notificationData)
                 } else {
                     const likes = cinemaDataPair.allReplys[replyID].likes
@@ -141,6 +170,7 @@ async function likeClipReply(req, res){
                         }
                     }
                     await cinemaPair.updateOne({postID}, {allReplys: cinemaDataPair.allReplys})
+                    await removeFromLikes()
                 }
 
                 const allReps = Object.values(cinemaDataPair.allReplys)
@@ -165,6 +195,9 @@ async function likeClipReply(req, res){
                     cinemaData.data[index].likeCount = repLikeCount
                     await cinema.updateOne({postID}, {data: cinemaData.data})
                 }
+
+                const {hash} = feedRef?.metaData || {hash: {}}
+                await knowledgeBuilder({userID, models: req.dbModels, which: "likes", intent: "hashtags", hash: [...Object.keys(hash)]})
 
                 // likeCount
             }

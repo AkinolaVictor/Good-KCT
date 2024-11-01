@@ -3,6 +3,7 @@ const { v4: uuidv4 } = require('uuid')
 const { dataType } = require('../../utils/utilsExport')
 const sendPushNotification = require('../pushNotification/sendPushNotification')
 const sendPushNotification_2 = require('../pushNotification/sendPushNotification_2')
+const knowledgeBuilder = require('../../utils/knowledgeBuilder')
 // const {doc, getDoc, updateDoc, setDoc, increment} = require('firebase/firestore')
 // const {getDownloadURL, ref, uploadBytes, deleteObject} = require('firebase/storage')
 // const {database} = require('../../database/firebase')
@@ -17,6 +18,7 @@ async function likeBubble(req, res){
     const userIcon = req.body.userIcon // user.id
     const userFullname = req.body.userFullname // user.userInfo.fullname
     const currentBubble = {...req.body.thisBubble}
+    const feedRef = currentBubble.refDoc
     // console.log(currentBubble.userID);
     // console.log(userID);
     // thisBubble.userID = thisBubble.user.id
@@ -92,19 +94,16 @@ async function likeBubble(req, res){
             const userNotification = await notifications.findOne({userID: currentBubble.userID})
             let access = true
             if(userNotification === null){
-                console.log("dd");
                 const newNotification = new notifications({userID: currentBubble.userID, all: [likeData]})
                 await newNotification.save().catch((e)=>{
-                    // console.log(e);
-                    console.log("also failed");
+                    console.log(e);
                     // access = false
                 })
             } else {
                 userNotification.all.push(likeData)
                 // await userNotification.save().catch(()=>{access = false})
                 await notifications.updateOne({userID: currentBubble}, {all: [...userNotification.all]}).catch((e)=>{
-                    // console.log(e);
-                    console.log("also failed2");
+                    console.log(e);
                     // access = false
                 })
             }
@@ -236,6 +235,9 @@ async function likeBubble(req, res){
                     }
                     await LikeNotifier('like', notificationData)
                     await updateUserAnalytics(thisBubble)
+                    const metaData = feedRef.metaData||{}
+                    const {hash} = metaData || {hash: {}}
+                    await knowledgeBuilder({userID, models: req.dbModels, which: "likes", intent: "hashtags", hash: [...Object.keys(hash)]})
     
                     if(currentBubble.userID!==userID){
                         // const thisUserLikes = await userLikes.findOne({userID})

@@ -11,15 +11,28 @@
 
 
 async function dislikeClip(req, res){
-    const {cinema} = req.dbModels
+    const {cinema, LikeModel} = req.dbModels
 
     const userID = req.body.userID
     const postID = req.body.postID
     const dataID = req.body.dataID
-    const count = req.body.count
-    const where = req.body.where
-    const interactions = req.body.interactions
+    // const count = req.body.count
+    // const where = req.body.where
+    // const interactions = req.body.interactions
 
+    async function removeFromLikes(){
+        const userLikes = await LikeModel.findOne({userID}).lean()
+        if(userLikes){
+            const cinema = [...userLikes?.cinema]
+            for(let i=0; i<cinema.length; i++){
+                const each = cinema[i]
+                if(each.postID === postID){
+                    cinema.splice(i, 1)
+                }
+            }
+            await LikeModel.updateOne({userID}, {cinema})
+        }
+    }
 
     try {
         let thisClip = await cinema.findOne({postID}).lean()
@@ -40,6 +53,7 @@ async function dislikeClip(req, res){
                 if(likes[userID]){
                     delete thisClip.data[index].likes[userID]
                     await cinema.findOneAndUpdate({postID}, {data: thisClip.data})
+                    await removeFromLikes()
                 }
             }
             res.send({successful: true})

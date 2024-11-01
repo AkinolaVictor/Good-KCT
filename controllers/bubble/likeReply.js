@@ -2,6 +2,7 @@ const { v4: uuidv4 } = require('uuid')
 const date = require('date-and-time')
 const sendPushNotification = require('../pushNotification/sendPushNotification')
 const sendPushNotification_2 = require('../pushNotification/sendPushNotification_2')
+const knowledgeBuilder = require('../../utils/knowledgeBuilder')
 // const {doc, getDoc, updateDoc, setDoc, increment} = require('firebase/firestore')
 // const {database} = require('../../database/firebase')
 // const notifications = require('../../models/notifications')
@@ -269,6 +270,8 @@ async function likeReply(req, res){
                 }
                 await LikeReplyNotifier(notificationData)
                 await updateUserAnalytics(thisBubble)
+                const {hash} = refDoc?.metaData || {hash: {}}
+                await knowledgeBuilder({userID, models: req.dbModels, which: "likes", intent: "hashtags", hash: [...Object.keys(hash)]})
             }).catch(()=>{
             })
 

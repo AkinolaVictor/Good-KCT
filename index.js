@@ -228,9 +228,51 @@ app.use('/check', (req, res)=>{
     res.status(200).send('Server is working fine')
 })
 
-// const data = [1, 3, 4]
-// console.log(typeof(data));
-// console.log(typeof(JSON.stringify(data)));
+
+
+// const dk = {
+//   audi: [2],
+//   audi2: [2, 3],
+//   audi3: [1, 23]
+// }
+// const djs = "audi"
+// const sl = dk[`${djs}`]
+// console.log({sl});
+
+// function chunks(arr, n) {
+//   const saver = []
+//   for (let i = 0; i < arr.length; i += n) {
+//     const pack = arr.slice(i, i + n);
+//     saver.push(pack)
+//   }
+//   return saver
+// }
+
+// let someArray = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 12]
+// console.log(chunks(someArray, 3)) // [[0, 1], [2, 3], [4, 5], [6, 7], [8, 9]]
+
+
+// console.log(chunckify(someArray, 3));
+
+// function* tryYield(){
+//   const p1 = "dd1"
+//   yield p1
+//   const p2 = "dd2"
+//   yield p2
+//   const p3 = "dd3"
+//   console.log("test pause");
+//   yield p3
+//   const p4 = "dd5"
+//   yield p4
+//   const p5 = "dd4"
+//   yield p5
+// }
+// const trya = tryYield()
+// console.log(trya.next());
+// console.log(trya.next());
+// console.log(trya.next());
+
+
 
 // app.use(express.static(path.join(__dirname, "./public")))
 

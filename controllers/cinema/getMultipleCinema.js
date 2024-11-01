@@ -13,7 +13,7 @@ async function getMultipleCinema(req, res){
         for(let i=0; i<refs.length; i++){
             const {postID, metaData} = refs[i]
             const creatorID = refs[i].userID
-            const {audience} = metaData
+            const {audience} = metaData||{}
             const basicViewEligibity = audience["Everyone"] || audience[userID]
             if(basicViewEligibity){
                 userIDs[creatorID] = true

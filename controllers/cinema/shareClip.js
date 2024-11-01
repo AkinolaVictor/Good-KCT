@@ -3,6 +3,7 @@
 // const {database} = require('../../database/firebase')
 // const User = require('../../models/User')
 
+const knowledgeBuilder = require("../../utils/knowledgeBuilder")
 const sendPushNotification_2 = require("../pushNotification/sendPushNotification_2")
 
 // const sendPushNotification_2 = require("../pushNotification/sendPushNotification_2")
@@ -13,7 +14,7 @@ const { v4: uuidv4 } = require('uuid')
 
 
 async function shareClip(req, res){
-    const {cinema, cinemaPair, userCinema, cinemaFeeds, hashTags, allUser, notifications, Followers, io, cinemaForEveryone} = req.dbModels
+    const {cinema, userShares, cinemaFeeds, notifications, Followers} = req.dbModels
 
     const userID = req.body.userID
     const postID = req.body.postID
@@ -90,6 +91,7 @@ async function shareClip(req, res){
                         }
                     }
 
+                    await updateUserShares()
                     await ShareNotifier()
                 }
                 res.send({successful: true})
@@ -101,6 +103,19 @@ async function shareClip(req, res){
             console.log(e);
             console.log("failed");
             res.send({successful: false, message: 'problem encountered'})
+        }
+    }
+
+    async function updateUserShares(){
+        const userReps = await userShares.findOne({userID}).lean()
+        if(userReps){
+            const cinema = userReps?.cinema?[...userReps?.cinema]:[]
+            for(let i=0; i<cinema.length; i++){
+                const each = cinema[i]
+                if(each.postID === postID) return
+            }
+            cinema.push(feedRef)
+            await userShares.updateOne({userID}, {cinema})
         }
     }
 
@@ -170,10 +185,14 @@ async function shareClip(req, res){
         if(shareSettings.sharePermission.value === value){
             return true
         }
+
         return false
     }
 
     async function initShare(){
+        const {hash} = feedRef?.metaData || {hash: {}}
+        await knowledgeBuilder({userID, models: req.dbModels, which: "shares", intent: "hashtags", hash: [...Object.keys(hash)]})
+
         if(feedRef.userID===userID){
             // await directlyShareClip()
             res.send({successful: false})

@@ -63,7 +63,7 @@ async function initializeUser(req, res){
         const allUserLikes = await LikeModel.findOne({userID}).lean()
         if(allUserLikes){
             const likes = [...allUserLikes.bubbles]
-            const cins = allUserLikes.cinema||[]
+            const cins = allUserLikes?.cinema||[]
             const cinemalikes = [...cins]
             data.likes = likes
             data.cinemalikes = cinemalikes
@@ -76,7 +76,7 @@ async function initializeUser(req, res){
         const allUserReplies = await userReplies.findOne({userID}).lean()
         if(allUserReplies){
             const bubblereplies = [...allUserReplies.bubbles]
-            const cins = allUserReplies.cinema||[]
+            const cins = allUserReplies?.cinema||[]
             const cinemareplies = [...cins]
             data.replies = bubblereplies
             data.cinemareplies = cinemareplies
@@ -89,7 +89,7 @@ async function initializeUser(req, res){
         const allUserShares = await userShares.findOne({userID}).lean()
         if(allUserShares){
             const bubbleshares = [...allUserShares.bubbles]
-            const cins = allUserShares.cinema||[]
+            const cins = allUserShares?.cinema||[]
             const cinemashares = [...cins]
             data.shares = bubbleshares
             data.cinemashares = cinemashares

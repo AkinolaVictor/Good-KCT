@@ -10,9 +10,8 @@ const { storage } = require('../../database/firebase')
 
 async function deleteCinema(req, res){
     const userID = req.body.userID
-    // const userName = req.body.userName
     const cinemaData = req.body.cinema
-    const {cinema, userCinema, io, cinemaForEveryone} = req.dbModels
+    const {cinema, cinemaPair, userCinema, io, cinemaForEveryone} = req.dbModels
     // const settings = cinemaData.settings
     // const secrecySettings = settings.secrecyData
 
@@ -22,34 +21,46 @@ async function deleteCinema(req, res){
         const videos = cinemaData.data
 
         for(let i=0; i<videos.length; i++){
-            allPaths.push(videos[i].path)
+            // allPaths.push(videos[i].path)
+            const thisPath = videos[i].path
+            if(thisPath){
+                const path = thisPath.join('/')
+                const fileRef = ref(storage, path);
+                await deleteObject(fileRef).then(async()=>{ 
+                    if(i===videos.length-1){
+                        await deleteThisCinema()
+                    }
+                }).catch((err)=>{
+                    console.log(err);
+                    res.send({successful: false, message: 'Server Error: unable to delete files'})
+                    return
+                })
+            }
         }
 
-        if(allPaths.length){
-            const path = allPaths[i].join('/')
-            const fileRef = ref(storage, path);
-            await deleteObject(fileRef).then(async()=>{ 
-                if(i===allPaths.length-1){
-                    await deleteThisCinema()
-                }
-            }).catch((err)=>{
-                res.send({successful: false, message: 'unable to delete files'})
-                return
-            })
+        if(!videos.length){
+            res.send({successful: false, message: "No data"})
+            return
         }
+
 
         async function deleteThisCinema(){
-
             await cinema.findOneAndDelete({postID: cinemaData.postID}).then(async()=>{
+                await cinemaPair.findOneAndDelete({postID: cinemaData.postID})
+                .then(()=>{})
+                .catch((e)=>{
+                    console.log(e);
+                })
                 if(io){
                     // io.emit(`cinema-${cinemaData.postID}`, {
                     //     type: "cinema",
                     //     data: {bubbleNotFound: true}
                     // })
                 }
-                deleteSomeRefs()
+                await deleteSomeRefs()
                 res.send({successful: true})
-            }).catch(()=>{
+            }).catch((e)=>{
+                console.log(e);
                 res.send({successful: false, message: 'failed to delete bubble'})
             })
         }
@@ -80,7 +91,7 @@ async function deleteCinema(req, res){
         }
     } catch (e) {
         console.log(e);
-        console.log("failed");
+        console.log("failed to delete");
         res.send({successful: false, message: 'upload encountered some errors'})
     }
 

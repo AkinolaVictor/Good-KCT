@@ -1,4 +1,5 @@
 const date = require('date-and-time')
+const knowledgeBuilder = require('../../utils/knowledgeBuilder')
 // const {doc, getDoc, updateDoc, setDoc, increment} = require('firebase/firestore')
 // const { v4: uuidv4 } = require('uuid')
 // const {database} = require('../../database/firebase')
@@ -10,6 +11,7 @@ async function openedChart(req, res){
         const {bubble} = req.dbModels
         const userID = req.body.userID // user.id
         const currentBubble = {...req.body.thisBubble}
+        const feedRef = currentBubble.refDoc
         // thisBubble.userID = thisBubble.user.id
         // settings, userID
         // console.log(currentBubble.postID);
@@ -78,7 +80,10 @@ async function openedChart(req, res){
     
             const activities = JSON.stringify(thisBubble.activities)
             const openedChartCount = thisBubble.openedChartCount + 1
-            await bubble.updateOne({postID: currentBubble.postID}, {openedChartCount, activities}).then(()=>{
+            await bubble.updateOne({postID: currentBubble.postID}, {openedChartCount, activities}).then(async()=>{
+                const {hash} = feedRef?.metaData || {hash: {}}
+                await knowledgeBuilder({userID, models: req.dbModels, which: "openedAnalytics", intent: "hashtags", hash: [...Object.keys(hash)]})
+                
                 res.send({successful: true})
             }).catch((e)=>{
                 console.log("null")

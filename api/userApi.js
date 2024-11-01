@@ -9,7 +9,7 @@ const deleteAudience = require('../controllers/user/deleteAudience')
 const editAudience = require('../controllers/user/editAudience')
 const sendUserEmail = require('../controllers/user/sendUserEmail')
 const getAllUsers = require('../controllers/user/getAllUsers')
-const userDailyAnalytics = require('../controllers/user/userDailyAnalytics')
+// const userDailyAnalytics = require('../controllers/user/userDailyAnalytics')
 const updateUserProfile = require('../controllers/user/updateUserProfile')
 const savePushSubscribe = require('../controllers/pushNotification/savePushSubscribe')
 const getUsers = require('../controllers/user/getUsers')
@@ -37,6 +37,10 @@ const interFollow = require('../controllers/user/interFollow')
 const watchMyFollowing = require('../controllers/user/watchMyFollowing')
 const watchMyFollowers = require('../controllers/user/watchMyFollowers')
 const savePushSubscribe_2 = require('../controllers/pushNotification/savePushSubscribe_2')
+const updateUserInterests = require('../controllers/user/updateUserInterests')
+const createInIspace = require('../controllers/user/createInIspace')
+const deleteInIspace = require('../controllers/user/deleteInIspace')
+const getIspace = require('../controllers/user/getISpace')
 
 // create an account
 // router.post('/createAccount', signUp)
@@ -141,6 +145,14 @@ router.post('/openUserProfile_ForAnalytics', openUserProfile_ForAnalytics)
 router.post('/editUserSettings', editUserSettings)
 
 router.post('/getUserList', getUserList)
+
+router.post('/updateUserInterests', updateUserInterests)
+
+router.post('/createInIspace', createInIspace)
+
+router.post('/deleteInIspace', deleteInIspace)
+
+router.post('/getIspace', getIspace)
 
 
 module.exports = router

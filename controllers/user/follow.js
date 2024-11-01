@@ -15,7 +15,7 @@ async function follow(req, res){
     const userID = req.body.userID // user.id
     const userName = req.body.userName // user.userInfo.fullname
     const newUserID = req.body.newUserID // props.data.id
-    const newUserName = req.body.newUserName // props.data.userInfo.fullname
+    let newUserName = req.body.newUserName // props.data.userInfo.fullname
     const dontNotify = req.body.dontNotify
     // const data = req.body.data||{con: "none", condate: new Date().toISOString()} // props.data.userInfo.fullname
     const data = req.body.data// props.data.userInfo.fullname
@@ -40,7 +40,7 @@ async function follow(req, res){
 
     async function FollowNotifier(which){
         if(userID !== newUserID){
-
+            
             function additionalMessage(){
                 if(followPath){
                     const {type, path, bubbleRef} = followPath||{}
@@ -82,6 +82,8 @@ async function follow(req, res){
                 type: ifCon()?"con_follow":'follow',
                 id: uuidv4(),
             }
+
+            
 
             if(followPath){
                 followData.followPath = followPath.type
@@ -155,12 +157,13 @@ async function follow(req, res){
 
     const Follow = async () => {
         // add user id to my following
+
         if(con === "follow on promise"){
             await FollowNotifier("follow")
             res.send({successful: true})
             return
         }
-
+        // if(!user)
         const userFollowing = await Following.findOne({userID}).lean()
         if(userFollowing===null){
             const following = new Following({userID, following: { [newUserID]: {name: newUserName, id: newUserID, data}}})
