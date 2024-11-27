@@ -1,13 +1,23 @@
 const { dataType } = require("../utilsExport")
 
-async function checkIfEngagedinLastClip({creatorID, userID, models}) {
+async function checkIfEngagedinLastClip({creatorID, userID, models, feed}) {
     const {userCinema, cinemaPair} = models
     const allUserClips = await userCinema.findOne({creatorID})
     let pass = false
     
     if(allUserClips){
         const clips = [...allUserClips.cinema]
-        const last = clips[clips?.length-1]
+        const last = null
+
+        for(let i=0; i<clips.length; i++){
+            const curr = clips[i]
+            const postID = curr?.postID
+            if(postID === feed?.postID){
+                const prev = clips[i-1]
+                last = prev
+            }
+        }
+
         if(dataType(last) === "object"){
             const {postID} = last
             const clipPair = await cinemaPair.findOne({postID}).lean()

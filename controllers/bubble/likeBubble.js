@@ -4,6 +4,8 @@ const { dataType } = require('../../utils/utilsExport')
 const sendPushNotification = require('../pushNotification/sendPushNotification')
 const sendPushNotification_2 = require('../pushNotification/sendPushNotification_2')
 const knowledgeBuilder = require('../../utils/knowledgeBuilder')
+const knowledgeTypes = require('../../utils/knowledgeTypes')
+const updateBubbleRank = require('../../utils/updateBubbleRank')
 // const {doc, getDoc, updateDoc, setDoc, increment} = require('firebase/firestore')
 // const {getDownloadURL, ref, uploadBytes, deleteObject} = require('firebase/storage')
 // const {database} = require('../../database/firebase')
@@ -237,7 +239,9 @@ async function likeBubble(req, res){
                     await updateUserAnalytics(thisBubble)
                     const metaData = feedRef.metaData||{}
                     const {hash} = metaData || {hash: {}}
-                    await knowledgeBuilder({userID, models: req.dbModels, which: "likes", intent: "hashtags", hash: [...Object.keys(hash)]})
+                    
+                    await updateBubbleRank({which: "likes",  models: req.dbModels, feedRef})
+                    await knowledgeBuilder({userID, models: req.dbModels, which: knowledgeTypes.like, intent: "hashtags", hash: [...Object.keys(hash)]})
     
                     if(currentBubble.userID!==userID){
                         // const thisUserLikes = await userLikes.findOne({userID})

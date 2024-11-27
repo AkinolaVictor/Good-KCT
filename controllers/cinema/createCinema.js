@@ -13,7 +13,7 @@ async function createCinema(req, res){
     // console.log({cinemaData, userID});
     // res.send({successful: false, message: 'upload encountered some errors'})
     // return
-    const {cinema, cinemaPair, userCinema, cinemaFeeds, hashTags, allUser, notifications, cinemaForEveryone, Followers} = req.dbModels
+    const {cinema, cinemaPair, userCinema, cinemaFeeds, hashTags, allUser, notifications, cinemaForEveryone, Followers, clipRanks} = req.dbModels
     const settings = cinemaData.settings
     const secrecySettings = settings.secrecyData
 
@@ -29,6 +29,8 @@ async function createCinema(req, res){
             hash: {}
         }
     }
+
+    
 
     function discernUserIdentity(){
         if(secrecySettings.atmosphere === 'Night'){
@@ -52,6 +54,23 @@ async function createCinema(req, res){
         } else {
             return false
         }
+    }
+
+    async function createClipRank({feedRef}) {
+        if(!feedRef) return
+        const metadata = feedRef?.metaData||{}
+        // const {audience, aos, hash, text, image, video} = metaData
+
+        const cont = {
+            userID,
+            postID,
+            engagement: {},
+            metadata,
+            lastengaged: new Date().toISOString()
+        }
+
+        const rankData = new clipRanks({...cont})
+        await rankData.save()
     }
 
     async function updateHash(){
@@ -111,7 +130,12 @@ async function createCinema(req, res){
 
     for(let i=0; i<data.length; i++){
         const {audience, caption} = data[i]
-        cinemaAudience = {...cinemaAudience, ...audience}
+        if(audience["Ai Audience"]){
+            const aiAd = {...cinemaAudience?.["Ai Audience"], ...audience["Ai Audience"]}
+            cinemaAudience = {...cinemaAudience, "Ai Audience": aiAd}
+        } else {
+            cinemaAudience = {...cinemaAudience, ...audience}
+        }
         
         const captionContent = caption.split(" ")
         for(let j=0; j<captionContent.length; j++){
@@ -132,6 +156,18 @@ async function createCinema(req, res){
     feedRef.metaData.audience = cinemaAudience
     feedRef.metaData.mention = mentioned
     feedRef.metaData.hash = hash
+
+    const clpDat = cinemaData.data
+    const meta = {video: 0, text: 0}
+    for(let i=0; i<clpDat.length; i++){
+        const {caption} = clpDat[i]
+        if(caption.length>1){
+            meta.text++
+        }
+        meta.video++
+    }
+
+    feedRef.metaData = {...feedRef.metaData, ...meta}
     cinemaData.feedRef = feedRef
 
     const audienceData = {
@@ -371,6 +407,7 @@ async function createCinema(req, res){
             await updateHash()
             await informMentioned()
             await addToCinemaForEveryone()
+            await createClipRank({feedRef})
 
             res.send({successful: true})
         }).catch((e)=>{

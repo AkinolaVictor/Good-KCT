@@ -1,8 +1,9 @@
+const Ai_Audience = require("../../utils/AIAudience")
 const { dataType } = require("../../utils/utilsExport")
 
 async function bubbleServer(req, res){
-    const {userID, seen, where, count} = req.body
-    const {bubblesForEveryone, Feeds, Following, userBubbles} = req.dbModels
+    const {userID, seen, where, count, location} = req.body
+    const {bubblesForEveryone, Feeds, Following, userBubbles, bubble,} = req.dbModels
 
     try {
         
@@ -39,15 +40,43 @@ async function bubbleServer(req, res){
                     const {aos} = metaData||{aos:"None"}
                     const audience = metaData?.audience||{}
 
+                    const bubbleChecker = await bubble.findOne({postID})
+                    if(!bubbleChecker) continue
+
                     if(!tracker.includes(postID)){
                         tracker.push(postID)
+                    } else {
+                        continue
                     }
 
                     const basicViewEligibity = audience["Everyone"] || audience[userID] || Object.keys(audience).length===0
                     const bubbleIsAos = aos!=="None"
+                    const aiAud = audience["Ai Audience"]
+                    const aiAud2 = audience["Ai Audience"]||{}
+                    const audArr = Object.values(aiAud2)
+                    if(aiAud && !basicViewEligibity){
+                        let confirm = true
+                        for(let i=0; i<audArr.length; i++){
+                            const each = audArr[i]
+                            const {approved} = await Ai_Audience({
+                                userID,
+                                models: req.dbModels,
+                                audienceData: each,
+                                content: "bubble",
+                                feed: current
+                            })
+                            if(approved){
+                                confirm = false
+                                break
+                            }
+                        }
+                        if(confirm){
+                            continue
+                        }
+                    }
 
-                    // console.log(audience);
-                    if(basicViewEligibity){
+                    
+                    if(aiAud || basicViewEligibity){
                         if(!seen.includes(postID)){
                             if(where==="aos"){
                                 if(bubbleIsAos){

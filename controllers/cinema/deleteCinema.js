@@ -11,7 +11,7 @@ const { storage } = require('../../database/firebase')
 async function deleteCinema(req, res){
     const userID = req.body.userID
     const cinemaData = req.body.cinema
-    const {cinema, cinemaPair, userCinema, io, cinemaForEveryone} = req.dbModels
+    const {cinema, cinemaPair, userCinema, io, cinemaForEveryone, clipRanks} = req.dbModels
     // const settings = cinemaData.settings
     // const secrecySettings = settings.secrecyData
 
@@ -57,6 +57,7 @@ async function deleteCinema(req, res){
                     //     data: {bubbleNotFound: true}
                     // })
                 }
+                await clipRanks.findOneAndDelete({postID: cinemaData.postID})
                 await deleteSomeRefs()
                 res.send({successful: true})
             }).catch((e)=>{

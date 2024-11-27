@@ -1,5 +1,6 @@
 const date = require('date-and-time')
 const knowledgeBuilder = require('../../utils/knowledgeBuilder')
+const knowledgeTypes = require('../../utils/knowledgeTypes')
 // const { dataType } = require('../../utils/utilsExport')
 // const {database} = require('../../database/firebase')
 // const bubble = require('../../models/bubble')
@@ -87,7 +88,7 @@ async function openedReply(req, res){
             await bubble.updateOne({postID: thisBubble.postID}, {activities, openedReplyCount})
 
             const {hash} = feedRef?.metaData || {hash: {}}
-            await knowledgeBuilder({userID, models: req.dbModels, which: "openedReplys", intent: "hashtags", hash: [...Object.keys(hash)]})
+            await knowledgeBuilder({userID, models: req.dbModels, which: knowledgeTypes.openedReply, intent: "hashtags", hash: [...Object.keys(hash)]})
             
             res.send({successful: true})
         }

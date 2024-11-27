@@ -424,7 +424,11 @@ async function getBasicBubble(req, res){
                                 audienceData: curr.audienceData,
                                 content: "bubble"
                             })
-                            eligibity = approved
+                            // eligibityPass = approved
+                            
+                            if(approved){
+                                thisBubble.bubble[i].approved = true
+                            }
                         }
                     }
                 } else if(audNum>1){
@@ -435,7 +439,8 @@ async function getBasicBubble(req, res){
                                 userID,
                                 models: req.dbModels,
                                 audienceData: curr.audienceData,
-                                content: "bubble"
+                                content: "bubble",
+                                feed: feedRef
                             })
                             
                             if(approved){

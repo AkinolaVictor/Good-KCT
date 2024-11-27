@@ -229,6 +229,7 @@ app.use('/check', (req, res)=>{
 })
 
 
+// console.log(Math.max(...[])<11);
 
 // const dk = {
 //   audi: [2],

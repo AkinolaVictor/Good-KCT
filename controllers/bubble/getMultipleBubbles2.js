@@ -1,5 +1,6 @@
 const date = require('date-and-time')
 const { dataType } = require('../../utils/utilsExport')
+const Ai_Audience = require('../../utils/AIAudience')
 
 async function getMultipleBubbles2(req, res){
     const {User, Feeds, bot, Followers, Following, bubble} = req.dbModels
@@ -50,9 +51,10 @@ async function getMultipleBubbles2(req, res){
         }
     }
 
-    function ifForAudience(thisBubble){
+    async function ifForAudience(thisBubble){
         const bubble = thisBubble.bubble
         let allAudience = []
+        let checkAIAudience = false
         for(let i=0; i<bubble.length; i++){
             const audienceData = {...bubble[i].audienceData}
             const aud = [...Object.keys(audienceData)]
@@ -69,19 +71,43 @@ async function getMultipleBubbles2(req, res){
             audienceNames.push(bubble[i].name)
         }
 
+        if(audienceNames.includes('Ai Audience')){
+            checkAIAudience = true
+        }
+
         if(audienceNames.includes('Everyone')){
-            return false
+            // return false
+            return {
+                audienceCheck: false,
+                checkAIAudience
+            }
         } else if(audienceNames.includes('My Followers')){
             if(thisBubble.followers[userID]){
-                return false
+                // return false
+                return {
+                    audienceCheck: false,
+                    checkAIAudience
+                }
             } else {
-                return true
+                // return true
+                return {
+                    audienceCheck: true,
+                    checkAIAudience
+                }
             }
         } else {
             if(allAudience.includes(userID)){
-                return false
+                // return false
+                return {
+                    audienceCheck: false,
+                    checkAIAudience
+                }
             } else {
-                return true
+                // return true
+                return {
+                    audienceCheck: true,
+                    checkAIAudience
+                }
             }
         }
     }
@@ -227,7 +253,7 @@ async function getMultipleBubbles2(req, res){
     //     }
     // }
     
-    function viewEligibity(thisBubble){
+    async function viewEligibity(thisBubble){
         // CHECK IF USER IS ELIGIBLE TO SEE THIS BUBBLE
         
         // if(await checkBubbleSettings(thisBubble) === false){
@@ -235,19 +261,39 @@ async function getMultipleBubbles2(req, res){
         //     return false
         // } 
 
-        if((checkForSecrecy(thisBubble) || ifForAudience(thisBubble)) && feedRef.userID!==userID && feedRef.env==='profile'){
-            return false
+        const {audienceCheck, checkAIAudience} = await ifForAudience(thisBubble)
+        const secrecyCheck = checkForSecrecy(thisBubble)
+        const countChecker = check_for_viewCount(thisBubble)
+
+        if((secrecyCheck || audienceCheck) && feedRef.userID!==userID && feedRef.env==='profile'){
+            // return false
+            return {
+                checkAIAudience,
+                eligibity: false
+            }
         }
         
-        if(ifForAudience(thisBubble) && feedRef.userID!==userID){
-            return false
+        if(audienceCheck && feedRef.userID!==userID){
+            // return false
+            return {
+                eligibity: false,
+                checkAIAudience
+            }
         } 
         
-        if(check_for_viewCount(thisBubble)){
-            return false
+        if(countChecker){
+            // return false
+            return {
+                eligibity: false,
+                checkAIAudience
+            }
         }
 
-        return true
+        // return true
+        return {
+            eligibity: true,
+            checkAIAudience
+        }
     }
 
     async function getEachBubble(feedRef, data){
@@ -376,7 +422,61 @@ async function getMultipleBubbles2(req, res){
                 // // CHECK IF USER IS ELIGIBLE TO SEE THIS BUBBLE
                 // const testSettings = await checkBubbleSettings(thisBubble)
                 // if(!viewEligibity(thisBubble) || !testSettings){
-                if(!viewEligibity(thisBubble)){
+                const {eligibity, checkAIAudience} = await viewEligibity(thisBubble)
+                let eligibityPass = eligibity
+
+                if(checkAIAudience){
+                    console.log("found an AI Audience");
+                    const bubble = thisBubble.bubble
+    
+                    const audNames = {}
+                    for(let i=0; i<bubble.length; i++){
+                        const curr = bubble[i]
+                        audNames[curr.name] = true
+                    }
+    
+                    const audNum = Object.keys(audNames).length
+                    if(audNum===1){
+                        for(let i=0; i<bubble.length; i++){
+                            const curr = bubble[i]
+                            if(curr.name==="Ai Audience"){
+                                const {approved} = await Ai_Audience({
+                                    userID,
+                                    models: req.dbModels,
+                                    audienceData: curr.audienceData,
+                                    content: "bubble",
+                                    feed: feedRef
+                                })
+                                
+                                if(approved){
+                                    thisBubble.bubble[i].approved = true
+                                    eligibityPass = approved
+                                }
+                                // eligibityPass = approved
+                            }
+                        }
+                    } else if(audNum>1){
+                        for(let i=0; i<bubble.length; i++){
+                            const curr = bubble[i]
+                            if(curr.name==="Ai Audience"){
+                                const {approved} = await Ai_Audience({
+                                    userID,
+                                    models: req.dbModels,
+                                    audienceData: curr.audienceData,
+                                    content: "bubble",
+                                    feed: feedRef
+                                })
+                                
+                                if(approved){
+                                    thisBubble.bubble[i].approved = true
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // if(!viewEligibity(thisBubble)){
+                if(!eligibityPass){
                     // res.send({successful:false, message: 'ineligible to view bubble'})
                     return {pass: false}
                 } else {

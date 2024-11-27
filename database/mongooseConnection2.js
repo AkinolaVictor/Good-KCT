@@ -77,6 +77,9 @@ function modelPack(db){
             const userSchema = db.Schema({
                 id: String,
                 userInfo: {},
+                fullname: String,
+                username: String,
+                email: String,
                 audience: {},
                 followers: {},
                 following: {},
@@ -153,6 +156,8 @@ function modelPack(db){
               identity: Boolean,
               postID: String,
               version: Number,
+              country: String,
+              city: String,
               createdAt: {type: Date, default: new Date()},
               updatedAt: {
                   type: Date,
@@ -174,6 +179,7 @@ function modelPack(db){
                 shares: {},
                 allShares: [],
                 sharePermission: Number,
+                impressions: Number,
                 feedRef:{},
                 aosID: String,
                 createdDate: String,
@@ -181,6 +187,8 @@ function modelPack(db){
                 photo: String,
                 fullname: String,
                 username: String,
+                country: String,
+                city: String,
                 createdAt: {type: Date, default: new Date()},
                 updatedAt: {
                     type: Date,
@@ -485,7 +493,7 @@ function modelPack(db){
                 userID: String,
                 kpi: {}, //Monthly-usage, weekly-usage //avg-time-spent-per-mo/wk, //
                 // consumptionsummary: {}, 
-                hashTags: {}, // { like: 1, share: 1, reply: 6, openedRep: 1, openedAnal: 1, lastdate, }
+                hashTags: {}, // { like: 1, share: 1, reply: 6, openedRep: 1, openedAnal: 1, lastdate, impression, watchVideo, }
 
                 createdAt: {type: Date, default: new Date()},
                 updatedAt: Date
@@ -494,6 +502,36 @@ function modelPack(db){
             const i_space = db.models["userknowledgebase"] || db.model("userknowledgebase", user_knowledgebase)
             return i_space
         }(),
+        bubbleRanks: function(){
+            const bubbleRanks = db.Schema({
+                userID: String,
+                postID: String,
+                metadata: {}, // created, text: 1, video: 4, image: 13, hash: [ff, ee, aa], aos: None, audience: {}, more
+                lastengaged: String,
+                engagements: {}, //likes, shares, replys, impressions
+                // prevdates: [],
+                createdAt: {type: Date, default: new Date()},
+                updatedAt: Date
+            }, { strict: false, minimize: false })
+            
+            const rank = db.models["bubbleRanks"] || db.model("bubbleRanks", bubbleRanks)
+            return rank
+        }(),
+        clipRanks: function(){
+            const clipRanks = db.Schema({
+                userID: String,
+                postID: String,
+                metadata: {}, // datecreated, textLength, hasVideo, hasImage, aos, audience, more
+                lastengaged: String,
+                engagements: {}, //likes, shares, replys
+                // lastfiveengaged: Array,
+                createdAt: {type: Date, default: new Date()},
+                updatedAt: Date
+            }, { strict: false, minimize: false })
+            
+            const rank = db.models["clipRanks"] || db.model("clipRanks", clipRanks)
+            return rank
+        }() 
     }
     
     return {...models}

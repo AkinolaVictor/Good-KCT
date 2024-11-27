@@ -6,6 +6,8 @@ const { v4: uuidv4 } = require('uuid')
 const sendPushNotification_2 = require("../pushNotification/sendPushNotification_2")
 const clipReplyCounter = require('../../utils/clipReplyCounter')
 const knowledgeBuilder = require('../../utils/knowledgeBuilder')
+const knowledgeTypes = require('../../utils/knowledgeTypes')
+const updateClipRank = require('../../utils/updateClipRank')
 // const sendPushNotification = require('../pushNotification/sendPushNotification')
 
 async function createCinemaReply(req, res){
@@ -233,7 +235,8 @@ async function createCinemaReply(req, res){
             await doNotification(notificationData)
 
             const {hash} = feedRef?.metaData || {hash: {}}
-            await knowledgeBuilder({userID, models: req.dbModels, which: "replys", intent: "hashtags", hash: [...Object.keys(hash)]})
+            await updateClipRank({which: "replys",  models: req.dbModels, feedRef})
+            await knowledgeBuilder({userID, models: req.dbModels, which: knowledgeTypes.reply, intent: "hashtags", hash: [...Object.keys(hash)]})
             
             res.send({successful: true})
         }

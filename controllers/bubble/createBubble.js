@@ -1,18 +1,18 @@
-const { v4: uuidv4 } = require('uuid')
-const sendPushNotification = require('../pushNotification/sendPushNotification')
 // const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
 // const {getDownloadURL, ref, uploadBytes} = require('firebase/storage')
-const date = require('date-and-time')
-const sendPushNotification_2 = require('../pushNotification/sendPushNotification_2')
 // const {database, storage} = require('../../database/firebase')
 // const bot = require('../../models/bot')
 // const bubble = require('../../models/bubble')
 // const Feeds = require('../../models/Feeds')
 // const userBubbles = require('../../models/userBubbles')
 // const bubblesForEveryone = require('../../models/bubblesForEveryone')
+const { v4: uuidv4 } = require('uuid')
+const sendPushNotification = require('../pushNotification/sendPushNotification')
+const date = require('date-and-time')
+const sendPushNotification_2 = require('../pushNotification/sendPushNotification_2')
 
 async function createBubble(req, res){
-    const {bubblesForEveryone, userBubbles, Feeds, bubble, bot, hashTags, allUser, notifications} = req.dbModels
+    const {bubblesForEveryone, userBubbles, Feeds, bubble, bot, hashTags, allUser, notifications, bubbleRanks} = req.dbModels
 
     const userID = req.body.userID
     const metaData = req.body.metaData
@@ -94,7 +94,6 @@ async function createBubble(req, res){
         const allIds = []
 
         const payload = {
-            // time: getDate(),
             when: new Date().toISOString(),
             message: `${creatorName} mentioned you in a bubble`,
             userID,
@@ -118,15 +117,15 @@ async function createBubble(req, res){
         }
 
         for(let i=0; i<dataArr.length; i++){
-            const data = dataArr[i]
+            const id = dataArr[i]
 
-            if(!allIds.includes(data.userID)) allIds.push(data.userID)
+            if(!allIds.includes(id)) allIds.push(id)
 
-            const userNotification = await notifications.findOne({userID: data.userID}).lean()
+            const userNotification = await notifications.findOne({userID: id}).lean()
             if(userNotification){
                 userNotification.all.push(data.payload)
-                await notifications.updateOne({userID: data.userID}, {all: userNotification.all})
-                await sendPushNotification(data.userID, notificationData, req)
+                await notifications.updateOne({userID: id}, {all: userNotification.all})
+                // await sendPushNotification(data.userID, notificationData, req)
             }
         }
 
@@ -136,11 +135,28 @@ async function createBubble(req, res){
             req
         })
     }
+
+    async function createRankData({feedRef}){
+        if(!feedRef) return
+        const metadata = feedRef?.metaData||{}
+        // const {audience, aos, hash, text, image, video} = metaData
+
+        const cont = {
+            userID,
+            postID,
+            engagement: {},
+            metadata,
+            lastengaged: new Date().toISOString()
+        }
+
+        const rankData = new bubbleRanks({...cont})
+        await rankData.save()
+    }
     
     // all file are uploaded on the client side
     await saveData_New()
 
-    function checkForEveryoneAndFollowers(){
+    function checkForEveryoneAndFollowers({aiAud}){
         const bubble = [...thisBubble.bubble]
 
         const audienceNames = []
@@ -148,6 +164,11 @@ async function createBubble(req, res){
             audienceNames.push(bubble[i].name)
         }
 
+        if(aiAud){
+            if(audienceNames.includes('Ai Audience')){
+                return true
+            }
+        }
         if(audienceNames.includes('Everyone') || audienceNames.includes('My Followers') || audienceNames.includes('Ai Audience')){
             return true
         } else {
@@ -159,17 +180,14 @@ async function createBubble(req, res){
         const bubble = [...thisBubble.bubble]
         for(let i=0; i<bubble.length; i++){
             const curr = bubble[i]
-            if(curr.audienceData[testID]){
+            if(curr?.audienceData?.[testID]){
                 return true
             }
         }
         return false
     }
 
-    async function saveData_New(){
-        // gather all data to be forwarded as bubble
-        // update settings time for self-destructure
-
+    async function appendToBot(){
         const settings = thisBubble.settings
         // settings.selfDestructData.currentDate = new Date().toISOString()
 
@@ -189,7 +207,30 @@ async function createBubble(req, res){
                 }
             }
         }
+    }
 
+    async function saveData_New(){
+        // gather all data to be forwarded as bubble
+        // update settings time for self-destructure
+        await appendToBot()
+        // const settings = thisBubble.settings
+        // const botData = [...Object.keys(settings.botData)]
+        // if(botData.length){
+        //     for(let k=0; k<botData.length; k++){
+        //         const eachBot = botData[k]
+        //         const thisBot = await bot.findOne({id: eachBot}).lean()
+        //         if(thisBot){
+        //             if(!thisBot.data.includes(postID)){
+        //                 thisBot.data.push(postID)
+        //                 // await thisBot.save()
+        //                 await bot.updateOne({id: eachBot}, {data: [...thisBot.data]})
+        //             }
+        //         }
+        //     }
+        // }
+        // settings.selfDestructData.currentDate = new Date().toISOString()
+
+        // thisBubble.settings.selfDestructData.currentDate = new Date().toISOString()
 
         const feedRef = {
             userID,
@@ -199,16 +240,33 @@ async function createBubble(req, res){
             sharePath:[userID],
             metaData: {...metaData, aos: secrecySettings.atmosphere},
             data:{
-                // type: chosenBubble.name
                 type: bubbleName
             }
         }
-        // console.log(feedRef.metaData);
+        
+        const bublx = thisBubble.bubble
+        const meta = {text: 0, image: 0, video: 0}
+        for(let i=0; i<bublx.length; i++){
+            const {message, file} = bublx[i]
+            if(message.length>1){
+                meta.text++
+            }
+
+            for(let j=0; j<file.length; j++){
+                const type = file[j]?.type||[]
+                const which = type[0]
+                if(which==="video"){
+                    meta.video++
+                }
+
+                if(which==="image"){
+                    meta.image++
+                }
+            }
+        }
+
+        feedRef.metaData = {...feedRef.metaData, ...meta}
         thisBubble.feedRef = feedRef
-        // console.log(feedRef.metaData);
-        // const {metaData} = feedRef
-        // const userHashs = [...Object.keys(metaData.hash)]
-        // console.log(feedRef.metaData);
 
         // res.send({successful: false, message: 'bubble failed to upload to database'})
         // return
@@ -268,6 +326,8 @@ async function createBubble(req, res){
                 await userBubbles.updateOne({userID}, {bubbles: [...allUserBubbles.bubbles]}).catch(()=>{ })
             }
 
+            await createRankData({feedRef})
+
             async function checkThroughAudienceSettings(ID){
                 const secrecySettings = thisBubble.settings.secrecyData.atmosphere
                 const followerDetails = await User.findOne({userID: ID}).lean()
@@ -308,23 +368,23 @@ async function createBubble(req, res){
             const savedIDs = []
             for(let i=0; i<allBubbleAudience.length; i++){
                 // if(await checkThroughAudienceSettings(allBubbleAudience[i])){
-                    const followerFeed = await Feeds.findOne({userID: allBubbleAudience[i]})
-                    if(followerFeed === null){
-                        const newUserFeed = new Feeds({userID: allBubbleAudience[i], bubbles: [feedRef]})
-                        await newUserFeed.save().then(async()=>{
-                            await afterFeedingEachFollower_Send_notification({
-                                currentID: allBubbleAudience[i]
-                            })
-                        }).catch(()=>{ })
-                    } else {
-                        followerFeed.bubbles.push(feedRef)
-    
-                        await Feeds.updateOne({userID: allBubbleAudience[i]}, {bubbles: [...followerFeed.bubbles]}).then(async()=>{
-                            await afterFeedingEachFollower_Send_notification({
-                                currentID: allBubbleAudience[i]
-                            })
-                        }).catch(()=>{ })
-                    }
+                const followerFeed = await Feeds.findOne({userID: allBubbleAudience[i]})
+                if(followerFeed === null){
+                    const newUserFeed = new Feeds({userID: allBubbleAudience[i], bubbles: [feedRef]})
+                    await newUserFeed.save().then(async()=>{
+                        await afterFeedingEachFollower_Send_notification({
+                            currentID: allBubbleAudience[i]
+                        })
+                    }).catch(()=>{ })
+                } else {
+                    followerFeed.bubbles.push(feedRef)
+
+                    await Feeds.updateOne({userID: allBubbleAudience[i]}, {bubbles: [...followerFeed.bubbles]}).then(async()=>{
+                        await afterFeedingEachFollower_Send_notification({
+                            currentID: allBubbleAudience[i]
+                        })
+                    }).catch(()=>{ })
+                }
                 // }
                     
                 if(!savedIDs.includes(allBubbleAudience[i])) savedIDs.push(allBubbleAudience[i])
@@ -334,6 +394,7 @@ async function createBubble(req, res){
                 currentID: savedIDs,
                 multiple: true
             })
+
             async function afterFeedingEachFollower_Send_notification({currentID, multiple}){
                 function constructTitle(){
                     if(discernUserIdentity()){
@@ -420,11 +481,12 @@ async function createBubble(req, res){
                 }
             }
 
-            if(checkForEveryoneAndFollowers()){
+            // continue from here
+            if(checkForEveryoneAndFollowers({})){
                 const publicBubbles = await bubblesForEveryone.findOne({name: "Everyone"})
                 if(publicBubbles === null){
                     const newPublicBubbles = new bubblesForEveryone({name: "Everyone", bubbleRefs: [feedRef]})
-                    await newPublicBubbles.save().then(()=>{})
+                    await newPublicBubbles.save().then(()=>{}).catch(()=>{})
                 } else {
                     publicBubbles.bubbleRefs.push(feedRef)
                     await bubblesForEveryone.updateOne({name: "Everyone"}, {bubbleRefs: [...publicBubbles.bubbleRefs]}).catch(()=>{})
@@ -452,7 +514,7 @@ async function createBubble(req, res){
                     saveHash[userHashs[i]] = {
                         hash: userHashs[i],
                         count: {bub: 1},
-                        lastDate: getDate()
+                        lastDate: new Date().toISOString()
                     }
                 }
 
@@ -469,12 +531,12 @@ async function createBubble(req, res){
                 for(let i=0; i<userHashs.length; i++){
                     if(allHashs[userHashs[i]]){
                         allHashs[userHashs[i]].count.bub++
-                        allHashs[userHashs[i]].lastDate = getDate()
+                        allHashs[userHashs[i]].lastDate = new Date().toISOString()
                     } else {
                         allHashs[userHashs[i]] = {
                             hash: userHashs[i],
                             count: {bub: 1},
-                            lastDate: getDate()
+                            lastDate: new Date().toISOString()
                         }
                     }
                 }
@@ -512,7 +574,7 @@ async function createBubble(req, res){
                                     // }
                                 }
 
-                                if(checkForEveryoneAndFollowers() || checkForSpecificAudience(currentUser.userID)){
+                                if(checkForEveryoneAndFollowers({}) || checkForSpecificAudience(currentUser.userID)){
                                     if(currentUser.userID !== userID){
                                         // await sendNotificationToMentioned(data)
                                         storeMentioned.push(currentUser.userID)

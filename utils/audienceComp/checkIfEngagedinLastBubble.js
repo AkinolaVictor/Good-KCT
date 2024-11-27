@@ -1,12 +1,22 @@
 const { dataType } = require("../utilsExport")
 
-async function checkIfEngagedinLastBubble({creatorID, userID, models}){
+async function checkIfEngagedinLastBubble({creatorID, userID, models, feed}){
     const {userBubbles, bubble} = models
     let pass = false
     const userContent = await userBubbles.findOne({userID: creatorID}).lean()
     if(userContent){
         const bubbles = [...userContent.bubbles]
-        const last = bubbles[bubbles.length-1]
+        let last = null
+
+        for(let i=0; i<bubbles.length; i++){
+            const curr = bubbles[i]
+            const postID = curr?.postID
+            if(postID === feed?.postID){
+                const prev = bubbles[i-1]
+                last = prev
+            }
+        }
+
         if(dataType(last) === "object"){
             const {postID} = last
             const thisBubble = await bubble.findOne({postID}).lean()

@@ -12,7 +12,7 @@ const { ref, deleteObject} = require('firebase/storage')
 // const LikeModel = require('../../models/LikeModel')
 
 async function deleteBubble(req, res){
-    const {LikeModel, bubblesForEveryone, userBubbles, Feeds, userShares, userReplies, bot, bubble, io} = req.dbModels
+    const {LikeModel, bubblesForEveryone, userBubbles, Feeds, userShares, userReplies, bot, bubble, io, bubbleRanks} = req.dbModels
 
     // const userID = req.body.userID
     // const postID = req.body.postID // thisBubble.postID
@@ -165,6 +165,9 @@ async function deleteBubble(req, res){
                     await bubble.findOneAndDelete({postID: thisBubble.postID}).then(async()=>{
                         // const fire_ref = doc(database, "bubbles", thisBubble.postID)
                         // await setDoc(fire_ref, {bubbleNotFound: true}).catch(()=>{})
+                            
+                        await bubbleRanks.findOneAndDelete({postID: thisBubble.postID})
+
                         if(io){
                             io.emit(`bubble-${thisBubble.postID}`, {
                                 type: "bubble",

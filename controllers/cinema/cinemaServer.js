@@ -3,13 +3,15 @@
 // const User = require('../../models/User')
 // const { v4: uuidv4 } = require('uuid')
 
+const Ai_Audience = require("../../utils/AIAudience")
+
 // const sendPushNotification_2 = require("../pushNotification/sendPushNotification_2")
 // const sendPushNotification = require('../pushNotification/sendPushNotification')
 // const { ref, deleteObject } = require('firebase/storage')
 // const { storage } = require('../../database/firebase')
 
 async function cinemaServer(req, res){
-    const {cinemaForEveryone, cinemaFeeds} = req.dbModels
+    const {cinemaForEveryone, cinemaFeeds, cinema} = req.dbModels
 
     const userID = req.body.userID
     const seen = req.body.seen||[]
@@ -53,11 +55,41 @@ async function cinemaServer(req, res){
 
                 if(!tracker.includes(postID)){
                     tracker.push(postID)
+                } else {
+                    continue
                 }
+
 
                 const basicViewEligibity = audience["Everyone"] || audience[userID]
                 const clipIsAos = aos !== "None"
-                if(basicViewEligibity){
+                const aiAud = audience["Ai Audience"]
+                const aiAud2 = audience["Ai Audience"]||{}
+                const audArr = Object.values(aiAud2)
+                if(aiAud && !basicViewEligibity){
+                    let confirm = true
+                    for(let i=0; i<audArr.length; i++){
+                        const each = audArr[i]
+                        const {approved} = await Ai_Audience({
+                            userID,
+                            models: req.dbModels,
+                            audienceData: each,
+                            content: "clip",
+                            feed: curr
+                        })
+                        if(approved){
+                            confirm = false
+                            break
+                        }
+                    }
+                    if(confirm){
+                        continue
+                    }
+                }
+
+                const clipChecker = await cinema.findOne({postID})
+                if(!clipChecker) continue
+
+                if(basicViewEligibity || aiAud){
                     if(!seen.includes(postID)){
                         if(where==="aos"){
                             if(clipIsAos){

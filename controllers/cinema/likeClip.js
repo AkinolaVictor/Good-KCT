@@ -4,6 +4,8 @@
 // const User = require('../../models/User')
 
 const knowledgeBuilder = require("../../utils/knowledgeBuilder")
+const knowledgeTypes = require("../../utils/knowledgeTypes")
+const updateClipRank = require("../../utils/updateClipRank")
 const sendPushNotification_2 = require("../pushNotification/sendPushNotification_2")
 
 // const sendPushNotification_2 = require("../pushNotification/sendPushNotification_2")
@@ -125,7 +127,8 @@ async function likeClip(req, res){
                     await addToLikes()
                     await notifyCreator()
                     const {hash} = feedRef?.metaData || {hash: {}}
-                    await knowledgeBuilder({userID, models: req.dbModels, which: "likes", intent: "hashtags", hash: [...Object.keys(hash)]})
+                    await updateClipRank({which: "likes",  models: req.dbModels, feedRef})
+                    await knowledgeBuilder({userID, models: req.dbModels, which: knowledgeTypes.like, intent: "hashtags", hash: [...Object.keys(hash)]})
                 }
             }
             res.send({successful: true})

@@ -4,16 +4,20 @@
 // const bubble = require('../../models/bubble')
 const date = require('date-and-time')
 const registerViewedHashs = require('../../utils/registerViewedHash')
+const knowledgeBuilder = require('../../utils/knowledgeBuilder')
+const knowledgeTypes = require('../../utils/knowledgeTypes')
+const updateBubbleRank = require('../../utils/updateBubbleRank')
 
 async function updateImpression(req, res){
-    const {bubble, eachUserAnalytics, User} = req.dbModels
+    const models = req.dbModels
+    const {bubble, eachUserAnalytics, User} = models
     
     const userID = req.body.userID // user.id
     const postID = req.body.postID
 
     const monthMap = {Jan: "00", Feb: "01", Mar: "02", Apr: "03", May: "04", Jun: "05", Jul: "06", Aug: "07", Sep: "08", Oct: "09", Nov: "10", Dec: "11"}
 
-
+    // knowledgeBuilder({})
     async function updateUserAnalytics(thisBubble){
         // update bubble creator analytics
         const userAnalytics = await eachUserAnalytics.findOne({userID: thisBubble.user.id}).lean()
@@ -125,6 +129,15 @@ async function updateImpression(req, res){
             
             await bubble.updateOne({postID}, {activities}).then(async()=>{
                 await updateUserAnalytics(thisBubble)
+                if(feedRef){
+                    const {metaData} = feedRef
+                    if(metaData){
+                        const hash = metaData.hash||{}
+
+                        await updateBubbleRank({which: "impressions",  models: req.dbModels, feedRef})
+                        await knowledgeBuilder({userID, models, which: knowledgeTypes.impression, intent: "hashtags", hash: [...Object.keys(hash)]})
+                    }
+                }
             }).catch(()=>{})
         }
 

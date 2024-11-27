@@ -1,3 +1,4 @@
+const Ai_Audience = require("../../utils/AIAudience")
 
 async function getCinema(req, res){
     const {cinema, cinemaPair, User, Followers} = req.dbModels
@@ -9,7 +10,9 @@ async function getCinema(req, res){
     try {
         const {postID, metaData} = ref||{}
         const {audience} = metaData||{}
-        const basicViewEligibity = audience?.["Everyone"] || audience?.[userID]
+        const AiAud = audience?.["Ai Audience"]
+        const basicViewEligibity = audience?.["Everyone"] || audience?.[userID] || AiAud
+        // if(forFollowers){}
         if(basicViewEligibity){
             let thisCinema = await cinema.findOne({postID}).lean()
             const thisCinemaPair = await cinemaPair.findOne({postID}).lean()
@@ -26,6 +29,33 @@ async function getCinema(req, res){
                     const followers = creatorFollowers.followers
                     if(followers[userID] || ref.userID===userID){
                         thisCinema.isFollower = true
+                    }
+                }
+
+                if(AiAud){
+                    const clipData = thisCinema.data
+                    for(let i=0; i<clipData.length; i++){
+                        const curr = clipData[i]
+                        const AiAud = curr?.audience?.["Ai Audience"]
+                        if(AiAud){
+                            const {approved} = await Ai_Audience({
+                                userID,
+                                models: req.dbModels,
+                                audienceData: AiAud,
+                                content: "clip",
+                                feed: ref
+                            })
+                            if(clipData.length===1){
+                                if(approved){
+                                    thisCinema.data[i].approved = approved
+                                } else {
+                                    res.send({successful: false})
+                                    return
+                                }
+                            } else {
+                                thisCinema.data[i].approved = approved
+                            }
+                        }
                     }
                 }
                 

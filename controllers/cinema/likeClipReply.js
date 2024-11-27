@@ -5,6 +5,8 @@ const { v4: uuidv4 } = require('uuid')
 
 const sendPushNotification_2 = require("../pushNotification/sendPushNotification_2")
 const knowledgeBuilder = require('../../utils/knowledgeBuilder')
+const knowledgeTypes = require('../../utils/knowledgeTypes')
+const updateClipRank = require('../../utils/updateClipRank')
 // const sendPushNotification = require('../pushNotification/sendPushNotification')
 
 async function likeClipReply(req, res){
@@ -197,7 +199,8 @@ async function likeClipReply(req, res){
                 }
 
                 const {hash} = feedRef?.metaData || {hash: {}}
-                await knowledgeBuilder({userID, models: req.dbModels, which: "likes", intent: "hashtags", hash: [...Object.keys(hash)]})
+                await updateClipRank({which: "likes",  models: req.dbModels, feedRef})
+                await knowledgeBuilder({userID, models: req.dbModels, which: knowledgeTypes.like, intent: "hashtags", hash: [...Object.keys(hash)]})
 
                 // likeCount
             }

@@ -4,6 +4,8 @@
 // const User = require('../../models/User')
 
 const knowledgeBuilder = require("../../utils/knowledgeBuilder")
+const knowledgeTypes = require("../../utils/knowledgeTypes")
+const updateClipRank = require("../../utils/updateClipRank")
 const sendPushNotification_2 = require("../pushNotification/sendPushNotification_2")
 
 // const sendPushNotification_2 = require("../pushNotification/sendPushNotification_2")
@@ -191,7 +193,8 @@ async function shareClip(req, res){
 
     async function initShare(){
         const {hash} = feedRef?.metaData || {hash: {}}
-        await knowledgeBuilder({userID, models: req.dbModels, which: "shares", intent: "hashtags", hash: [...Object.keys(hash)]})
+        await updateClipRank({which: "shares",  models: req.dbModels, feedRef})
+        await knowledgeBuilder({userID, models: req.dbModels, which: knowledgeTypes.share, intent: "hashtags", hash: [...Object.keys(hash)]})
 
         if(feedRef.userID===userID){
             // await directlyShareClip()

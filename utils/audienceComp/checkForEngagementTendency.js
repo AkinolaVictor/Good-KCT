@@ -22,7 +22,8 @@ async function checkForEngagementTendency({userID, feed, models}) {
 
                     const timeSpace = 4*7*24*60*60*1000
                     const tendency = likes || replys || shares
-                    if(gap<=timeSpace && tendency){
+                    const gapPass = gap<=timeSpace
+                    if(gapPass && tendency){
                         pass = true
                         break
                     }
