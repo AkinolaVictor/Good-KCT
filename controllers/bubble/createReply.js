@@ -6,6 +6,7 @@ const sendPushNotification_2 = require('../pushNotification/sendPushNotification
 const knowledgeBuilder = require('../../utils/knowledgeBuilder')
 const knowledgeTypes = require('../../utils/knowledgeTypes')
 const updateBubbleRank = require('../../utils/updateBubbleRank')
+const propagatorAlgorithm = require('../../utils/algorithms/propagatorAlgorithm')
 // const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
 // const {database} = require('../../database/firebase')
 // const bubble = require('../../models/bubble')
@@ -27,6 +28,7 @@ async function createReply_Old(req, res){
     const parentID = req.body.parentID /* props.replyData.userID */
     const refDoc = req.body.refDoc /* refDoc */
     const discernUserIdentity = req.body.discernUserIdentity /* discernUserIdentity() */
+    const algorithmInfo = req.body.algorithmInfo
     
     // res.send({successful: true})
     
@@ -359,6 +361,19 @@ async function createReply_Old(req, res){
 
             await updateBubbleRank({which: "replys",  models: req.dbModels, feedRef: refDoc})
             await knowledgeBuilder({userID, models: req.dbModels, which: knowledgeTypes.reply, intent: "hashtags", hash: [...Object.keys(hash)]})
+
+
+            if(algorithmInfo){
+                const {triggeredEvent, algoType, contentType, algorithm} = algorithmInfo
+                await propagatorAlgorithm({
+                    models: req.dbModels, 
+                    feedRef: refDoc, 
+                    contentType, 
+                    algoType, 
+                    triggeredEvent,
+                    algorithm
+                })
+            }
 
             if(creatorID!==userID){
                 const thisUserReplies = await userReplies.findOne({userID}).lean()

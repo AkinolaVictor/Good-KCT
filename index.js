@@ -18,6 +18,7 @@ const user = require('./api/userApi')
 const cinema = require('./api/cinemaApi')
 const uploadData = require('./controllers/uploads/uploadData')
 const chats = require('./api/chatApi')
+const generalApi = require('./api/generalApi')
 const http = require('http')
 const socketio = require('socket.io');
 const socketApi = require('./api/socketApi');
@@ -219,6 +220,16 @@ app.use('/api/chats', async function(req, res, next){
     res.send({successful: false, message: "database failed to connect"})
   }
 }, chats)
+  
+app.use('/api/general', async function(req, res, next){
+  const models = await cachedConnection()
+  if(models){
+    req.dbModels =  {...models, io}
+    next()
+  } else {
+    res.send({successful: false, message: "database failed to connect"})
+  }
+}, generalApi)
 
 app.use('/api/test', (req, res)=>{
     res.status(200).send('testing api')
@@ -227,6 +238,9 @@ app.use('/api/test', (req, res)=>{
 app.use('/check', (req, res)=>{
     res.status(200).send('Server is working fine')
 })
+
+
+
 
 
 // console.log(Math.max(...[])<11);

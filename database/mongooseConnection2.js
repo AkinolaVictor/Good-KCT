@@ -492,8 +492,8 @@ function modelPack(db){
             const user_knowledgebase = db.Schema({
                 userID: String,
                 kpi: {}, //Monthly-usage, weekly-usage //avg-time-spent-per-mo/wk, //
-                // consumptionsummary: {}, 
                 hashTags: {}, // { like: 1, share: 1, reply: 6, openedRep: 1, openedAnal: 1, lastdate, impression, watchVideo, }
+                // consumptionsummary: {}, 
 
                 createdAt: {type: Date, default: new Date()},
                 updatedAt: Date
@@ -531,7 +531,35 @@ function modelPack(db){
             
             const rank = db.models["clipRanks"] || db.model("clipRanks", clipRanks)
             return rank
-        }() 
+        }(),
+        propAlgorithm: function(){
+            const algorithm = db.Schema({
+                userID: String,
+                postID: String,
+                algType: String,
+                contentType: String,
+                feedRef: {}, // datecreated, textLength, hasVideo, hasImage, aos, audience, more
+                dateActivated: String,
+                propagators: {}, //likes, shares, replys
+                createdAt: {type: Date, default: new Date()},
+                updatedAt: Date
+            }, { strict: false, minimize: false })
+            
+            const alg = db.models["propAlgorithm"] || db.model("propAlgorithm", algorithm)
+            return alg
+        }(),
+        reservedContents: function(){
+            const userBubblesSchema = db.Schema({
+                bubbles: [],
+                cinema: [],
+                userID: String,
+                createdAt: {type: Date, default: new Date()},
+                updatedAt: Date
+            }, { strict: false, minimize: false })
+            
+            const userBubbles = db.models["userbubbles"] || db.model("userbubbles", userBubblesSchema)
+            return userBubbles
+        }(),
     }
     
     return {...models}

@@ -57,8 +57,8 @@ async function createBubble_v2(req, res) {
             body: payload.message,
             data: {
                 type: "bubble",
+                feed: feedRef,
                 // userID,
-                feed: feedRef
             }
             // icon: decideNotifyIcon()
         }
@@ -157,6 +157,7 @@ async function createBubble_v2(req, res) {
         const feedRef = {
             userID,
             postID,
+            creationDate: new Date().toISOString(),
             type: 'Ref',
             status: 'active',
             sharePath:[userID],
@@ -183,6 +184,28 @@ async function createBubble_v2(req, res) {
 
                 if(which==="image"){
                     meta.image++
+                }
+            }
+        }
+
+        const algorithm = thisBubble?.settings?.algorithmData||{data:{}}
+        const {type, location, topics, gend} = algorithm?.data||{type: "default"}
+        const typeCheck = type==="virality" || type==="momentum"
+        if(typeCheck){
+            if(location.length){
+                feedRef.metaData.loc = location
+            }
+            
+            if(gend !== "a"){
+                feedRef.metaData.gend = gend
+            }
+
+            if(topics.length){
+                for(let i=0; i<topics.length; i++){
+                    const eachTopic = topics[i]
+                    if(eachTopic){
+                        feedRef.metaData.hash[eachTopic] = true
+                    }
                 }
             }
         }
@@ -220,7 +243,7 @@ async function createBubble_v2(req, res) {
         
         thisBubble.audience = []
 
-        return thisBubble
+        return {thisBubble, allBubbleAudience}
     }
 
     async function updateMyFeed({feedRef}){
@@ -249,7 +272,7 @@ async function createBubble_v2(req, res) {
         }
     }
             
-    async function afterFeedingEachFollower_Send_notification({currentID, thisBubble}){
+    async function afterFeedingEachFollower_Send_notification({currentID, thisBubble, feedRef}){
         function constructTitle(){
             if(discernUserIdentity()){
                 return "someone you're following created a bubble"
@@ -348,22 +371,123 @@ async function createBubble_v2(req, res) {
                 
         await afterFeedingEachFollower_Send_notification({
             currentID: savedIDs,
-            multiple: true,
-            thisBubble
+            thisBubble,
+            feedRef
         })
     }
-    
-    async function saveData_New(){
+
+    async function serveBubble_v2({feedRef, allBubbleAudience, thisBubble}) {
+        
+    }
+
+    async function saveBubbleForEveryone({feedRef}) {
+        if(checkForEveryoneAndFollowers({})){
+            const publicBubbles = await bubblesForEveryone.findOne({name: "Everyone"})
+            if(publicBubbles === null){
+                const newPublicBubbles = new bubblesForEveryone({name: "Everyone", bubbleRefs: [feedRef]})
+                await newPublicBubbles.save().then(()=>{}).catch(()=>{})
+            } else {
+                publicBubbles.bubbleRefs.push(feedRef)
+                await bubblesForEveryone.updateOne({name: "Everyone"}, {bubbleRefs: [...publicBubbles.bubbleRefs]}).catch(()=>{})
+            }
+
+            if(feedRef.metaData.aos!=="None"){
+                const aosBubbles = await bubblesForEveryone.findOne({name: "AosBubbles"})
+                if(aosBubbles === null){
+                    const newaosBubbles = new bubblesForEveryone({name: "AosBubbles", bubbleRefs: [feedRef]})
+                    await newaosBubbles.save().then(()=>{})
+                } else {
+                    aosBubbles.bubbleRefs.push(feedRef)
+                    await bubblesForEveryone.updateOne({name: "AosBubbles"}, {bubbleRefs: [...aosBubbles.bubbleRefs]}).catch(()=>{})
+                }
+            }
+        }
+        
+    }
+
+    async function saveHashTag({feedRef}) {
+        const metaHash = feedRef.metaData.hash||{}
+        const userHashs = [...Object.keys(metaHash)]
+        const userHashTags = await hashTags.findOne({title: "batch_1"}).lean()
+        if(userHashTags === null){
+            const saveHash = {}
+            for(let i=0; i<userHashs.length; i++){
+                saveHash[userHashs[i]] = {
+                    hash: userHashs[i],
+                    count: {bub: 1},
+                    lastDate: new Date().toISOString()
+                }
+            }
+
+            const newHash = new hashTags({
+                title: "batch_1", 
+                allHashs: {
+                    ...saveHash
+                }
+            })
+
+            await newHash.save()
+        } else {
+            const {allHashs} = userHashTags
+            for(let i=0; i<userHashs.length; i++){
+                if(allHashs[userHashs[i]]){
+                    allHashs[userHashs[i]].count.bub++
+                    allHashs[userHashs[i]].lastDate = new Date().toISOString()
+                } else {
+                    allHashs[userHashs[i]] = {
+                        hash: userHashs[i],
+                        count: {bub: 1},
+                        lastDate: new Date().toISOString()
+                    }
+                }
+            }
+            await hashTags.updateOne({title: "batch_1"}, {allHashs})
+        }   
+    }
+
+    async function informMentions({feedRef}) {
+        const metaMentions = feedRef.metaData.mention||{}
+        const userMentioned = [...Object.keys(metaMentions)]
+        if(userMentioned.length){
+            const allConcealedUsers = await allUser.findOne({name: "concealed"}).lean()
+            if(allConcealedUsers){
+                const {users} = allConcealedUsers
+                const userArr = Object.values(users)
+                const storeMentioned = []
+                for(let i=0; i<userMentioned.length; i++){
+                    const curretMentioned = userMentioned[i]
+                    for(let j=0; j<userArr.length; j++){
+                        const currentUser = userArr[j]
+                        if(currentUser.username.toLowerCase() === curretMentioned.toLowerCase()){
+                            if(checkForEveryoneAndFollowers({}) || checkForSpecificAudience(currentUser.userID)){
+                                if(currentUser.userID !== userID){
+                                    storeMentioned.push(currentUser.userID)
+                                }
+                            }
+                        }
+                    }
+                }
+                if(storeMentioned.length) await sendNotificationToMentioned({dataArr: storeMentioned, feedRef})
+            }
+        }
+    }
+
+    await  createThisBubble()
+
+    async function createThisBubble(){
         await appendToBot()
         const feedRef = buildFeedRef()
-        const thisBubble = compileBubble({feedRef})
+        const {thisBubble, allBubbleAudience} = compileBubble({feedRef})
 
         const newBubble = new bubble({...thisBubble})
         await newBubble.save().then(async()=>{
             await updateMyBubbleList({feedRef})
             await updateMyFeed({feedRef})
             await createRankData({feedRef})
-            await serveBubble({feedRef, allBubbleAudience: [], thisBubble})
+            await serveBubble({feedRef, allBubbleAudience, thisBubble})
+            await saveBubbleForEveryone({feedRef})
+            await saveHashTag({feedRef})
+            await  informMentions({feedRef})
 
         }).then(()=>{
             res.send({successful: true})
@@ -373,3 +497,5 @@ async function createBubble_v2(req, res) {
         })
     }
 }
+
+module.exports = createBubble_v2

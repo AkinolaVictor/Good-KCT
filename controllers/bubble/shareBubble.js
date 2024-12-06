@@ -15,7 +15,7 @@ const updateBubbleRank = require('../../utils/updateBubbleRank')
 // const userShares = require('../../models/userShares')
 
 async function shareBubble(req, res){
-    const {userShares, Feeds, Followers, bubble, notifications, eachUserAnalytics} = req.dbModels
+    const {userShares, Feeds, Followers, bubble, notifications, eachUserAnalytics, User} = req.dbModels
 
     const userID = req.body.userID // userID
     const userIcon = req.body.userIcon // user.id
@@ -28,6 +28,7 @@ async function shareBubble(req, res){
     let secrecySettings = thisBubble.settings.secrecyData
     let shareSettings = thisBubble.settings.shareData    
     const feedRef = thisBubble.refDoc
+    const {loc, gend} = feedRef?.metaData||{}
     
     let overallShare = []
     let eachShare = {}
@@ -401,6 +402,27 @@ async function shareBubble(req, res){
                     }
                     // share with all your followers
                     for(let i=0; i<followers.length; i++){
+                        if(loc || gend){
+                            const cacheUser = await User.findOne({id: followers[i]}).lean()
+
+                            if(loc){
+                                if(cacheUser){
+                                    const {location} = cacheUser?.userInfo
+                                    const loco = location?.country?.toLowerCase()
+                                    if(!loc.includes(loco)) continue
+                                }
+                            }
+                
+                            if(gend){
+                                // const cacheUser = await User.findOne({id: followers[i]}).lean()
+                                if(cacheUser){
+                                    const {gender} = cacheUser?.userInfo
+                                    const thisGender = gender==="male"?"m":gender==="female"?"f":"a"
+                                    if(gend!==thisGender) continue
+                                }
+                            }
+                        }
+                        
                         // if you're not sharing a reply
                         if(!path.length){
                             // check if follower has never recieved this bubble (since it has no reply attached to it)

@@ -24,12 +24,16 @@ const getBasicBubble = require('../controllers/bubble/getBasicBubble')
 const checkReplyEligibity = require('../controllers/bubble/checkReplyEligibity')
 // const getMultipleBubbles = require('../controllers/bubble/getMultipleBubbles')
 const getMultipleBubbles2 = require('../controllers/bubble/getMultipleBubbles2')
-const getMultipleBubbles3 = require('../controllers/bubble/getMultipleBubbles3')
+// const getMultipleBubbles3 = require('../controllers/bubble/getMultipleBubbles3')
 const getAllHashs = require('../controllers/bubble/getAllHashs')
 const bubbleServer = require('../controllers/bubble/bubbleServer')
+const createBubble_v2 = require('../controllers/bubble/createBubble_v2')
+const bubbleServer_v2 = require('../controllers/bubble/bubbleServer_v2')
 // console.log(router);
+
 // create a bubble
-router.post('/createBubble', createBubble)
+// router.post('/createBubble', createBubble)
+router.post('/createBubble', createBubble_v2)
 
 // delete bubble
 router.post('/deleteBubble', deleteBubble)
@@ -103,6 +107,7 @@ router.post('/getAllHashs', getAllHashs)
 
 // opened chart
 router.post('/bubbleServer', bubbleServer)
+// router.post('/bubbleServer', bubbleServer_v2)
 
 
 module.exports = router

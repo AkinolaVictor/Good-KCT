@@ -6,6 +6,7 @@ const sendPushNotification_2 = require('../pushNotification/sendPushNotification
 const knowledgeBuilder = require('../../utils/knowledgeBuilder')
 const knowledgeTypes = require('../../utils/knowledgeTypes')
 const updateBubbleRank = require('../../utils/updateBubbleRank')
+const propagatorAlgorithm = require('../../utils/algorithms/propagatorAlgorithm')
 // const {doc, getDoc, updateDoc, setDoc, increment} = require('firebase/firestore')
 // const {getDownloadURL, ref, uploadBytes, deleteObject} = require('firebase/storage')
 // const {database} = require('../../database/firebase')
@@ -14,11 +15,13 @@ const updateBubbleRank = require('../../utils/updateBubbleRank')
 // const LikeModel = require('../../models/LikeModel')
 
 async function likeBubble(req, res){
-    const {LikeModel, notifications, bubble, eachUserAnalytics} = req.dbModels
+    const models = req.dbModels
+    const {LikeModel, notifications, bubble, eachUserAnalytics} = models
 
     const userID = req.body.userID // user.id
     const userIcon = req.body.userIcon // user.id
     const userFullname = req.body.userFullname // user.userInfo.fullname
+    const algorithmInfo = req.body.algorithmInfo
     const currentBubble = {...req.body.thisBubble}
     const feedRef = currentBubble.refDoc
     // console.log(currentBubble.userID);
@@ -172,6 +175,29 @@ async function likeBubble(req, res){
             await eachUserAnalytics.updateOne({userID: thisBubble.user.id}, {bubbles})
         }
     }
+
+    async function addUpUserLikes({thisBubble}) {
+        if(currentBubble.userID!==userID){
+            const thisUserLikes = await LikeModel.findOne({userID})
+            if(thisUserLikes === null){
+                const newUserLike = new LikeModel({userID, bubbles: [currentBubble.refDoc]})
+                await newUserLike.save()
+            } else {
+                const allLikesID = []
+
+                for(let i=0; i<thisUserLikes.bubbles.length; i++){
+                    if(dataType(thisUserLikes.bubbles[i])==='object'){
+                        allLikesID.push(thisUserLikes.bubbles[i].postID)
+                    }
+                }
+
+                if(!allLikesID.includes(thisBubble.postID)){
+                    thisUserLikes.bubbles.push(currentBubble.refDoc)
+                    await LikeModel.updateOne({userID}, {bubbles: [...thisUserLikes.bubbles]})
+                }
+            }
+        }
+    }
     try{
         const thisBubble = await bubble.findOne({postID: currentBubble.postID}).lean()
         if(thisBubble){
@@ -242,31 +268,18 @@ async function likeBubble(req, res){
                     
                     await updateBubbleRank({which: "likes",  models: req.dbModels, feedRef})
                     await knowledgeBuilder({userID, models: req.dbModels, which: knowledgeTypes.like, intent: "hashtags", hash: [...Object.keys(hash)]})
-    
-                    if(currentBubble.userID!==userID){
-                        // const thisUserLikes = await userLikes.findOne({userID})
-                        const thisUserLikes = await LikeModel.findOne({userID})
-                        if(thisUserLikes === null){
-                            const newUserLike = new LikeModel({userID, bubbles: [currentBubble.refDoc]})
-                            // const newUserLike = new userLikes.findOne({userID, bubbles: [currentBubble.refDoc]})
-                            await newUserLike.save()
-                        } else {
-                            const allLikesID = []
-    
-                            for(let i=0; i<thisUserLikes.bubbles.length; i++){
-                                if(dataType(thisUserLikes.bubbles[i])==='object'){
-                                    allLikesID.push(thisUserLikes.bubbles[i].postID)
-                                }
-                            }
-    
-                            if(!allLikesID.includes(thisBubble.postID)){
-                                thisUserLikes.bubbles.push(currentBubble.refDoc)
-                                // await thisUserLikes.save()
-                                await LikeModel.updateOne({userID}, {bubbles: [...thisUserLikes.bubbles]})
-                            }
-                        }
-                    // } else {
-                    //     console.log("ready...");
+                    await addUpUserLikes({thisBubble})
+
+                    if(algorithmInfo){
+                        const {triggeredEvent, algoType, contentType, algorithm} = algorithmInfo
+                        await propagatorAlgorithm({
+                            models, 
+                            feedRef: currentBubble.refDoc, 
+                            contentType, 
+                            algoType,
+                            triggeredEvent,
+                            algorithm
+                        })
                     }
     
                 }).then(()=>{

@@ -1,6 +1,7 @@
 const date = require('date-and-time')
 const knowledgeBuilder = require('../../utils/knowledgeBuilder')
 const knowledgeTypes = require('../../utils/knowledgeTypes')
+const propagatorAlgorithm = require('../../utils/algorithms/propagatorAlgorithm')
 // const {doc, getDoc, updateDoc, setDoc, increment} = require('firebase/firestore')
 // const { v4: uuidv4 } = require('uuid')
 // const {database} = require('../../database/firebase')
@@ -10,7 +11,7 @@ const knowledgeTypes = require('../../utils/knowledgeTypes')
 async function openedChart(req, res){
     try{
         const {bubble} = req.dbModels
-        const userID = req.body.userID // user.id
+        const {userID, algorithmInfo} = req.body.userID // user.id
         const currentBubble = {...req.body.thisBubble}
         const feedRef = currentBubble.refDoc
         // thisBubble.userID = thisBubble.user.id
@@ -85,6 +86,17 @@ async function openedChart(req, res){
                 const {hash} = feedRef?.metaData || {hash: {}}
                 await knowledgeBuilder({userID, models: req.dbModels, which: knowledgeTypes.openedAnalytics, intent: "hashtags", hash: [...Object.keys(hash)]})
                 
+                if(algorithmInfo){
+                    const {triggeredEvent, algoType, contentType, algorithm} = algorithmInfo
+                    await propagatorAlgorithm({
+                        models: req.dbModels, 
+                        feedRef,
+                        contentType, 
+                        algoType,
+                        triggeredEvent,
+                        algorithm
+                    })
+                }
                 res.send({successful: true})
             }).catch((e)=>{
                 console.log("null")

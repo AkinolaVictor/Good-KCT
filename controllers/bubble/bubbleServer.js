@@ -88,7 +88,8 @@ async function bubbleServer(req, res){
                         }
                     }
 
-                    if(stored.length>=count){
+                    // if(stored.length>=count){
+                    if(stored.length>=60){
                         break
                     }
                 }

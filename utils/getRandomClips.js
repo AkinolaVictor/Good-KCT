@@ -2,8 +2,8 @@ const Ai_Audience = require("./AIAudience")
 const clipRankModel = require("./clipRankModel")
 const dataType = require("./dataType")
 
-module.exports = async function getRandomClips({clipRefs, models, userID, seen, where, count}) {
-    const {cinema, userKnowledgebase, hashTags} = models
+module.exports = async function getRandomClips({clipRefs, models, interestBasedContents, userID, seen, where, count}) {
+    const {User, userKnowledgebase, hashTags, clipRanks} = models
     const tracker = []
     const familiar = []
 
@@ -13,9 +13,11 @@ module.exports = async function getRandomClips({clipRefs, models, userID, seen, 
     const refIDs = []
     for(let i=0; i<interestBasedContents.length; i++){
         const curr = interestBasedContents[i]
-        const {postID} = curr
+        const {postID} = curr||{}
         refIDs.push(postID)
     }
+
+    let cacheUser = null
 
     
     if(clipRefs.length){
@@ -24,19 +26,36 @@ module.exports = async function getRandomClips({clipRefs, models, userID, seen, 
             if(dataType(curr) !== "object") continue
 
             const {postID, metaData} = curr||{}
-            const {audience, aos} = metaData
-            const hash = metaData?.hash||{}
-
+            const {aos, audience, loc, gend} = metaData||{aos:"None"}
+            // const hash = metaData?.hash||{}
             
             // post ranking here
+            if(tracker.includes(postID)) continue
+            if(seen.includes(postID)) continue
+            if(refIDs.includes(postID)) continue
+            tracker.push(postID)
+
+            if(loc){
+                if(!cacheUser) cacheUser = await User.findOne({id: userID}).lean()
+                if(cacheUser){
+                    const {location} = cacheUser?.userInfo
+                    const loco = location?.country?.toLowerCase()
+                    if(!loc.includes(loco)) continue
+                }
+            }
+
+            if(gend){
+                if(!cacheUser) cacheUser = await User.findOne({id: userID}).lean()
+                if(cacheUser){
+                    const {gender} = cacheUser?.userInfo
+                    const thisGender = gender==="male"?"m":gender==="female"?"f":"a"
+                    if(gend !== thisGender) continue
+                }
+            }
+
+
             const {state} = await clipRankModel({feedRef: curr, userID, models, contentHashs, userKnowledge})
             if(state === "bad") continue
-
-            if(!tracker.includes(postID)){
-                tracker.push(postID)
-            } else {
-                continue
-            }
 
             const basicViewEligibity = audience["Everyone"] || audience[userID] || Object.keys(audience).length===0
             const clipIsAos = aos!=="None"
@@ -66,18 +85,17 @@ module.exports = async function getRandomClips({clipRefs, models, userID, seen, 
                 }
             }
 
-            const clipChecker = await cinema.findOne({postID})
+            // const clipChecker = await cinema.findOne({postID})
+            const clipChecker = await clipRanks.findOne({postID})
             if(!clipChecker) continue
 
             if(basicViewEligibity || aiAud){
-                if(!seen.includes(postID)){
-                    if(where==="aos"){
-                        if(clipIsAos){
-                            familiar.push(curr)
-                        }
-                    } else {
+                if(where==="aos"){
+                    if(clipIsAos){
                         familiar.push(curr)
                     }
+                } else {
+                    familiar.push(curr)
                 }
             }
 

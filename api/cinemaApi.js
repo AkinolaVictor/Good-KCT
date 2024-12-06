@@ -18,6 +18,7 @@ const denyClipShare = require('../controllers/cinema/denyClipShare')
 const deleteCinemaReply = require('../controllers/cinema/deleteCinemaReply')
 const openedClipReply = require('../controllers/cinema/openedClipReply')
 const clipImpression = require('../controllers/cinema/clipImpression')
+const cinemaServer_v2 = require('../controllers/cinema/cinemaServer_v2')
 
 
 
@@ -26,7 +27,6 @@ router.post('/createCinema', createCinema)
 router.post('/deleteCinema', deleteCinema)
 router.post('/deleteCinemaForMe', deleteCinemaForMe)
 router.post('/getCinemaForEveryone', getCinemaForEveryone)
-router.post('/cinemaServer', cinemaServer)
 router.post('/getCinema', getCinema)
 router.post('/getMultipleCinema', getMultipleCinema)
 router.post('/likeClip', likeClip)
@@ -40,5 +40,7 @@ router.post('/denyClipShare', denyClipShare)
 router.post('/deleteCinemaReply', deleteCinemaReply)
 router.post('/openedClipReply', openedClipReply)
 router.post('/clipImpression', clipImpression)
+router.post('/cinemaServer', cinemaServer)
+// router.post('/cinemaServer', cinemaServer_v2)
 
 module.exports = router

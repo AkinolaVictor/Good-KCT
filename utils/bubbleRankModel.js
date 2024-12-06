@@ -1,10 +1,10 @@
 const getDateGap = require("./getDateGap")
 
 module.exports = async function bubbleRankModel({feedRef, userID, models, contentHashs, userKnowledge}) {
-    const {postID} = feedRef
     // const creatorID = feedRef?.userID
-    // const {bubbleRanks, hashTags, userKnowledgebase} = models
+    const {postID} = feedRef
     const {bubbleRanks} = models
+    // const {bubbleRanks, hashTags, userKnowledgebase} = models
     try{
         const response = { pass: false, score: 0, state: "bad" }
         const rankData = await bubbleRanks.findOne({postID}).lean()
@@ -40,27 +40,42 @@ module.exports = async function bubbleRankModel({feedRef, userID, models, conten
                 const hashTrack = []
                 for(let i=0; i<hashs.length; i++){
                     const curr = hashs[i]
-                    const thisHash = allHashs[curr]?.count||{cin: 0, bub: 0}
+                    const thisHash = allHashs?.[curr]?.count||{cin: 0, bub: 0}
                     const {cin, bub} = thisHash
                     const totalRet = cin+bub
                     hashTrack.push(totalRet)
                 }
+
                 const high = Math.max(...hashTrack)
                 let totavg = 0
                 for(let i=0; i<hashTrack.length; i++){
                     const curr = hashTrack[i]
                     totavg+=curr
                 }
+
                 const avg = totavg/hashTrack.length
                 const rate = avg/high
                 topicRank = rate*40
             }
 
             // Rank post by engagement (MAX 40)
+            // Next version of this should include checking of the people who replied to see if/how they are related to the person who wants to view (use this to influence he count)
             let engagementRank = 0
             let totalEngScore = Math.max(...[likes, shares, replys])
             const engConstant = totalEngScore/impressions
-            engagementRank = engConstant*40
+            if(engConstant>0 && engConstant<=0.001) {
+                engagementRank = 10
+            } else if(engConstant>0.001 && engConstant<=0.005){
+                engagementRank = 15
+            } else if(engConstant>0.005 && engConstant<=0.01){
+                engagementRank = 20
+            } else if(engConstant>0.01 && engConstant<=0.03){
+                engagementRank = 25
+            } else if(engConstant>0.03 && engConstant<=0.05){
+                engagementRank = 30
+            } else if(engConstant>0.05){
+                engagementRank = 40
+            }
 
             // Decay Rank (MAX 40)
             let decayRank = 40
@@ -87,31 +102,47 @@ module.exports = async function bubbleRankModel({feedRef, userID, models, conten
                     const curr = hashs[i]
                     const thisHash = hashTags[curr]
                     if(!thisHash) continue
-                    const {like, share, reply, impression} = thisHash
-                    const totalRet = Math.max(like, share, reply)
+                    const {like, share, reply, openedAnalytics, openedReply, impression} = thisHash
+                    const totalRet = Math.max(like, share, reply, openedAnalytics, openedReply)
                     const hashIndex = totalRet/impression
                     trackHashInterestIndex.push(hashIndex)
                 }
                 const highestRate = trackHashInterestIndex.length?Math.max(...trackHashInterestIndex):0
-                if(highestRate>=1){
+                // if(highestRate>=1){
+                //     audienceScore = 40
+                // } else {
+                //     audienceScore = highestRate*40
+                // }
+
+                
+                if(highestRate>0 && highestRate<=0.01) {
+                    audienceScore = 10
+                } else if(highestRate>0.01 && highestRate<=0.05){
+                    audienceScore = 15
+                } else if(highestRate>0.05 && highestRate<=0.1){
+                    audienceScore = 20
+                } else if(highestRate>0.1 && highestRate<=0.25){
+                    audienceScore = 25
+                } else if(highestRate>0.25 && highestRate<=0.4){
+                    audienceScore = 30
+                } else if(highestRate>0.4){
                     audienceScore = 40
-                } else {
-                    audienceScore = highestRate*40
                 }
+
                 //  checkout to know the right pass mark
                 //  if any/or/certain percentage if the weakest hashtag exist, 
             }
 
-            
+
             
             const finalScore = contentRankCount + topicRank + engagementRank + decayRank + audienceScore
             response.pass = true
             response.score = finalScore
-            if(finalScore>180){
+            if(finalScore>=140){
                 response.state = "good"
-            } else if(finalScore>140){
+            } else if(finalScore>=100){
                 response.state = "moderate"
-            } else if(finalScore>100){
+            } else if(finalScore>=80){
                 response.state = "fair"
             } else {
                 response.state = "bad"
@@ -120,6 +151,8 @@ module.exports = async function bubbleRankModel({feedRef, userID, models, conten
 
         return response
     } catch (e) {
+        console.log(e);
+        console.log("bubble rank error");
         return {pass: false, score: 0, state: "bad"}
     }
 }

@@ -3,7 +3,7 @@ const sendPushNotification_2 = require("../pushNotification/sendPushNotification
 
 
 async function confirmClipShare(req, res){
-    const {cinema, cinemaFeeds, notifications, Followers, userShares} = req.dbModels
+    const {cinema, cinemaFeeds, notifications, Followers, userShares, User} = req.dbModels
     
     const userID = req.body.userID // user.id
     let data = req.body.data
@@ -80,6 +80,8 @@ async function confirmClipShare(req, res){
             let thisClip = await cinema.findOne({postID: data.clipID}).lean()
     
             if(thisClip){
+                const feedRef = thisClip?.feedRef||{metaData: {}}
+                const {loc, gend} = feedRef?.metaData||{}
                 
                 const shares = thisClip?.allShares||[]
                 if(!shares.includes(data.userID)){
@@ -90,6 +92,26 @@ async function confirmClipShare(req, res){
     
                     for(let i=0; i<fflArr.length; i++){
                         const each = fflArr[i]
+                        if(loc || gend){
+                            const cacheUser = await User.findOne({id: each}).lean()
+                            if(loc){
+                                if(cacheUser){
+                                    const {location} = cacheUser?.userInfo
+                                    const loco = location?.country?.toLowerCase()
+                                    if(!loc.includes(loco)) continue
+                                }
+                            }
+                
+                            if(gend){
+                                // const cacheUser = await User.findOne({id: followers[i]}).lean()
+                                if(cacheUser){
+                                    const {gender} = cacheUser?.userInfo
+                                    const thisGender = gender==="male"?"m":gender==="female"?"f":"a"
+                                    if(gend!==thisGender) continue
+                                }
+                            }
+                        }
+
                         const userCinFeed = await cinemaFeeds.findOne({userID: each})
                         if(userCinFeed){
                             userCinFeed.cinema.push(feedRef)

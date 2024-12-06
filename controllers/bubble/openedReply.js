@@ -1,6 +1,7 @@
 const date = require('date-and-time')
 const knowledgeBuilder = require('../../utils/knowledgeBuilder')
 const knowledgeTypes = require('../../utils/knowledgeTypes')
+const propagatorAlgorithm = require('../../utils/algorithms/propagatorAlgorithm')
 // const { dataType } = require('../../utils/utilsExport')
 // const {database} = require('../../database/firebase')
 // const bubble = require('../../models/bubble')
@@ -10,8 +11,9 @@ const knowledgeTypes = require('../../utils/knowledgeTypes')
 async function openedReply(req, res){
     const {bubble} = req.dbModels
 
-    const userID = req.body.userID // user.id
+    const {userID, algorithmInfo} = req.body.userID // user.id
     const thisBubble = {...req.body.thisBubble}
+    const feedRef = thisBubble.refDoc
     // thisBubble.userID = thisBubble.user.id
     // settings, userID
 
@@ -90,6 +92,17 @@ async function openedReply(req, res){
             const {hash} = feedRef?.metaData || {hash: {}}
             await knowledgeBuilder({userID, models: req.dbModels, which: knowledgeTypes.openedReply, intent: "hashtags", hash: [...Object.keys(hash)]})
             
+            if(algorithmInfo){
+                const {triggeredEvent, algoType, contentType, algorithm} = algorithmInfo
+                await propagatorAlgorithm({
+                    models: req.dbModels, 
+                    feedRef,
+                    contentType, 
+                    algoType, 
+                    triggeredEvent,
+                    algorithm
+                })
+            }
             res.send({successful: true})
         }
     } catch(e){

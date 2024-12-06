@@ -16,7 +16,7 @@ const { v4: uuidv4 } = require('uuid')
 
 
 async function shareClip(req, res){
-    const {cinema, userShares, cinemaFeeds, notifications, Followers} = req.dbModels
+    const {cinema, userShares, cinemaFeeds, notifications, Followers, User} = req.dbModels
 
     const userID = req.body.userID
     const postID = req.body.postID
@@ -25,6 +25,7 @@ async function shareClip(req, res){
     const fullname = req.body.fullname
     const discernUserIdentity = req.body.discernUserIdentity
     const shareSettings = req.body.shareData
+    const {loc, gend} = feedRef?.metaData||{}
 
 
     async function ShareNotifier(){
@@ -87,6 +88,27 @@ async function shareClip(req, res){
                     for(let i=0; i<fflArr.length; i++){
                         const each = fflArr[i]
                         const userCinFeed = await cinemaFeeds.findOne({userID: each})
+                        
+                        if(loc || gend){
+                            const cacheUser = await User.findOne({id: each}).lean()
+                            if(loc){
+                                if(cacheUser){
+                                    const {location} = cacheUser?.userInfo
+                                    const loco = location?.country?.toLowerCase()
+                                    if(!loc.includes(loco)) continue
+                                }
+                            }
+                
+                            if(gend){
+                                // const cacheUser = await User.findOne({id: each}).lean()
+                                if(cacheUser){
+                                    const {gender} = cacheUser?.userInfo
+                                    const thisGender = gender==="male"?"m":gender==="female"?"f":"a"
+                                    if(gend!==thisGender) continue
+                                }
+                            }
+                        }
+
                         if(userCinFeed){
                             userCinFeed.cinema.push(feedRef)
                             await cinemaFeeds.updateOne({userID: each}, {cinema: userCinFeed.cinema})

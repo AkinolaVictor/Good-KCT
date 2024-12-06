@@ -5,6 +5,7 @@ const sendPushNotification_2 = require('../pushNotification/sendPushNotification
 const knowledgeBuilder = require('../../utils/knowledgeBuilder')
 const knowledgeTypes = require('../../utils/knowledgeTypes')
 const updateBubbleRank = require('../../utils/updateBubbleRank')
+const propagatorAlgorithm = require('../../utils/algorithms/propagatorAlgorithm')
 // const {doc, getDoc, updateDoc, setDoc, increment} = require('firebase/firestore')
 // const {database} = require('../../database/firebase')
 // const notifications = require('../../models/notifications')
@@ -25,6 +26,7 @@ async function likeReply(req, res){
     const secrecySettings = req.body.secrecySettings
     const replyCreatorID = req.body.replyCreatorID
     const replyDataID = req.body.replyDataID
+    const algorithmInfo = req.body.algorithmInfo
     
     // remove from audience
     let overallRep = []
@@ -276,6 +278,18 @@ async function likeReply(req, res){
 
                 await updateBubbleRank({which: "likes",  models: req.dbModels, feedRef: refDoc})
                 await knowledgeBuilder({userID, models: req.dbModels, which: knowledgeTypes.like, intent: "hashtags", hash: [...Object.keys(hash)]})
+                
+                if(algorithmInfo){
+                    const {triggeredEvent, algoType, contentType, algorithm} = algorithmInfo
+                    await propagatorAlgorithm({
+                        models: req.dbModels, 
+                        feedRef: refDoc, 
+                        contentType, 
+                        algoType, 
+                        triggeredEvent,
+                        algorithm
+                    })
+                }
             }).catch(()=>{
             })
 

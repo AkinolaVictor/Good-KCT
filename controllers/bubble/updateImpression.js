@@ -7,10 +7,11 @@ const registerViewedHashs = require('../../utils/registerViewedHash')
 const knowledgeBuilder = require('../../utils/knowledgeBuilder')
 const knowledgeTypes = require('../../utils/knowledgeTypes')
 const updateBubbleRank = require('../../utils/updateBubbleRank')
+const dataType = require('../../utils/dataType')
 
 async function updateImpression(req, res){
     const models = req.dbModels
-    const {bubble, eachUserAnalytics, User} = models
+    const {bubble, eachUserAnalytics, reservedContents} = models
     
     const userID = req.body.userID // user.id
     const postID = req.body.postID
@@ -126,6 +127,20 @@ async function updateImpression(req, res){
     
             thisBubble.activities.iAmOnTheseFeeds[userID].myActivities.impression = true
             const activities = JSON.stringify(thisBubble.activities)
+
+            const reserved = await reservedContents.findOne({userID}).lean()
+            if(reserved){
+                const bubbles = reserved.bubbles||[]
+                for(let i=0; i<bubbles.length; i++){
+                    const curr = bubbles[i]
+                    if(dataType(curr)!=="object") continue
+                    const contentID = curr.postID
+                    if(postID === contentID){
+                        bubbles.splice(i, 1)
+                    }
+                }
+                await reservedContents.updateOne({userID}, {bubbles})
+            }
             
             await bubble.updateOne({postID}, {activities}).then(async()=>{
                 await updateUserAnalytics(thisBubble)

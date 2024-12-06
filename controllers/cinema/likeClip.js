@@ -3,6 +3,7 @@
 // const {database} = require('../../database/firebase')
 // const User = require('../../models/User')
 
+const propagatorAlgorithm = require("../../utils/algorithms/propagatorAlgorithm")
 const knowledgeBuilder = require("../../utils/knowledgeBuilder")
 const knowledgeTypes = require("../../utils/knowledgeTypes")
 const updateClipRank = require("../../utils/updateClipRank")
@@ -21,6 +22,8 @@ async function likeClip(req, res){
     const userID = req.body.userID
     const postID = req.body.postID
     const dataID = req.body.dataID
+    const algorithmInfo = req.body.algorithmInfo
+    // const dataID = req.body.algorithm
     // const dataIndex = req.body.dataIndex
     const feedRef = req.body.feedRef
     const fullname = req.body.fullname
@@ -129,6 +132,18 @@ async function likeClip(req, res){
                     const {hash} = feedRef?.metaData || {hash: {}}
                     await updateClipRank({which: "likes",  models: req.dbModels, feedRef})
                     await knowledgeBuilder({userID, models: req.dbModels, which: knowledgeTypes.like, intent: "hashtags", hash: [...Object.keys(hash)]})
+                
+                    if(algorithmInfo){
+                        const {triggeredEvent, algoType, contentType, algorithm} = algorithmInfo
+                        await propagatorAlgorithm({
+                            models: req.dbModels, 
+                            feedRef, 
+                            contentType, 
+                            algoType, 
+                            triggeredEvent,
+                            algorithm
+                        })
+                    }
                 }
             }
             res.send({successful: true})

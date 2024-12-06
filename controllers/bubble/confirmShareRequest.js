@@ -11,7 +11,7 @@ const sendPushNotification_2 = require('../pushNotification/sendPushNotification
 // const Followers = require('../../models/Followers')
 
 async function confirmShareRequest(req, res){
-    const {Feeds, Followers, bubble, notifications, eachUserAnalytics} = req.dbModels
+    const {Feeds, Followers, bubble, notifications, eachUserAnalytics, User} = req.dbModels
     
     const userID = req.body.userID // user.id
     let data = req.body.data
@@ -223,7 +223,30 @@ async function confirmShareRequest(req, res){
                 const userFollowers = await Followers.findOne({userID: data.userID})
                 if(userFollowers){
                     const followers = [...Object.keys(userFollowers.followers)]
+                    const feedRef = thisBubble?.feedRef||{metaData: {}}
+                    const {loc, gend} = feedRef?.metaData||{}
                     for(let i=0; i<followers.length; i++){
+                        // if you're not sharing a reply
+                        if(loc || gend){
+                            const cacheUser = await User.findOne({id: followers[i]}).lean()
+                            if(loc){
+                                if(cacheUser){
+                                    const {location} = cacheUser?.userInfo
+                                    const loco = location?.country?.toLowerCase()
+                                    if(!loc.includes(loco)) continue
+                                }
+                            }
+                
+                            if(gend){
+                                // const cacheUser = await User.findOne({id: followers[i]}).lean()
+                                if(cacheUser){
+                                    const {gender} = cacheUser?.userInfo
+                                    const thisGender = gender==="male"?"m":gender==="female"?"f":"a"
+                                    if(gend!==thisGender) continue
+                                }
+                            }
+                        }
+
                         // check if bubble does not contains a reply
                         if(!data.feed.data.path.length){
                             // check if this follower has gotten it before

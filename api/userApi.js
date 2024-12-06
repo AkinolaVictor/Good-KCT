@@ -42,6 +42,7 @@ const createInIspace = require('../controllers/user/createInIspace')
 const deleteInIspace = require('../controllers/user/deleteInIspace')
 const getIspace = require('../controllers/user/getISpace')
 const search = require('../controllers/user/search')
+const updateLocation = require('../controllers/user/updateLocation')
 
 // create an account
 // router.post('/createAccount', signUp)
@@ -156,6 +157,8 @@ router.post('/deleteInIspace', deleteInIspace)
 router.post('/getIspace', getIspace)
 
 router.post('/search', search)
+
+router.post('/updateLocation', updateLocation)
 
 
 module.exports = router

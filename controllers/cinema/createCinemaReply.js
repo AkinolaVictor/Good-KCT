@@ -8,6 +8,7 @@ const clipReplyCounter = require('../../utils/clipReplyCounter')
 const knowledgeBuilder = require('../../utils/knowledgeBuilder')
 const knowledgeTypes = require('../../utils/knowledgeTypes')
 const updateClipRank = require('../../utils/updateClipRank')
+const propagatorAlgorithm = require('../../utils/algorithms/propagatorAlgorithm')
 // const sendPushNotification = require('../pushNotification/sendPushNotification')
 
 async function createCinemaReply(req, res){
@@ -24,6 +25,7 @@ async function createCinemaReply(req, res){
         parentName, 
         feedRef,
         replyPath,
+        algorithmInfo,
         // dataIndex
     } = req.body
     
@@ -237,6 +239,18 @@ async function createCinemaReply(req, res){
             const {hash} = feedRef?.metaData || {hash: {}}
             await updateClipRank({which: "replys",  models: req.dbModels, feedRef})
             await knowledgeBuilder({userID, models: req.dbModels, which: knowledgeTypes.reply, intent: "hashtags", hash: [...Object.keys(hash)]})
+            
+            if(algorithmInfo){
+                const {triggeredEvent, algoType, contentType, algorithm} = algorithmInfo
+                await propagatorAlgorithm({
+                    models: req.dbModels, 
+                    feedRef, 
+                    contentType, 
+                    algoType, 
+                    triggeredEvent,
+                    algorithm
+                })
+            }
             
             res.send({successful: true})
         }

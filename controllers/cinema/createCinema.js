@@ -17,20 +17,133 @@ async function createCinema(req, res){
     const settings = cinemaData.settings
     const secrecySettings = settings.secrecyData
 
-    const feedRef = {
-        userID,
-        postID: cinemaData.postID,
-        type: "clip",
-        metaData: {
-            aos: secrecySettings.atmosphere, 
-            audienceCount: cinemaData.data.length,
-            createdDate: cinemaData.createdDate,
-            mention: {},
-            hash: {}
+    // const feedRef = {
+    //     userID,
+    //     postID: cinemaData.postID,
+    //     type: "clip",
+    //     creationDate: cinemaData.createdDate,
+    //     metaData: {
+    //         aos: secrecySettings.atmosphere, 
+    //         audienceCount: cinemaData.data.length,
+    //         createdDate: cinemaData.createdDate,
+    //         mention: {},
+    //         hash: {}
+    //     }
+    // }
+
+
+    function buildFeedRef(){
+        const feedRef = {
+            userID,
+            postID: cinemaData.postID,
+            type: "clip",
+            creationDate: cinemaData.createdDate,
+            metaData: {
+                aos: secrecySettings.atmosphere, 
+                audienceCount: cinemaData.data.length,
+                createdDate: cinemaData.createdDate,
+                mention: {},
+                hash: {}
+            }
         }
+
+        const {data} = cinemaData
+        let cinemaAudience = {}
+        const mentioned = {}
+        const hash = {}
+    
+        function getActualWord(word, multiple){
+            const newWord = word.split("")
+            newWord.shift()
+            if(multiple === "two"){
+                newWord.shift()
+            }
+            return newWord.join("")
+        }
+    
+        for(let i=0; i<data.length; i++){
+            const {audience, caption} = data[i]
+            if(audience["Ai Audience"]){
+                const aiAd = {...cinemaAudience?.["Ai Audience"], ...audience["Ai Audience"]}
+                cinemaAudience = {...cinemaAudience, "Ai Audience": aiAd}
+            } else {
+                cinemaAudience = {...cinemaAudience, ...audience}
+            }
+            
+            const captionContent = caption.split(" ")
+            for(let j=0; j<captionContent.length; j++){
+                const current = captionContent[j]
+                const first = current[0]
+                if(first === "@" && current.length>1){
+                    const actualWord = getActualWord(current)
+                    mentioned[actualWord] = true
+                }
+    
+                if(first === "#" && first.length){
+                    const actualHash = getActualWord(current)
+                    hash[actualHash] = true
+                }
+            }
+        }
+    
+        const clpDat = cinemaData.data
+        const meta = {video: 0, text: 0}
+        for(let i=0; i<clpDat.length; i++){
+            const {caption} = clpDat[i]
+            if(caption.length>1){
+                meta.text++
+            }
+            meta.video++
+        }
+
+        const algorithm = cinemaData?.settings?.algorithmData||{data:{}}
+        const {type, location, topics, gend} = algorithm?.data||{type: "default"}
+        const typeCheck = type==="virality" || type==="momentum"
+        if(typeCheck){
+            if(location.length){
+                feedRef.metaData.loc = location
+            }
+            
+            if(gend !== "a"){
+                feedRef.metaData.gend = gend
+            }
+
+            if(topics.length){
+                for(let i=0; i<topics.length; i++){
+                    const eachTopic = topics[i]
+                    if(eachTopic){
+                        hash[eachTopic] = true
+                    }
+                }
+            }
+        }
+        
+        feedRef.metaData.audience = cinemaAudience
+        feedRef.metaData.mention = mentioned
+        feedRef.metaData.hash = hash
+    
+        feedRef.metaData = {...feedRef.metaData, ...meta}
+        cinemaData.feedRef = feedRef
+        
+        const audienceData = {
+            forall: false,
+            forfollowers: false,
+            audience: []
+        }
+
+        if(cinemaAudience["Everyone"]){
+            audienceData.forall = true
+        } else if(cinemaAudience["My Followers"]){
+            audienceData.forfollowers = true
+        } else {
+            audienceData.audience = [...Object.keys(cinemaAudience)]
+        }
+
+        return {feedRef, cinemaAudience}
     }
 
-    
+    const {feedRef, audienceData} = buildFeedRef()
+
 
     function discernUserIdentity(){
         if(secrecySettings.atmosphere === 'Night'){
@@ -114,75 +227,76 @@ async function createCinema(req, res){
         }
     }
 
-    const {data} = cinemaData
-    let cinemaAudience = {}
-    const mentioned = {}
-    const hash = {}
+    // const {data} = cinemaData
+    // let cinemaAudience = {}
+    // const mentioned = {}
+    // const hash = {}
 
-    function getActualWord(word, multiple){
-        const newWord = word.split("")
-        newWord.shift()
-        if(multiple === "two"){
-            newWord.shift()
-        }
-        return newWord.join("")
-    }
+    // function getActualWord(word, multiple){
+    //     const newWord = word.split("")
+    //     newWord.shift()
+    //     if(multiple === "two"){
+    //         newWord.shift()
+    //     }
+    //     return newWord.join("")
+    // }
 
-    for(let i=0; i<data.length; i++){
-        const {audience, caption} = data[i]
-        if(audience["Ai Audience"]){
-            const aiAd = {...cinemaAudience?.["Ai Audience"], ...audience["Ai Audience"]}
-            cinemaAudience = {...cinemaAudience, "Ai Audience": aiAd}
-        } else {
-            cinemaAudience = {...cinemaAudience, ...audience}
-        }
+    // for(let i=0; i<data.length; i++){
+    //     const {audience, caption} = data[i]
+    //     if(audience["Ai Audience"]){
+    //         const aiAd = {...cinemaAudience?.["Ai Audience"], ...audience["Ai Audience"]}
+    //         cinemaAudience = {...cinemaAudience, "Ai Audience": aiAd}
+    //     } else {
+    //         cinemaAudience = {...cinemaAudience, ...audience}
+    //     }
         
-        const captionContent = caption.split(" ")
-        for(let j=0; j<captionContent.length; j++){
-            const current = captionContent[j]
-            const first = current[0]
-            if(first === "@" && current.length>1){
-                const actualWord = getActualWord(current)
-                mentioned[actualWord] = true
-            }
+    //     const captionContent = caption.split(" ")
+    //     for(let j=0; j<captionContent.length; j++){
+    //         const current = captionContent[j]
+    //         const first = current[0]
+    //         if(first === "@" && current.length>1){
+    //             const actualWord = getActualWord(current)
+    //             mentioned[actualWord] = true
+    //         }
 
-            if(first === "#" && first.length){
-                const actualHash = getActualWord(current)
-                hash[actualHash] = true
-            }
-        }
-    }
+    //         if(first === "#" && first.length){
+    //             const actualHash = getActualWord(current)
+    //             hash[actualHash] = true
+    //         }
+    //     }
+    // }
     
-    feedRef.metaData.audience = cinemaAudience
-    feedRef.metaData.mention = mentioned
-    feedRef.metaData.hash = hash
+    // feedRef.metaData.audience = cinemaAudience
+    // feedRef.metaData.mention = mentioned
+    // feedRef.metaData.hash = hash
 
-    const clpDat = cinemaData.data
-    const meta = {video: 0, text: 0}
-    for(let i=0; i<clpDat.length; i++){
-        const {caption} = clpDat[i]
-        if(caption.length>1){
-            meta.text++
-        }
-        meta.video++
-    }
+    // const clpDat = cinemaData.data
+    // const meta = {video: 0, text: 0}
+    // for(let i=0; i<clpDat.length; i++){
+    //     const {caption} = clpDat[i]
+    //     if(caption.length>1){
+    //         meta.text++
+    //     }
+    //     meta.video++
+    // }
 
-    feedRef.metaData = {...feedRef.metaData, ...meta}
-    cinemaData.feedRef = feedRef
+    // feedRef.metaData = {...feedRef.metaData, ...meta}
+    // cinemaData.feedRef = feedRef
 
-    const audienceData = {
-        forall: false,
-        forfollowers: false,
-        audience: []
-    }
 
-    if(cinemaAudience["Everyone"]){
-        audienceData.forall = true
-    } else if(cinemaAudience["My Followers"]){
-        audienceData.forfollowers = true
-    } else {
-        audienceData.audience = [...Object.keys(cinemaAudience)]
-    }
+    // const audienceData = {
+    //     forall: false,
+    //     forfollowers: false,
+    //     audience: []
+    // }
+
+    // if(cinemaAudience["Everyone"]){
+    //     audienceData.forall = true
+    // } else if(cinemaAudience["My Followers"]){
+    //     audienceData.forfollowers = true
+    // } else {
+    //     audienceData.audience = [...Object.keys(cinemaAudience)]
+    // }
 
     function gatherAudience(){
         const {data} = cinemaData

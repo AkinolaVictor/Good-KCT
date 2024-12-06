@@ -7,14 +7,14 @@ const sendPushNotification_2 = require("../pushNotification/sendPushNotification
 const knowledgeBuilder = require('../../utils/knowledgeBuilder')
 const knowledgeTypes = require('../../utils/knowledgeTypes')
 const updateClipRank = require('../../utils/updateClipRank')
+const propagatorAlgorithm = require('../../utils/algorithms/propagatorAlgorithm')
 // const sendPushNotification = require('../pushNotification/sendPushNotification')
 
 async function likeClipReply(req, res){
     // const userID = req.body.userID
     // const postID = req.body.postID
     // const replyData = req.body.data
-    const {replyID, userID, postID, dataID, feedRef, discernUserIdentity, fullname, replyCreatorName, replyPath, parentID} = req.body
-
+    const {replyID, userID, postID, algorithmInfo, dataID, feedRef, discernUserIdentity, fullname, replyCreatorName, replyPath, parentID} = req.body
     const {cinema, LikeModel, cinemaPair, notifications} = req.dbModels
 
     async function removeFromLikes(){
@@ -202,6 +202,17 @@ async function likeClipReply(req, res){
                 await updateClipRank({which: "likes",  models: req.dbModels, feedRef})
                 await knowledgeBuilder({userID, models: req.dbModels, which: knowledgeTypes.like, intent: "hashtags", hash: [...Object.keys(hash)]})
 
+                if(algorithmInfo){
+                    const {triggeredEvent, algoType, contentType, algorithm} = algorithmInfo
+                    await propagatorAlgorithm({
+                        models: req.dbModels, 
+                        feedRef,
+                        contentType, 
+                        algoType, 
+                        triggeredEvent,
+                        algorithm
+                    })
+                }
                 // likeCount
             }
             
