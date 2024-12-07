@@ -238,6 +238,7 @@ async function createBubble(req, res){
             type: 'Ref',
             status: 'active',
             sharePath:[userID],
+            creationDate: new Date().toISOString(),
             metaData: {...metaData, aos: secrecySettings.atmosphere},
             data:{
                 type: bubbleName

@@ -450,7 +450,7 @@ function modelPack(db){
                 createdAt: {type: Date, default: new Date()},
             }, { strict: false, minimize: false })
             
-            const eachUserAnalytics = db.models["eachUserAnalytics"] || db.model("eachUserAnalytics", eachUserAnalyticsSchema)
+            const eachUserAnalytics = db.models["eachuseranalytics"] || db.model("eachuseranalytics", eachUserAnalyticsSchema)
             return eachUserAnalytics
         }(),
         // userSettings: function(){
@@ -472,7 +472,7 @@ function modelPack(db){
                 createdAt: {type: Date, default: new Date()},
             }, { strict: false, minimize: false })
             
-            const hashTags = db.models["hashTags"] || db.model("hashTags", hashTagsSchema)
+            const hashTags = db.models["hashtags"] || db.model("hashtags", hashTagsSchema)
             return hashTags
         }(),
         ispace: function(){
@@ -514,7 +514,7 @@ function modelPack(db){
                 updatedAt: Date
             }, { strict: false, minimize: false })
             
-            const rank = db.models["bubbleRanks"] || db.model("bubbleRanks", bubbleRanks)
+            const rank = db.models["bubbleranks"] || db.model("bubbleranks", bubbleRanks)
             return rank
         }(),
         clipRanks: function(){
@@ -529,7 +529,7 @@ function modelPack(db){
                 updatedAt: Date
             }, { strict: false, minimize: false })
             
-            const rank = db.models["clipRanks"] || db.model("clipRanks", clipRanks)
+            const rank = db.models["clipranks"] || db.model("clipranks", clipRanks)
             return rank
         }(),
         propAlgorithm: function(){
@@ -545,7 +545,7 @@ function modelPack(db){
                 updatedAt: Date
             }, { strict: false, minimize: false })
             
-            const alg = db.models["propAlgorithm"] || db.model("propAlgorithm", algorithm)
+            const alg = db.models["propalgorithm"] || db.model("propalgorithm", algorithm)
             return alg
         }(),
         reservedContents: function(){
@@ -557,8 +557,19 @@ function modelPack(db){
                 updatedAt: Date
             }, { strict: false, minimize: false })
             
-            const userBubbles = db.models["userbubbles"] || db.model("userbubbles", userBubblesSchema)
+            const userBubbles = db.models["reservedcontents"] || db.model("reservedcontents", userBubblesSchema)
             return userBubbles
+        }(),
+        retainedAudience: function(){
+            const userRetainedAudience = db.Schema({
+                audience: {},
+                userID: String,
+                createdAt: {type: Date, default: new Date()},
+                updatedAt: Date
+            }, { strict: false, minimize: false })
+            
+            const userRetained = db.models["retainedaudience"] || db.model("retainedaudience", userRetainedAudience)
+            return userRetained
         }(),
     }
     

@@ -7,6 +7,7 @@ const knowledgeBuilder = require('../../utils/knowledgeBuilder')
 const knowledgeTypes = require('../../utils/knowledgeTypes')
 const updateBubbleRank = require('../../utils/updateBubbleRank')
 const propagatorAlgorithm = require('../../utils/algorithms/propagatorAlgorithm')
+const buildRetainedAudience = require('../../utils/buildRetainedAudience')
 // const {doc, getDoc, updateDoc, setDoc, increment} = require('firebase/firestore')
 // const {getDownloadURL, ref, uploadBytes, deleteObject} = require('firebase/storage')
 // const {database} = require('../../database/firebase')
@@ -269,7 +270,7 @@ async function likeBubble(req, res){
                     await updateBubbleRank({which: "likes",  models: req.dbModels, feedRef})
                     await knowledgeBuilder({userID, models: req.dbModels, which: knowledgeTypes.like, intent: "hashtags", hash: [...Object.keys(hash)]})
                     await addUpUserLikes({thisBubble})
-
+                    await buildRetainedAudience({userID, feedRef, models: req.dbModels, which: "bubLik"})
                     if(algorithmInfo){
                         const {triggeredEvent, algoType, contentType, algorithm} = algorithmInfo
                         await propagatorAlgorithm({

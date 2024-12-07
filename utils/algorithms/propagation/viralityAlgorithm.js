@@ -12,7 +12,7 @@ async function viralityAlgorithm({models, feedRef, contentType, triggeredEvent, 
     // const hashArr = Object.keys(allHash)
     
     const now = new Date().toISOString()
-    const gap = getDateGap(createdDate, now, "day")
+    const gap = getDateGap(now,createdDate,  "day")
     const lapse_days = v_len||14
     const hasElapsed = gap >= lapse_days
 

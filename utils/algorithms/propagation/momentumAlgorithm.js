@@ -26,7 +26,7 @@ async function momentumAlgorithm({models, feedRef, contentType, triggeredEvent, 
 
     const now = new Date().toISOString()
     const createdDate = algorithmData.dateActivated
-    const gap = getDateGap(createdDate, now, "day")
+    const gap = getDateGap(now, createdDate, "day")
     const hasElapsed = gap>=lapse_days
 
     if(hasElapsed){

@@ -1,3 +1,5 @@
+const getDateGap = require("./getDateGap")
+
 module.exports = async function clipRankModel({feedRef, userID, models, contentHashs, userKnowledge}) {
     const {clipRanks} = models
     const {postID} = feedRef
@@ -77,7 +79,7 @@ module.exports = async function clipRankModel({feedRef, userID, models, contentH
             // Decay Rank (MAX 40)
             let decayRank = 40
             const now = new Date().toISOString()
-            const daygap = getDateGap(created, now, "day")
+            const daygap = getDateGap(now, created, "day")
             if(daygap>=7){
                 const thisShare = shares||1
                 const thisReply = replys||1

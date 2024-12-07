@@ -18,7 +18,7 @@ async function checkForEngagementTendency({userID, feed, models}) {
                     // const {likes, replys, lastdate, openedAnalytics, openedReplys, shares} = gotten
                     const {likes, replys, lastdate, shares} = gotten
                     const now = new Date().toISOString()
-                    const gap = getDateGap(lastdate, now)
+                    const gap = getDateGap(now, lastdate)
 
                     const timeSpace = 4*7*24*60*60*1000
                     const tendency = likes || replys || shares
