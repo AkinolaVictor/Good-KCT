@@ -7,6 +7,30 @@ async function buildRetainedAudience({userID, models, which, feedRef, content, t
     try {
         const creatorID = feedRef?.userID
         const {postID, creationDate} = feedRef
+
+        const now = new Date().toISOString()
+        const daysRaw = getDateGap(now, creationDate, "day")
+        // const days = Math.floor(daysRaw)
+
+        if(daysRaw > 30) return
+
+        const newData = {
+            postID,
+            creation: creationDate,
+            type,
+            dateSeen: new Date().toISOString(),
+        }
+        const proto = {
+            active: [
+                {
+                    ...newData
+                }
+            ],
+            skipped: [
+
+            ]
+        }
+
         let userRetained = await retainedAudience.findOne({userID: creatorID}).lean()
         let createNew = false
         if(!userRetained) {
@@ -17,26 +41,14 @@ async function buildRetainedAudience({userID, models, which, feedRef, content, t
             }
         }
 
+        if(createNew){
+            if(which!=="impression") return
+            const newAud = new retainedAudience({...proto})
+            await newAud.save()
+            return
+        }
         const {audience} = userRetained
         const thisAudience = audience[userID]
-        const now = new Date().toISOString()
-        const daysRaw = getDateGap(now, creationDate, "day")
-        // const days = Math.floor(daysRaw)
-
-        if(daysRaw > 30) return
-
-        const proto = {
-            active: [
-                {
-                    postID,
-                    creationDate,
-                    dateSeen: new Date().toISOString(),
-                }
-            ],
-            skipped: [
-
-            ]
-        }
 
         function inSkipped(){
             const {skipped} = thisAudience||{active: [], skipped: []}
@@ -64,25 +76,68 @@ async function buildRetainedAudience({userID, models, which, feedRef, content, t
         }
 
         if(thisAudience){
+            const active = userRetained.audience?.[userID]?.active
+            const skipped = userRetained.audience?.[userID]?.skipped
             if(which === "impression"){
-                const engaged = true // use functions 
-                if(engaged) return
-
                 const checkActive = inActive()
                 const checkSkipped = inSkipped()
-
                 if(checkActive || checkSkipped) return
 
-
+                
+                let moveOn = true
+                if(active?.length){
+                    active?.shift()
+                }
+                
+                if(active.length===0){
+                    delete userRetained.audience[userID]
+                    moveOn = false
+                }
+                
+                if(moveOn){
+                    if(skipped.length>=5){
+                        userRetained.audience[userID].skipped?.shift()
+                        userRetained.audience[userID].skipped?.push(newData)
+                    }
+                }
+                
+                await retainedAudience.updateOne({userID: creatorID}, {audience: userRetained.audience})
+                return
+            }
+            
+            if(which==="like" || which==="share" || which==="reply"){
+                const checkActive = inActive()
+                if(checkActive) return
+                
+                const checkSkipped = inSkipped()
+                if(checkSkipped){
+                    for(let i=0; i<skipped.length; i++){
+                        const curr = skipped[i]
+                        if(curr.postID === postID) skipped.splice(i, 1)
+                    }
+                    userRetained.audience[userID].skipped = skipped
+                }
+            
+                if(active.length>=5){
+                    userRetained.audience[userID].active?.shift()
+                }
+                
+                userRetained.audience[userID].active?.push(newData)
+                
+                await retainedAudience.updateOne({userID: creatorID}, {audience: userRetained.audience})
+                return
+            }
+            
+            if(which==="subreply"){
+                // let userRetained = await retainedAudience.findOne({userID: creatorID}).lean()
+            }
+        } else {
+            if(which==="like" || which==="share" || which==="reply"){
+                userRetained.audience[userID] = proto
+                await retainedAudience.updateOne({userID: creatorID}, {audience: userRetained.audience})
+                return
             }
         }
-
-        // if(createNew){
-        //     const starter = new retainedAudience({...userRetained})
-        //     await starter.save()
-        // } else {
-        //     await retainedAudience.update({userID}, {})
-        // }
     } catch(e){
         console.log(e);
         console.log("error from retained");

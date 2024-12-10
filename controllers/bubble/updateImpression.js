@@ -8,6 +8,10 @@ const knowledgeBuilder = require('../../utils/knowledgeBuilder')
 const knowledgeTypes = require('../../utils/knowledgeTypes')
 const updateBubbleRank = require('../../utils/updateBubbleRank')
 const dataType = require('../../utils/dataType')
+const checkBubbleLikes = require('../../utils/checkBubbleLikes')
+const checkBubbleShares = require('../../utils/checkBubbleShares')
+const checkBubbleReplys = require('../../utils/checkBubbleReplys')
+const buildRetainedAudience = require('../../utils/buildRetainedAudience')
 
 async function updateImpression(req, res){
     const models = req.dbModels
@@ -151,6 +155,20 @@ async function updateImpression(req, res){
 
                         await updateBubbleRank({which: "impressions",  models: req.dbModels, feedRef})
                         await knowledgeBuilder({userID, models, which: knowledgeTypes.impression, intent: "hashtags", hash: [...Object.keys(hash)]})
+                        
+                        try {
+                            const checkLikes = checkBubbleLikes({thisBubble, userID})
+                            const checkShares = checkBubbleShares({thisBubble, userID})
+                            const checkReplys = checkBubbleReplys({thisBubble, userID})
+                            
+                            const checkForRetain = checkLikes || checkShares || checkReplys
+                            if(!checkForRetain){
+                                await buildRetainedAudience({userID, models: req.dbModels, which: "impression", feedRef, content: thisBubble, type: "bubble"})
+                            }
+                        } catch(e){
+                            console.log(e);
+                            console.log("retained audience in bubble impression");
+                        }
                     }
                 }
             }).catch(()=>{})
