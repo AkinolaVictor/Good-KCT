@@ -3,6 +3,10 @@
 // const {database} = require('../../database/firebase')
 // const User = require('../../models/User')
 
+const buildRetainedAudience = require("../../utils/buildRetainedAudience")
+const checkClipLikes = require("../../utils/checkClipLikes")
+const checkClipReplys = require("../../utils/checkClipReplys")
+const checkClipShares = require("../../utils/checkClipShares")
 const knowledgeBuilder = require("../../utils/knowledgeBuilder")
 const knowledgeTypes = require("../../utils/knowledgeTypes")
 const updateClipRank = require("../../utils/updateClipRank")
@@ -16,7 +20,7 @@ const { v4: uuidv4 } = require('uuid')
 
 
 async function shareClip(req, res){
-    const {cinema, userShares, cinemaFeeds, notifications, Followers, User} = req.dbModels
+    const {cinema, cinemaPair, userShares, cinemaFeeds, notifications, Followers, User} = req.dbModels
 
     const userID = req.body.userID
     const postID = req.body.postID
@@ -77,7 +81,6 @@ async function shareClip(req, res){
             let thisClip = await cinema.findOne({postID}).lean()
     
             if(thisClip){
-                
                 const shares = thisClip?.allShares||[]
                 if(!shares.includes(userID)){
                     shares.push(userID)
@@ -117,6 +120,16 @@ async function shareClip(req, res){
 
                     await updateUserShares()
                     await ShareNotifier()
+
+                    let thisClipPair = await cinemaPair.findOne({postID}).lean()
+                    if(thisClipPair){
+                        thisClip = {...thisClip, ...thisClipPair}
+                        const checkBuildRetained = checkClipLikes({clip: thisClip, userID}) || checkClipReplys({clip: thisClip, userID}) || checkClipShares({clip: thisClip, userID})
+                        if(!checkBuildRetained){
+                            await buildRetainedAudience({userID, feedRef, models: req.dbModels, which: "share", type: "clip"})
+                        }
+                    }
+                    
                 }
                 res.send({successful: true})
             } else {

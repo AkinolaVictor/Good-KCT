@@ -1,6 +1,10 @@
 const date = require('date-and-time')
 const sendPushNotification = require('../pushNotification/sendPushNotification')
 const sendPushNotification_2 = require('../pushNotification/sendPushNotification_2')
+const buildRetainedAudience = require('../../utils/buildRetainedAudience')
+const checkBubbleLikes = require('../../utils/checkBubbleLikes')
+const checkBubbleReplys = require('../../utils/checkBubbleReplys')
+const checkBubbleShares = require('../../utils/checkBubbleShares')
 // const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
 // const { v4: uuidv4 } = require('uuid')
 // const {database} = require('../../database/firebase')
@@ -370,6 +374,10 @@ async function confirmShareRequest(req, res){
                 await bubble.updateOne({postID: data.feed.postID}, {activities, shareStructure: savedShareStructure})
                 await updateUserAnalytics(thisBubble)
                 await notify()
+                const checkBuildRetained = checkBubbleLikes({thisBubble, userID}) || checkBubbleReplys({thisBubble, userID}) || checkBubbleShares({thisBubble, userID})
+                if(!checkBuildRetained){
+                    await buildRetainedAudience({userID, models: req.dbModels, which: "share", feedRef: {...data.feed}, type: "bubble"})
+                }
                 
                 res.send({successful: true})
             } else {

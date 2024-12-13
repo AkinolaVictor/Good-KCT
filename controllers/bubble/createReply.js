@@ -7,6 +7,10 @@ const knowledgeBuilder = require('../../utils/knowledgeBuilder')
 const knowledgeTypes = require('../../utils/knowledgeTypes')
 const updateBubbleRank = require('../../utils/updateBubbleRank')
 const propagatorAlgorithm = require('../../utils/algorithms/propagatorAlgorithm')
+const checkBubbleShares = require('../../utils/checkBubbleShares')
+const checkBubbleLikes = require('../../utils/checkBubbleLikes')
+const checkBubbleReplys = require('../../utils/checkBubbleReplys')
+const buildRetainedAudience = require('../../utils/buildRetainedAudience')
 // const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
 // const {database} = require('../../database/firebase')
 // const bubble = require('../../models/bubble')
@@ -44,7 +48,8 @@ async function createReply_Old(req, res){
         }
     }
 
-    const thisDate = getDate()
+    // const thisDate = getDate()
+    const thisDate = new Date().toISOString()
     
 
     function decideNotifyIcon(){
@@ -219,6 +224,100 @@ async function createReply_Old(req, res){
         }
     }
 
+    function checkReplyDepth({thisBubble, finalPack}){
+        const payload = {
+            allowSubRep: false,
+            allowRep: true,
+            allowParentLike: false, 
+            allowUserLike: false
+        }
+
+        try {
+
+            const checkShare = checkBubbleShares({thisBubble, userID})
+            const checkLikes = checkBubbleLikes({thisBubble, userID})
+            const checkReply = checkBubbleReplys({thisBubble, userID})
+
+            if(checkShare || checkLikes || checkReply){
+                payload.allowRep = false
+            }
+            
+            let userIDCount = 1 // automatically given 1, since they are here making a reply
+            let replierIDCount = 0
+            let userIDlikes = 0
+            let parentIDlikes = 0
+
+            if(finalPack.length>=2){
+                const lastPerson = finalPack[finalPack.length-1]
+                const lastPersonID = lastPerson?.userID
+                payload.replierID_2 = lastPersonID
+                const parentRepLikes = lastPerson?.like||[]
+                
+                if(parentRepLikes.includes(userID) &&  userID!==lastPersonID){
+                    payload.allowParentLike = true
+                }
+
+                for(let i=0; i<finalPack.length; i++){
+                    const curr = finalPack[i]
+                    if(typeof curr !== "object") break
+                    const thisUserID = curr?.userID
+                
+                    if(thisUserID === userID){
+                        userIDCount++
+
+                        const repLikes = curr?.like||[]
+                        if(repLikes.includes(lastPersonID)){
+                            userIDlikes++
+                        }
+                    }
+
+                    if(thisUserID === lastPersonID){
+                        replierIDCount++
+
+                        const repLikes = curr?.likes||[]
+                        if(repLikes.includes(userID)){
+                            parentIDlikes++
+                        }
+                    }
+
+                    // const thisReply = curr?.reply||[]
+                    // for(let j=0; j<thisReply.length; j++){
+                    //     const curr2 = thisReply[j]
+                    //     if(typeof curr2 !== "object") continue
+
+                    //     const thisUserID = curr2?.userID
+
+                    //     if(thisUserID === userID){
+                    //         userIDCount++
+                    //     }
+
+                    //     if(thisUserID === lastPersonID){
+                    //         replierIDCount++
+                    //     }
+                    // }
+                }
+            }
+
+            if(userIDCount>=2 && replierIDCount>=2){
+                payload.allowSubRep = true
+            }
+            
+            if(userIDlikes>=2){
+                payload.allowUserLike = true
+            }
+            
+            if(parentIDlikes>=2){
+                payload.allowParentLike = true
+            }
+        } catch(e){
+            console.log(e);
+            console.log("work on this message");            
+        }
+
+
+
+        return payload
+    }
     
     const thisBubble = await bubble.findOne({postID}).lean()
     if(thisBubble){
@@ -264,7 +363,10 @@ async function createReply_Old(req, res){
             thisBubble.activities.iAmOnTheseFeeds[userID].myActivities.replied=true
             
         }
+
         const newReplyPath = [...path]
+        let finalPack = []
+
         if(path.length === 0){
             newReplyPath.push(replys.length)
             replys.push(data)
@@ -283,7 +385,7 @@ async function createReply_Old(req, res){
                 if (eachReply.id){
                     let old = {...eachReply}
                     eachReply = {...old.reply[pathClone[0]]}
-                }else{
+                } else {
                     eachReply = {...reply[pathClone[0]]}
                 }
                 overallRep.push(eachReply)
@@ -300,6 +402,8 @@ async function createReply_Old(req, res){
             buildReply(path)
             
             let dR = [...overallRep]
+            finalPack = dR
+            
             newReplyPath.push(dR[path.length-1].reply.length)
             dR[path.length-1].reply.push(data)
             // Compile Reversal
@@ -322,6 +426,7 @@ async function createReply_Old(req, res){
         if(!thisBubble.activities.lastActivities){
             thisBubble.activities.lastActivities=[]
         }
+        
         const lastActivities = thisBubble.activities.lastActivities
         const activityData = {
             activity,
@@ -355,13 +460,24 @@ async function createReply_Old(req, res){
             const notificationData = {
                 message: `Reply: ${data.message||''}`
             }
+
             await ReplyNotifier(notificationData, newReplyPath)
             await updateUserAnalytics(thisBubble)
             const {hash} = refDoc?.metaData || {hash: {}}
 
             await updateBubbleRank({which: "replys",  models: req.dbModels, feedRef: refDoc})
             await knowledgeBuilder({userID, models: req.dbModels, which: knowledgeTypes.reply, intent: "hashtags", hash: [...Object.keys(hash)]})
+            
+            const {allowSubRep, allowParentLike, allowUserLike, allowRep, replierID_2} = checkReplyDepth({thisBubble, finalPack})
 
+            if(allowRep){
+                await buildRetainedAudience({userID, models: req.dbModels, which: "reply", feedRef: refDoc, type: "bubble"})
+            }
+
+            if(allowSubRep){
+                console.log("Helped by God");
+                await buildRetainedAudience({userID, models: req.dbModels, which: "subreply", feedRef: refDoc, type: "bubble", replierID_1: userID, replierID_2, allowSubRep, allowParentLike, allowUserLike})
+            }
 
             if(algorithmInfo){
                 const {triggeredEvent, algoType, contentType, algorithm} = algorithmInfo

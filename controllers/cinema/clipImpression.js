@@ -1,14 +1,18 @@
+const buildRetainedAudience = require("../../utils/buildRetainedAudience")
+const checkClipLikes = require("../../utils/checkClipLikes")
+const checkClipReplys = require("../../utils/checkClipReplys")
+const checkClipShares = require("../../utils/checkClipShares")
 const dataType = require("../../utils/dataType")
 const knowledgeBuilder = require("../../utils/knowledgeBuilder")
 const knowledgeTypes = require("../../utils/knowledgeTypes")
 const updateClipRank = require("../../utils/updateClipRank")
 
 async function clipImpression(req, res) {
-    const {cinema, reservedContents} = req.dbModels
+    const {cinema, cinemaPair, reservedContents} = req.dbModels
     const {feedRef, userID} = req.body
 
     const {postID} = feedRef
-    const thisClip = await cinema.findOne({postID}).lean()
+    let thisClip = await cinema.findOne({postID}).lean()
     if(thisClip){
         let impressions = thisClip.impressions
         if(impressions){
@@ -39,6 +43,16 @@ async function clipImpression(req, res) {
                 }
             }
             await reservedContents.updateOne({userID}, {cinema: cinemaa})
+        }
+
+        let thisClipPair = await cinemaPair.findOne({postID}).lean()
+        if(thisClipPair){
+            thisClip = {...thisClip, ...thisClipPair}
+            const checkBuildRetained = checkClipLikes({clip: thisClip, userID}) || checkClipReplys({clip: thisClip, userID}) || checkClipShares({clip: thisClip, userID})
+            
+            if(!checkBuildRetained){
+                await buildRetainedAudience({userID, feedRef, models: req.dbModels, which: "impression", type: "clip"})
+            }
         }
     }
 

@@ -1,9 +1,13 @@
+const buildRetainedAudience = require("../../utils/buildRetainedAudience")
+const checkClipLikes = require("../../utils/checkClipLikes")
+const checkClipReplys = require("../../utils/checkClipReplys")
+const checkClipShares = require("../../utils/checkClipShares")
 const sendPushNotification_2 = require("../pushNotification/sendPushNotification_2")
 
 
 
 async function confirmClipShare(req, res){
-    const {cinema, cinemaFeeds, notifications, Followers, userShares, User} = req.dbModels
+    const {cinema, cinemaPair, cinemaFeeds, notifications, Followers, userShares, User} = req.dbModels
     
     const userID = req.body.userID // user.id
     let data = req.body.data
@@ -121,6 +125,15 @@ async function confirmClipShare(req, res){
 
                     await updateUserShares()
                     await Notifier()
+
+                    let thisClipPair = await cinemaPair.findOne({postID}).lean()
+                    if(thisClipPair){
+                        thisClip = {...thisClip, ...thisClipPair}
+                        const checkBuildRetained = checkClipLikes({clip: thisClip, userID}) || checkClipReplys({clip: thisClip, userID}) || checkClipShares({clip: thisClip, userID})
+                        if(!checkBuildRetained){
+                            await buildRetainedAudience({userID, feedRef, models: req.dbModels, which: "share", type: "clip"})
+                        }
+                    }
                 }
 
                 res.send({successful: true})

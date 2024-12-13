@@ -1,6 +1,6 @@
 const date = require('date-and-time')
 
-module.exports = function getDateGap(greater, lesser, which){
+function getDateGap(greater, lesser, which){
     if(!(greater && lesser)){
         return false
     }
@@ -17,3 +17,5 @@ module.exports = function getDateGap(greater, lesser, which){
     }
     return gap
 }
+
+module.exports = getDateGap

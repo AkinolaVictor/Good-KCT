@@ -4,6 +4,10 @@
 // const User = require('../../models/User')
 
 const propagatorAlgorithm = require("../../utils/algorithms/propagatorAlgorithm")
+const buildRetainedAudience = require("../../utils/buildRetainedAudience")
+const checkClipLikes = require("../../utils/checkClipLikes")
+const checkClipReplys = require("../../utils/checkClipReplys")
+const checkClipShares = require("../../utils/checkClipShares")
 const knowledgeBuilder = require("../../utils/knowledgeBuilder")
 const knowledgeTypes = require("../../utils/knowledgeTypes")
 const updateClipRank = require("../../utils/updateClipRank")
@@ -17,7 +21,7 @@ const sendPushNotification_2 = require("../pushNotification/sendPushNotification
 
 
 async function likeClip(req, res){
-    const {cinema, LikeModel, notifications, Followers, io, cinemaForEveryone} = req.dbModels
+    const {cinema, cinemaPair, LikeModel, notifications, Followers, io, cinemaForEveryone} = req.dbModels
 
     const userID = req.body.userID
     const postID = req.body.postID
@@ -132,7 +136,17 @@ async function likeClip(req, res){
                     const {hash} = feedRef?.metaData || {hash: {}}
                     await updateClipRank({which: "likes",  models: req.dbModels, feedRef})
                     await knowledgeBuilder({userID, models: req.dbModels, which: knowledgeTypes.like, intent: "hashtags", hash: [...Object.keys(hash)]})
-                
+                    
+                    let thisClipPair = await cinemaPair.findOne({postID}).lean()
+                    if(thisClipPair){
+                        thisClip = {...thisClip, ...thisClipPair}
+                        const checkBuildRetained = checkClipLikes({clip: thisClip, userID}) || checkClipReplys({clip: thisClip, userID}) || checkClipShares({clip: thisClip, userID})
+                        if(!checkBuildRetained){
+                            await buildRetainedAudience({userID, feedRef, models: req.dbModels, which: "like", type: "clip"})
+                        }
+                    }
+
+
                     if(algorithmInfo){
                         const {triggeredEvent, algoType, contentType, algorithm} = algorithmInfo
                         await propagatorAlgorithm({

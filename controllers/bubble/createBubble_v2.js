@@ -4,7 +4,7 @@ const date = require('date-and-time')
 const sendPushNotification_2 = require('../pushNotification/sendPushNotification_2')
 
 async function createBubble_v2(req, res) {
-    const {bubblesForEveryone, userBubbles, Feeds, bubble, bot, hashTags, allUser, notifications, bubbleRanks} = req.dbModels
+    const {bubblesForEveryone, userBubbles, Feeds, bubble, bot, hashTags, allUser, notifications, bubbleRanks, followersFeeds, Followers, retainedAudience} = req.dbModels
     const userID = req.body.userID
     const metaData = req.body.metaData
     const creatorName = req.body.name

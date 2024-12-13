@@ -1,16 +1,21 @@
-const checkAiFollowerFollowingRatio = require("./checkAiFollowerFollowingRatio")
-const checkAiFollowers = require("./checkAiFollowers")
-const checkAiFollowings = require("./checkAIFollowings")
-const checkForEngagementTendency = require("./checkForEngagementTendency")
-const checkForLastContent = require("./checkForLastContent")
-const checkHandpicked = require("./checkHandpicked")
+// const checkAiFollowerFollowingRatio = require("./checkAiFollowerFollowingRatio")
+// const checkAiFollowers = require("./checkAiFollowers")
+// const checkAiFollowings = require("./checkAIFollowings")
+// const checkForEngagementTendency = require("./checkForEngagementTendency")
+// const checkForLastContent = require("./checkForLastContent")
+// // const checkForLastContentzzz = require("")
+// const checkHandpicked = require("./checkHandpicked")
+
+const { checkAiFollowers, checkAiFollowings, checkAiFollowerFollowingRatio, checkForLastContent, checkForEngagementTendency, checkHandpicked } = require("../optionCheckerFunctions")
 
 
 async function eachOptionChecker({userID, num, dir, current, creatorID, content, models, feed, val}){
+
     let finalResult = false
     
     if(val === "ffw"){
         const result = await checkAiFollowers({userID, num, dir, models})
+        // const results = await checkForAi({userID, num, dir, models})
         finalResult = result
     }
 

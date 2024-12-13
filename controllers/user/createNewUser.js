@@ -11,7 +11,7 @@
 // const notifications = require('../../models/notifications')
 
 async function createNewUser(req, res){
-  const {userKnowledgebase, reservedContents, User, allUser, notifications, userBubbles, retainedAudience, userCinema, cinemaFeeds, Followers, Following, userReplies, Feeds, userShares, savedAudience, LikeModel} = req.dbModels
+  const {userKnowledgebase, reservedContents, User, allUser, notifications, userBubbles, retainedAudience, userCinema, cinemaFeeds, Followers, Following, userReplies, Feeds, userShares, savedAudience, LikeModel, followersFeeds} = req.dbModels
   
     const data = req.body.data
 
@@ -39,14 +39,14 @@ async function createNewUser(req, res){
         // user created cinema
         const thisUserCinema = await userCinema.findOne({userID: data.id})
         if(thisUserCinema === null){
-          const cinema = new thisUserCinema({userID: data.id, cinema: []})
+          const cinema = new userCinema({userID: data.id, cinema: []})
           await cinema.save()
         }
 
         // user received cinema
         const thisCinemaFeed = await cinemaFeeds.findOne({userID: data.id})
         if(thisCinemaFeed === null){
-          const cinemaFeed = new thisCinemaFeed({userID: data.id, cinema: []})
+          const cinemaFeed = new cinemaFeeds({userID: data.id, cinema: []})
           await cinemaFeed.save()
         }
 
@@ -131,11 +131,19 @@ async function createNewUser(req, res){
         }
         
         // userKnowledgebase, reservedContents
-        const thisrRtainedAudience = await retainedAudience.findOne({userID: data.id})
-        if(thisReservedContents === null){
+        const thisRetainedAudience = await retainedAudience.findOne({userID: data.id})
+        if(thisRetainedAudience === null){
           const proto = {userID: data.id, audience: {}}
-          const thisKnowledge = new retainedAudience({...proto})
-          await thisKnowledge.save()
+          const thisRetainedAudience = new retainedAudience({...proto})
+          await thisRetainedAudience.save()
+        }
+        
+        // userKnowledgebase, reservedContents
+        const thisFollowersFeeds = await followersFeeds.findOne({userID: data.id})
+        if(thisFollowersFeeds === null){
+          const proto = {userID: data.id, cinema: [], bubbles: []}
+          const thisFollowersFeeds = new followersFeeds({...proto})
+          await thisFollowersFeeds.save()
         }
         
 

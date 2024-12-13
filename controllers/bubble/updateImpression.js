@@ -163,7 +163,7 @@ async function updateImpression(req, res){
                             
                             const checkForRetain = checkLikes || checkShares || checkReplys
                             if(!checkForRetain){
-                                await buildRetainedAudience({userID, models: req.dbModels, which: "impression", feedRef, content: thisBubble, type: "bubble"})
+                                await buildRetainedAudience({userID, models: req.dbModels, which: "impression", feedRef, type: "bubble"})
                             }
                         } catch(e){
                             console.log(e);

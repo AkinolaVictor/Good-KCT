@@ -6,6 +6,10 @@ const knowledgeBuilder = require('../../utils/knowledgeBuilder')
 const knowledgeTypes = require('../../utils/knowledgeTypes')
 const updateBubbleRank = require('../../utils/updateBubbleRank')
 const propagatorAlgorithm = require('../../utils/algorithms/propagatorAlgorithm')
+const checkBubbleShares = require('../../utils/checkBubbleShares')
+const checkBubbleLikes = require('../../utils/checkBubbleLikes')
+const checkBubbleReplys = require('../../utils/checkBubbleReplys')
+const buildRetainedAudience = require('../../utils/buildRetainedAudience')
 // const {doc, getDoc, updateDoc, setDoc, increment} = require('firebase/firestore')
 // const {database} = require('../../database/firebase')
 // const notifications = require('../../models/notifications')
@@ -240,6 +244,85 @@ async function likeReply(req, res){
         }
     }
 
+    function checkReplyDepth({thisBubble, finalPack}){
+        const payload = {
+            allowSubRep: false,
+            allowRep: true,
+            allowParentLike: false, 
+            allowUserLike: false
+        }
+
+        try {
+
+            const checkShare = checkBubbleShares({thisBubble, userID})
+            const checkLikes = checkBubbleLikes({thisBubble, userID})
+            const checkReply = checkBubbleReplys({thisBubble, userID})
+
+            if(checkShare || checkLikes || checkReply){
+                payload.allowRep = false
+            }
+            
+            let userIDCount = 1 // automatically given 1, since they are here making a reply
+            let replierIDCount = 0
+            let userIDlikes = 0
+            let parentIDlikes = 0
+
+            if(finalPack.length>=2){
+                const lastPerson = finalPack[finalPack.length-1]
+                const lastPersonID = lastPerson?.userID
+                payload.replierID_2 = lastPersonID
+                const parentRepLikes = lastPerson?.like||[]
+                
+                if(parentRepLikes.includes(userID) && userID!==lastPersonID){
+                    payload.allowParentLike = true
+                }
+
+                for(let i=0; i<finalPack.length; i++){
+                    const curr = finalPack[i]
+                    if(typeof curr !== "object") break
+                    const thisUserID = curr?.userID
+                
+                    if(thisUserID === userID){
+                        userIDCount++
+
+                        const repLikes = curr?.like||[]
+                        if(repLikes.includes(lastPersonID)){
+                            userIDlikes++
+                        }
+                    }
+
+                    if(thisUserID === lastPersonID){
+                        replierIDCount++
+
+                        const repLikes = curr?.likes||[]
+                        if(repLikes.includes(userID)){
+                            parentIDlikes++
+                        }
+                    }
+                }
+            }
+
+            if(userIDCount>=2 && replierIDCount>=2){
+                payload.allowSubRep = true
+            }
+            
+            if(userIDlikes>=2){
+                payload.allowUserLike = true
+            }
+            
+            if(parentIDlikes>=2){
+                payload.allowParentLike = true
+            }
+        } catch(e){
+            console.log(e);
+            console.log("work on this message");            
+        }
+
+
+
+        return payload
+    }
+
     try {
         const thisBubble = await bubble.findOne({postID: bubbleID}).lean()
         if(thisBubble === null){
@@ -249,10 +332,12 @@ async function likeReply(req, res){
             if(typeof(thisBubble.reply) === "string"){
                 replys = JSON.parse(thisBubble.reply)
             }
+            let finalPack = []
             // const newReplyPath = [...path]
             buildReply(path, replys)
             // destructured replies
             let dR = [...overallRep]
+            finalPack = dR
             // add like if its absent
             const message = dR[dR.length-1].message||''
             if(!(dR[dR.length-1].like.includes(userID))){
@@ -279,6 +364,17 @@ async function likeReply(req, res){
                 await updateBubbleRank({which: "likes",  models: req.dbModels, feedRef: refDoc})
                 await knowledgeBuilder({userID, models: req.dbModels, which: knowledgeTypes.like, intent: "hashtags", hash: [...Object.keys(hash)]})
                 
+                const {allowSubRep, allowParentLike, allowUserLike, allowRep, replierID_2} = checkReplyDepth({thisBubble, finalPack})
+
+                if(allowRep){
+                    await buildRetainedAudience({userID, models: req.dbModels, which: "like", feedRef: refDoc, type: "bubble"})
+                }
+
+                if(allowSubRep || allowParentLike || allowUserLike){
+                    console.log("Helped by God");
+                    await buildRetainedAudience({userID, models: req.dbModels, which: "subreply", feedRef: refDoc, type: "bubble", replierID_1: userID, replierID_2, allowParentLike, allowSubRep, allowUserLike})
+                }
+
                 if(algorithmInfo){
                     const {triggeredEvent, algoType, contentType, algorithm} = algorithmInfo
                     await propagatorAlgorithm({

@@ -5,6 +5,10 @@ const sendPushNotification_2 = require('../pushNotification/sendPushNotification
 const knowledgeBuilder = require('../../utils/knowledgeBuilder')
 const knowledgeTypes = require('../../utils/knowledgeTypes')
 const updateBubbleRank = require('../../utils/updateBubbleRank')
+const checkBubbleLikes = require('../../utils/checkBubbleLikes')
+const checkBubbleShares = require('../../utils/checkBubbleShares')
+const checkBubbleReplys = require('../../utils/checkBubbleReplys')
+const buildRetainedAudience = require('../../utils/buildRetainedAudience')
 // const {doc, getDoc, updateDoc, setDoc} = require('firebase/firestore')
 // const {database} = require('../../database/firebase')
 // const { dataType } = require('../../utils/utilsExport')
@@ -555,6 +559,16 @@ async function shareBubble(req, res){
                                 await userShares.updateOne({userID}, {bubbles: [...thisUserShares.bubbles]})
                             }
                         }
+                    }
+
+                    try {
+                        const checkBuildRetained = checkBubbleLikes({thisBubble: currentBubble, userID}) || checkBubbleReplys({thisBubble: currentBubble, userID}) || checkBubbleShares({thisBubble: currentBubble, userID})
+                        if(!checkBuildRetained){
+                            await buildRetainedAudience({userID, models: req.dbModels, which: "share", feedRef, type: "bubble"})
+                        }
+                    } catch(e){
+                        console.log(e);
+                        console.log("retained audience in bubble impression");
                     }
                 }).catch(()=>{})
 

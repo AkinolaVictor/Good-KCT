@@ -1,8 +1,3 @@
-// const checkAiFollowerFollowingRatio = require("./checkAiFollowerFollowingRatio")
-// const checkAiFollowers = require("./checkAiFollowers")
-// const checkAiFollowings = require("./checkAIFollowings")
-// const checkForEngagementTendency = require("./checkForEngagementTendency")
-// const checkForLastContent = require("./checkForLastContent")
 const eachOptionChecker = require("./eachOptionChecker")
 
 async function fixedAIAudience({options, models, userID, creatorID, content, feed}) {

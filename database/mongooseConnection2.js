@@ -262,6 +262,18 @@ function modelPack(db){
             const Feeds = db.models["feeds"] || db.model("feeds", feedsSchema)
             return Feeds
         }(),
+        followersFeeds: function(){
+            const feedsSchema = db.Schema({
+                bubbles: [],
+                cinema: [],
+                userID: String,
+                createdAt: {type: Date, default: new Date()},
+                updatedAt: Date
+            }, { strict: false, minimize: false })
+            
+            const Feeds = db.models["feeds"] || db.model("feeds", feedsSchema)
+            return Feeds
+        }(),
         bubblesForEveryone: function(){
             const bubblesForEveryoneSchema = db.Schema({
                 bubbleRefs: [],

@@ -9,6 +9,10 @@ const knowledgeBuilder = require('../../utils/knowledgeBuilder')
 const knowledgeTypes = require('../../utils/knowledgeTypes')
 const updateClipRank = require('../../utils/updateClipRank')
 const propagatorAlgorithm = require('../../utils/algorithms/propagatorAlgorithm')
+const checkClipShares = require('../../utils/checkClipShares')
+const checkClipLikes = require('../../utils/checkClipLikes')
+const checkClipReplys = require('../../utils/checkClipReplys')
+const buildRetainedAudience = require('../../utils/buildRetainedAudience')
 // const sendPushNotification = require('../pushNotification/sendPushNotification')
 
 async function createCinemaReply(req, res){
@@ -179,6 +183,85 @@ async function createCinemaReply(req, res){
         }
     }
 
+    function checkReplyDepth({clip}){
+        const payload = {
+            allowSubRep: false,
+            allowRep: true, 
+            allowUserLike: false, 
+            allowParentLike: false,
+            replierID_2: parentID
+        }
+
+        try {
+            const checkShare = checkClipShares({clip, userID})
+            const checkLikes = checkClipLikes({clip, userID})
+            const checkReply = checkClipReplys({clip, userID})
+
+            if(checkShare || checkLikes || checkReply){
+                payload.allowRep = false
+            }
+            
+            let userIDCount = 1 // automatically given 1, since they are here making a reply
+            let replierIDCount = 0
+            let userIDlikes = 0
+            let parentIDlikes = 0
+            const parentRepList = [...replyData?.parentReplys]
+            const parentRep = clip.allReplys[parentReplyID]||{}
+            const parentRepLikes = parentRep?.likes||[]
+            // const parentRepID = parentRep
+            // const childRep = parentRep.childReplys||[]
+            // if(ifParent && childRep.length){
+            
+            if(parentRepLikes.includes(userID) && userID!==parentID){
+                payload.allowParentLike = true
+            }
+
+            if(ifParent){
+
+                for(let i=0; i<parentRepList.length; i++){
+                    const thisID = parentRepList[i]
+                    const curr = clip.allReplys[thisID]
+                    if(typeof curr !== "object") continue
+
+                    if(curr?.userID === userID){
+                        userIDCount++
+                        const repLikes = curr?.likes||[]
+                        if(repLikes.includes(parentID)){
+                            userIDlikes++
+                        }
+                    }
+                    
+                    if(curr?.userID === parentID){
+                        replierIDCount++
+                        const repLikes = curr?.likes||[]
+                        if(repLikes.includes(userID)){
+                            parentIDlikes++
+                        }
+                    }
+                }
+            }
+
+            if(userIDCount>=2 && replierIDCount>=2){
+                payload.allowSubRep = true
+            }
+            
+            if(userIDlikes>=2){
+                payload.allowUserLike = true
+            }
+            
+            if(parentIDlikes>=2){
+                payload.allowParentLike = true
+            }
+        } catch(e){
+            console.log(e);
+            console.log("work on this message");            
+        }
+
+
+
+        return payload
+    }
+
     try {
         const cinemaData = await cinema.findOne({postID}).lean()
         const cinemaDataPair = await cinemaPair.findOne({postID}).lean()
@@ -220,7 +303,7 @@ async function createCinemaReply(req, res){
             }
             
             const updates = {
-                allReplys: cinemaDataPair.allReplys, 
+                allReplys: cinemaDataPair.allReplys,
                 initRep: cinemaDataPair.initRep,
             }
 
@@ -240,6 +323,19 @@ async function createCinemaReply(req, res){
             await updateClipRank({which: "replys",  models: req.dbModels, feedRef})
             await knowledgeBuilder({userID, models: req.dbModels, which: knowledgeTypes.reply, intent: "hashtags", hash: [...Object.keys(hash)]})
             
+            let clip = {...cinemaData, ...cinemaDataPair}
+            const {allowSubRep, allowRep, replierID_2, allowUserLike, allowParentLike} = checkReplyDepth({clip})
+            if(allowRep){
+                await buildRetainedAudience({userID, models: req.dbModels, which: "reply", feedRef, type: "clip"})
+            }
+
+            if(allowSubRep || allowUserLike || allowParentLike){
+                console.log("Helped by God");
+                const payload = {userID, models: req.dbModels, which: "subreply", feedRef, type: "clip", replierID_1: userID, replierID_2, allowUserLike, allowParentLike, allowSubRep}
+                
+                await buildRetainedAudience({...payload})
+            }
+
             if(algorithmInfo){
                 const {triggeredEvent, algoType, contentType, algorithm} = algorithmInfo
                 await propagatorAlgorithm({
